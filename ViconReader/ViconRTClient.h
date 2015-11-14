@@ -130,7 +130,7 @@ private:
 	bool m_recording;
 	bool m_initSkeleton;
 
-	std::vector<BoneData> Bones;
+	std::vector<BoneData, Eigen::aligned_allocator<BoneData>> Bones;
 	std::vector<unsigned int> BonesOrder;
 	std::vector<BoneData *> m_skeletons;
 };
