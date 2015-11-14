@@ -254,14 +254,15 @@ public:
 	
 };
 
-class BoneData {
+__declspec(align(16))
+class BoneData{
 public:
+	Eigen::Affine3d toWorld;
+	Eigen::Affine3d toLocal;
 	BodyData *body;
 	BodyChannel *channel;
 	bool visit;
 	std::vector<BoneData *> children;
-	Eigen::Affine3d toWorld;
-	Eigen::Affine3d toLocal;
 	BoneData(BodyChannel *_channel=NULL,BodyData *_body=NULL);
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
