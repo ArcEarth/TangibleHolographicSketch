@@ -1,0 +1,56 @@
+<scene gravity="0,-0.1,0">
+  <camera position="0,0,1.5" focus="0,0,0" up="0,1,0"></camera>
+  <skydome background="SkyBox\GrimmNight"/>
+  <cube position="0,-0.001,0" extent="10,0.001,10" name="floor" color="200,200,200" mass="0"></cube>
+  <cube position="0,0.5,-0.3" extent="0.5,0.5,0.02" name="wall" color="200,200,200" mass="0"></cube>
+  <cube position="-0.6,0.05,0.0" extent="0.05,0.05,0.05" name="cube_fl" color="35,255,35"></cube>
+  <cube position="-0.2,0.05.0,0.0" extent="0.05,0.05,0.05" name="cube_bl" color="225,35,225"></cube>
+  <cube position="-0.6,0.05,0.4" extent="0.05,0.05,0.05" name="cube_fr" color="35,255,35"></cube>
+  <cube position="-0.2,0.05.0,0.4" extent="0.05,0.05,0.05" name="cube_br" color="225,35,225"></cube>
+  <obj src="baseball_bat.obj" position="2.0,1.5.0,0.0" scale="0.1"></obj>
+  <!--<obj src="ConfederatePistolf.obj" position="5.0,5.0,4.0" scale = "0.0075"></obj>-->
+  <obj src="NBA_BASKETBALL.obj" position="2.5,1.0,0.0" scale="0.005"></obj>
+
+  <!--<obj src="sibenik_n.obj" position="0,13,46.2" scale="10.0"></obj>-->
+
+  <skin_model src="Bird.obj">
+    <skin_model.armature>
+      <armature name="Bird_sk">
+        <joint id="0" name="SPIN">
+          <joint id="1" name="WING_LEFT"></joint>
+          <joint id="2" name="WING_RIGHT"></joint>
+        </joint>
+      </armature>
+    </skin_model.armature>
+    <skin_model.rest_frame>
+      <boneframe target_armature="Bird_sk" time="0">
+        <bonestate id="0" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="1" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="2" end_position="0,0,0" orientation="0,0,0,1" />
+      </boneframe>
+    </skin_model.rest_frame>
+  </skin_model>
+  
+  <bone_animation name="bird_flapy" target_armature="Bird_sk">
+      <boneframe time="0:0:0">
+        <bonestate id="0" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="1" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="2" end_position="0,0,0" orientation="0,0,0,1" />
+      </boneframe>
+      <boneframe time="0:0:5" name="flapL">
+        <bonestate id="0" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="1" end_position="0,-1,0" orientation="0,0,0,1" />
+        <bonestate id="2" end_position="0,1,0" orientation="0,0,0,1" />
+      </boneframe>
+      <boneframe time="0:0:15" name="flapR">
+        <bonestate id="0" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="1" end_position="0,1,0" orientation="0,0,0,1" />
+        <bonestate id="2" end_position="0,-1,0" orientation="0,0,0,1" />
+      </boneframe>
+      <boneframe time="0:0:20">
+        <bonestate id="0" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="1" end_position="0,0,0" orientation="0,0,0,1" />
+        <bonestate id="2" end_position="0,0,0" orientation="0,0,0,1" />
+      </boneframe>
+  </bone_animation>
+</scene>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+  <scene.settings>
+    <enviroment>
+      <gravity>0,0,0</gravity>
+    </enviroment>
+  </scene.settings>
+  <scene.assets>
+    <mesh name="cube_mesh" src="cube.obj"></mesh>
+    <mesh name="mug_mesh" src="Mug.obj"></mesh>
+    <mesh name="table_mesh" src="table.obj"></mesh>
+  </scene.assets>
+  <scene.content>
+    <grid name="root">
+
+      <light name="sun_light" primary="false" color="#FFAAAAAA" position="5,10,5" near="2" far="16" focus="0,0,0" up="0,0,-1" hfov="9" wfov="9" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
+
+      <hmd_camera name="primary_camera" primary="true" background="#FFFFFFFF" position="0,1.2,1.5" focus="0,0.5,0" up="0,1,0" ipd="0.065" fov="60">
+        <first_person_keyboard_mouse_control />
+      </hmd_camera>
+
+      <skydome name="sky" background="Skydome\Sunny_01B.dds"/>
+
+      <coordinate_axis/>
+
+      <object name="ground" position="0,-0.01,0" scale="5.0,0.005,5.0" mesh="{cube_mesh}"/>
+      <object name="table" position="0,0.5,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
+      <object name="mug" position="0,0.5,0" scale="0.05,0.05,0.05" mesh="{mug_mesh}">
+        <tracked_object idx="0"></tracked_object>
+        <pen_modeler></pen_modeler>
+      </object>
+
+    </grid>
+  </scene.content>
+</scene>

@@ -8,7 +8,7 @@
 #include "ViconRTClient.h"
 
 ViconRTClient::Ref gViconRTClient;
-std::string gViconClientIp =std::string("172.21.18.177");//std::string("localhost");
+std::string gViconClientIp =std::string("172.21.12.10");//std::string("localhost");
 
 int main(int argc,char *argv[]){
 	gViconRTClient=ViconRTClient::create(gViconClientIp,"./test/test");
