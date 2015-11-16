@@ -601,7 +601,7 @@ double ViconRTClient::getFrame(void) {
 			iBodyData->TX = data[iBody->TX];
 			iBodyData->TY = data[iBody->TY];
 			iBodyData->TZ = data[iBody->TZ];
-
+			
 			/*
 			iBodyData->baX = data[iBody->baX];
 			iBodyData->baY = data[iBody->baY];
@@ -611,7 +611,6 @@ double ViconRTClient::getFrame(void) {
 			iBodyData->btX = data[iBody->btX];
 			iBodyData->btY = data[iBody->btY];
 			iBodyData->btZ = data[iBody->btZ];
-			
 
 			//	The channel data is in the angle-axis form.
 			//	The following converts this to a quaternion.
@@ -743,7 +742,6 @@ double ViconRTClient::getFrame(void) {
 				iBodyData->beulerZ = 0;
 				iBodyData->beulerX = atan2(iBodyData->bGlobalRotation[0][1], iBodyData->bGlobalRotation[1][1]);
 			}
-
 			iBoneData->toWorld=Eigen::Translation3d(iBodyData->TX,iBodyData->TY,iBodyData->TZ)*Eigen::Quaterniond(iBodyData->QW,iBodyData->QX,iBodyData->QY,iBodyData->QZ);
 			iBoneData->toLocal=Eigen::Translation3d(iBodyData->btX,iBodyData->btY,iBodyData->btZ)*Eigen::Quaterniond(iBodyData->bqW,iBodyData->bqX,iBodyData->bqY,iBodyData->bqZ);
 		}
@@ -1072,8 +1070,9 @@ void ViconRTClient::recordFileData(){
 
 void ViconRTClient::printData(){
 	std::cout<<"All Bodies:\n";
-	for(std::vector<unsigned int>::const_iterator it=BonesOrder.begin();it!=BonesOrder.end();it++){
-		std::vector< BodyData >::iterator iBodyData=bodyPositions.begin()+(*it);
+	//for(std::vector<unsigned int>::const_iterator it=BonesOrder.begin();it!=BonesOrder.end();it++){
+		//std::vector< BodyData >::iterator iBodyData=bodyPositions.begin()+(*it);
+	for(std::vector< BodyData >::const_iterator iBodyData=bodyPositions.begin();iBodyData!=bodyPositions.end();iBodyData++){
 		std::cout<<iBodyData->btX<<" "<<iBodyData->btY<<" "<<iBodyData->btZ<<" "<<iBodyData->beulerX*180.0/M_PI<<" "<<iBodyData->beulerY*180.0/M_PI<<" "<<iBodyData->beulerZ*180.0/M_PI<<" ";
 	}
 	std::cout<<"\n";
