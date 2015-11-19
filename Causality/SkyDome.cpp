@@ -2,6 +2,8 @@
 #include "SkyDome.h"
 #include <Models.h>
 #include <PrimitiveVisualizer.h>
+#include "AssetDictionary.h"
+#include "Scene.h"
 
 using namespace Causality;
 using namespace DirectX;
@@ -11,6 +13,8 @@ namespace Causality
 	extern bool		g_ShowCharacterMesh;
 }
 
+REGISTER_SCENE_OBJECT_IN_PARSER(skydome, SkyDome);
+
 SkyDome::SkyDome()
 {
 }
@@ -18,6 +22,28 @@ SkyDome::SkyDome()
 SkyDome::~SkyDome()
 {
 
+}
+
+void SkyDome::Parse(const ParamArchive * store)
+{
+	SceneObject::Parse(store);
+	const char* bg = nullptr;
+	GetParam(store, "background", bg);
+
+	auto& assets = Scene->Assets();
+	auto pEffect = assets.GetEffect("default_environment");
+
+	CreateDeviceResource(assets.GetRenderDevice(), dynamic_cast<DirectX::EnvironmentMapEffect*>(pEffect));
+
+	if (bg[0] == '{')
+	{
+		string key(bg + 1, strlen(bg) - 2);
+		SetTexture(*assets.GetTexture(key));
+	}
+	else
+	{
+		SetTexture(*assets.LoadTexture(Name + "_background", bg));
+	}
 }
 
 void SkyDome::CreateDeviceResource(ID3D11Device * device, DirectX::EnvironmentMapEffect * pEffect)

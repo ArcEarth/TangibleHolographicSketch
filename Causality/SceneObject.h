@@ -4,8 +4,11 @@
 #include <HierarchicalTransform.h>
 #include <Locatable.h>
 #include <chrono>
+#include <unordered_map>
+#include <functional>
 #include "String.h"
 #include "Common\tree.h"
+#include "Serialization.h"
 
 namespace Causality
 {
@@ -25,13 +28,7 @@ namespace Causality
 		Collision_Ghost,		// Active, Don't Collide, but will move
 	};
 
-	//struct ProblistiscAffineTransform : public IsometricTransform
-	//{
-	//	using IsometricTransform::IsometricTransform;
-	//	float Probability;
-	//};
 
-	//typedef std::vector<ProblistiscAffineTransform> SuperPosition;
 
 #pragma region AbstractObject
 	//class AbstractObject : public tree_node<SceneObject>
@@ -132,9 +129,10 @@ namespace Causality
 	// Basic class for all object, camera, entity, or light
 	// It also holds a Axis-Aligned bounding box for each node, thus a AABB-tree
 	XM_ALIGNATTR
-	class SceneObject : public tree_node<SceneObject>, virtual public IRigid , public AlignedNew<XMVECTOR>
+	class SceneObject : public tree_node<SceneObject>, virtual public IRigid, public AlignedNew<XMVECTOR>
 	{
 	public:
+
 		typedef tree_node<SceneObject> tree_base_type;
 		typedef IsometricTransform TransformType;
 
@@ -159,6 +157,8 @@ namespace Causality
 		virtual ~SceneObject();
 
 		SceneObject();
+
+		virtual void Parse(const ParamArchive* store);
 
 		virtual void AddChild(SceneObject* child);
 
@@ -212,15 +212,15 @@ namespace Causality
 		}
 
 		template <typename TInterface>
-		auto DescendantsOfType() 
+		auto DescendantsOfType()
 		{
 			using namespace boost;
 			using namespace adaptors;
-			return 
+			return
 				descendants()
 				| transformed([](auto pCom) {
-					return dynamic_cast<TInterface*>(pCom); }) 
-				| filtered([](auto pCom){
+				return dynamic_cast<TInterface*>(pCom); })
+				| filtered([](auto pCom) {
 					return pCom != nullptr;});
 		}
 
@@ -268,4 +268,45 @@ namespace Causality
 		bool								m_IsEnabled;
 
 	};
+
+	struct SceneObjectParser
+	{
+		typedef std::function<SceneObject*(Scene*, const ParamArchive*)> CreationFunctionType;
+
+		typedef std::unordered_map<std::string, CreationFunctionType> CreatorMapType;
+
+		static CreatorMapType& Creators();
+
+		template<typename _TSceneObject>
+		static SceneObject* Create(Scene* scene, const ParamArchive* archive)
+		{
+			static_assert(std::is_base_of<SceneObject, _TSceneObject>::value, "You can only register type derived from SceneObject");
+			using type = _TSceneObject;
+
+			auto instance = new type();
+			instance->Scene = scene;
+			instance->Parse(archive);
+			return instance;
+		}
+
+		template<typename _TSceneObject>
+		static void Register(const std::string& tagname)
+		{
+			static_assert(std::is_base_of<SceneObject, _TSceneObject>::value, "You can only register type derived from SceneObject");
+			using type = _TSceneObject;
+
+			Creators()[tagname] = &SceneObjectParser::Create<type>;
+		}
+
+		static SceneObject* ParseSceneObject(Scene* scene, SceneObject* parent, const ParamArchive* archive);
+	};
+
+
+#define REGISTER_SCENE_OBJECT_IN_PARSER(xml_name,type) \
+	static struct type##_##xml_name##_parsing_registeration{ \
+		type##_##xml_name##_parsing_registeration()\
+		{\
+			Causality::SceneObjectParser::Register<type>(#xml_name); \
+		}\
+	} type##_##xml_name##_parsing_registeration_instance;
 }

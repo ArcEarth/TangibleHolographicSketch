@@ -8,7 +8,7 @@ namespace Leap
 
 namespace Causality
 {
-	struct TrackedBody;
+	class TrackedBody;
 
 	enum CursorButtonEnum
 	{

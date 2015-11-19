@@ -4,6 +4,7 @@
 #include "LightObject.h"
 #include <PrimitiveVisualizer.h>
 #include <ShadowMapGenerationEffect.h>
+#include "Scene.h"
 
 namespace Causality
 {
@@ -13,12 +14,32 @@ namespace Causality
 using namespace DirectX;
 using namespace Causality;
 
-std::weak_ptr<ShadowMapGenerationEffect> g_wpSMGEffect;
+REGISTER_SCENE_OBJECT_IN_PARSER(light, Light);
 
+std::weak_ptr<ShadowMapGenerationEffect> g_wpSMGEffect;
 
 Light::Light(IRenderDevice * device, const UINT& shadowResolution)
 {
 	EnableDropShadow(device, shadowResolution);
+}
+
+void Light::Parse(const ParamArchive * store)
+{
+	using namespace DirectX;
+	Camera::Parse(store);
+	unsigned resolution = 1024;
+	bool enableShadow;
+	Color color = Colors::White.v;
+	GetParam(store, "color", color);
+	GetParam(store, "drops_shadow", enableShadow);
+	GetParam(store, "resolution", resolution);
+
+	SetColor(color);
+	if (enableShadow)
+	{
+		auto device = Scene->GetRenderDevice();
+		EnableDropShadow(device, resolution);
+	}
 }
 
 Light::Light()

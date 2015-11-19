@@ -97,9 +97,9 @@ void BoneHiracheryFrame::Lerp(BoneHiracheryFrame& out, const BoneHiracheryFrame 
 	XMVECTOR vt = XMVectorReplicate(t);
 	for (size_t i = 0; i < armature.size(); i++)
 	{
-		out[i].LclRotation.StoreA(DirectX::XMQuaternionSlerpV(lhs[i].LclRotation.LoadA(), rhs[i].LclRotation.LoadA(), vt));
-		out[i].LclScaling.StoreA(DirectX::XMVectorLerpV(lhs[i].LclScaling.LoadA(), rhs[i].LclScaling.LoadA(), vt));
-		out[i].LclTranslation.StoreA(DirectX::XMVectorLerpV(lhs[i].LclTranslation.LoadA(), rhs[i].LclTranslation.LoadA(), vt));
+		XMStoreA(out[i].LclRotation,DirectX::XMQuaternionSlerpV(XMLoadA(lhs[i].LclRotation), XMLoadA(rhs[i].LclRotation), vt));
+		XMStoreA(out[i].LclScaling,DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclScaling), XMLoadA(rhs[i].LclScaling), vt));
+		XMStoreA(out[i].LclTranslation,DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclTranslation), XMLoadA(rhs[i].LclTranslation), vt));
 	}
 	out.RebuildGlobal(armature);
 }

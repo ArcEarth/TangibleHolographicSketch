@@ -164,6 +164,7 @@
     <ClCompile Include="PenModeler.cpp">
       <Filter>ArSketch Objects</Filter>
     </ClCompile>
+    <ClCompile Include="Serialization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -355,6 +356,12 @@
     <ClInclude Include="PenModeler.h">
       <Filter>ArSketch Objects</Filter>
     </ClInclude>
+    <ClInclude Include="Serialization.h">
+      <Filter>Serialization</Filter>
+    </ClInclude>
+    <ClInclude Include="Asset.h">
+      <Filter>Scene Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\OculusDisortionPixelShader.hlsl">
@@ -379,24 +386,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\Back.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\Bottom.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\front.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\Left.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\Right.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
-    <Image Include="Resources\Textures\SkyBox\GrimmNight\top.dds">
-      <Filter>Resource Files\SkyBox</Filter>
-    </Image>
     <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
@@ -407,9 +396,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="Resources\Foregrounds.xml">
-      <Filter>Resource Files</Filter>
-    </Xml>
     <Xml Include="manifest.xml">
       <Filter>Platform Application Logic</Filter>
     </Xml>
@@ -417,6 +403,9 @@
       <Filter>Resource Files</Filter>
     </Xml>
     <Xml Include="Resources\App.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="Resources\SelectorScene.xml">
       <Filter>Resource Files</Filter>
     </Xml>
   </ItemGroup>

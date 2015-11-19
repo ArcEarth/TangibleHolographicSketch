@@ -7,16 +7,7 @@ SamplerState NormalSampler : register(s1);
 
 // Should be linear
 SamplerState ShadowSampler : register(s2);
-SamplerComparisonState ShadowSampleCmpState : register(s3)
-{
-	// sampler state
-	Filter = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
-	AddressU = MIRROR;
-	AddressV = MIRROR;
-
-	// sampler comparison state
-	ComparisonFunc = LESS;
-};
+SamplerComparisonState ShadowSampleCmpState : register(s3);
 
 #define REGISTER(b) : register(b)
 
@@ -25,7 +16,7 @@ SamplerComparisonState ShadowSampleCmpState : register(s3)
 #include "ShadowMapEffectStructures.hlsli"
 
 static const float bias = 3e-3f;
-static const float spbias = 0.003f;
+static const float spbias = 0.0000003f;
 
 //
 // lambert lighting function
@@ -41,6 +32,12 @@ float3 LambertLighting(
 	float diffuseAmount = saturate(dot(lightNormal, surfaceNormal));
 	float3 diffuse = diffuseAmount * lightColor * pixelColor;
 	return diffuse;
+}
+
+void NormalizeLightUV(inout float4 luv)
+{
+    luv = luv / luv.w; // Normalize homogenous coords
+    luv.xy = float2(0.5f, -0.5f) * luv.xy + 0.5f; // Projection space to UV space transform
 }
 
 //
@@ -87,6 +84,7 @@ float4 PS_OneLightNoTex(PSInputOneLightNoTex pixel) : SV_TARGET
 	[unroll]
 	for (int i = 0; i < 1; i++)
 	{
+        NormalizeLightUV(pixel.lightUv[i]);
 		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
 	}
@@ -112,6 +110,7 @@ float4 PS_OneLightTex(PSInputOneLightTex pixel) : SV_TARGET
 	[unroll]
 	for (int i = 0; i < 1; i++)
 	{
+        NormalizeLightUV(pixel.lightUv[i]);
 		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
 		//float shadowAmount = 1.0f;
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
@@ -147,6 +146,7 @@ float4 PS_OneLightTexBump(PSInputOneLightTexBump pixel) : SV_TARGET
 	[unroll]
 	for (int i = 0; i < 1; i++)
 	{
+        NormalizeLightUV(pixel.lightUv[i]);
 		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
 		specular += shadowAmount * SpecularContribution(toEyeVector, LightDirection[i].xyz, worldNormal, MaterialSpecular.rgb, MaterialSpecularPower, LightColor[i].a, LightColor[i].rgb);
@@ -251,6 +251,7 @@ float4 PS_BinaryOneLightNoTex(PSInputBinaryOneLightNoTex pixel) : SV_TARGET
 	[unroll]
 	for (int i = 0; i < 1; i++)
 	{
+        NormalizeLightUV(pixel.lightUv[i]);
 		float shadowDepth = ShadowTex.Sample(ShadowSampler, pixel.lightUv[i].xy).r;
 		amount[i] = (shadowDepth + bias > pixel.lightUv[i].z) ? 1.0f : 0.0f;
 	}
@@ -273,6 +274,7 @@ float4 PS_BinaryOneLightTex(PSInputBinaryOneLightTex pixel) : SV_TARGET
 	[unroll]
 	for (int i = 0; i < 1; i++)
 	{
+        NormalizeLightUV(pixel.lightUv[i]);
 		float shadowDepth = ShadowTex.Sample(ShadowSampler, pixel.lightUv[i].xy).r;
 		amount[i] = (shadowDepth + bias > pixel.lightUv[i].z) ? alpha : 0.0f;
 	}

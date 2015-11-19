@@ -28,11 +28,15 @@ namespace Causality
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection) = 0;
 	};
 
+	IRenderDevice* GetSceneRenderDevice(Scene*);
+
 	// Scene object acts like entities for render
 	class VisualObject : virtual public SceneObject, virtual public IVisual
 	{
 	public:
 		VisualObject();
+
+		virtual void Parse(const ParamArchive* store) override;
 		//int										MaxLoD() const;
 		//int										CurrentLoD() const;
 		//void										SetLoD(int LoD);

@@ -3,6 +3,8 @@
 #include <Models.h>
 #include <PrimitiveVisualizer.h>
 #include <ShadowMapGenerationEffect.h>
+#include "Scene.h"
+#include "AssetDictionary.h"
 
 using namespace Causality;
 using namespace DirectX;
@@ -14,8 +16,11 @@ namespace Causality
 	extern bool		g_ShowCharacterMesh;
 	extern float	g_DebugArmatureThinkness;
 	extern bool		g_MirrowInputX;
-
 }
+
+REGISTER_SCENE_OBJECT_IN_PARSER(object, VisualObject);
+REGISTER_SCENE_OBJECT_IN_PARSER(glowing_border, GlowingBorder);
+REGISTER_SCENE_OBJECT_IN_PARSER(coordinate_axis, CoordinateAxis);
 
 void XM_CALLCONV DrawBox(_In_reads_(8) Vector3 *conners, FXMVECTOR color)
 {
@@ -106,6 +111,36 @@ VisualObject::VisualObject()
 	m_isVisable = true;
 	m_opticity = 1.0f;
 	m_isFocuesd = false;
+}
+
+void VisualObject::Parse(const ParamArchive* store)
+{
+	SceneObject::Parse(store);
+
+	float mass = 1.0f;
+	GetParam(store, "mass", mass);
+
+	auto& assets = Scene->Assets();
+	const char* path = nullptr;
+	GetParam(store, "mesh", path);
+	if (path != nullptr && strlen(path) != 0)
+	{
+		if (path[0] == '{') // asset reference
+		{
+			const std::string key(path + 1, path + strlen(path) - 1);
+			SetRenderModel(assets.GetMesh(key));
+		}
+	}
+	else
+	{
+		auto nMesh = GetFirstChildArchive(store,"object.mesh");
+		if (nMesh)
+		{
+			nMesh = GetFirstChildArchive(nMesh);
+			auto model = assets.ParseMesh(nMesh);
+			SetRenderModel(model);
+		}
+	}
 }
 
 bool VisualObject::IsVisible(const BoundingGeometry & viewFrustum) const

@@ -497,14 +497,14 @@ public:
 			{
 				frame[jId].UpdateGlobalData(frame[pId]);
 			}
-			DirectX::XMVECTOR q = frame[jId].GblRotation.LoadA();
+			DirectX::XMVECTOR q = XMLoadA(frame[jId].GblRotation);
 			if (DirectX::XMVector4Equal(q, DirectX::XMVectorZero()))
 			{
 				if (pId != -1)
-					q = frame[pId].GblRotation.LoadA();
+					q = XMLoadA(frame[pId].GblRotation);
 				else
 					q = DirectX::XMQuaternionIdentity();
-				frame[jId].GblRotation.StoreA(q);
+				XMStoreA(frame[jId].GblRotation,q);
 			}
 
 		}

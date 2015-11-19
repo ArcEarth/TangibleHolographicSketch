@@ -111,7 +111,7 @@ void BehavierSpace::UniformQuaternionsBetweenClips()
 		{
 			for (size_t i = 0; i < armature.size(); i++)
 			{
-				pivots[i] += frame[i].LclRotation.LoadA();
+				pivots[i] += XMLoadA(frame[i].LclRotation);
 			}
 		}
 
@@ -119,7 +119,7 @@ void BehavierSpace::UniformQuaternionsBetweenClips()
 		{
 			for (size_t i = 0; i < armature.size(); i++)
 			{
-				gbl_pivots[i] = DirectX::XMVector3Normalize(pivots[i].LoadA());
+				gbl_pivots[i] = DirectX::XMVector3Normalize(XMLoadA(pivots[i]));
 			}
 			gbl_def = false;
 		}

@@ -8,8 +8,8 @@ float2 PositionToUV(float4 posProj)
 float4 GetLightUV(float4 posWorld, float4x4 viewProjection)
 {
 	float4 luv = mul(posWorld, viewProjection);
-	luv = luv / luv.w; // Normalize homogenous coords
-	luv.xy = float2(0.5f, -0.5f) * luv.xy + 0.5f; // Projection space to UV space transform
+	//luv = luv / luv.w; // Normalize homogenous coords
+	//luv.xy = float2(0.5f, -0.5f) * luv.xy + 0.5f; // Projection space to UV space transform
 	return luv;
 }
 

@@ -293,8 +293,9 @@ public:
 		CD3D11_SAMPLER_DESC samplerDesc (def);
 		samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS;
 		samplerDesc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+		XMStoreFloat4(samplerDesc.BorderColor, Colors::White.v);
 
 		ThrowIfFailed(
 			device->CreateSamplerState(&samplerDesc, &pShadowMapSampler)
@@ -355,10 +356,10 @@ public:
 		{
 			for (size_t i = 0; i < lightsEnabled; i++) //? Use MAX_LIGHT instead of 1
 			{
-				XMMATRIX lvp = lights[i].View.LoadA();
+				XMMATRIX lvp = XMLoadA(lights[i].View);
 				constants.LightPosition[i] = lights[i].SourcePosition;
 				constants.LightDirection[i] = lights[i].FocusDirection;
-				lvp *= lights[i].Projection.LoadA();
+				lvp *= XMLoadA(lights[i].Projection);
 				constants.LightViewProjection[i] = XMMatrixTranspose(lvp);
 			}
 

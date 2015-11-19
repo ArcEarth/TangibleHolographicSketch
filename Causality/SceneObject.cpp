@@ -4,7 +4,8 @@
 
 using namespace Causality;
 using namespace DirectX;
-//using namespace DirectX::Scene;
+
+REGISTER_SCENE_OBJECT_IN_PARSER(scene_object, SceneObject);
 
 SceneObject::~SceneObject()
 {
@@ -15,6 +16,25 @@ SceneObject::SceneObject() {
 	m_IsEnabled = true;
 	m_IsStatic = false;
 	m_TransformDirty = false;
+}
+
+void SceneObject::Parse(const ParamArchive * store)
+{
+	GetParam(store, "name", Name);
+	GetParam(store, "tag", Tag);
+
+	Vector3 scale(1.0f);
+	Vector3 pos;
+	Vector3 eular;
+
+	GetParam(store, "position", pos);
+	GetParam(store, "scale", scale);
+	GetParam(store, "orientation", eular);
+
+	SetPosition(pos);
+	SetScale(scale);
+	SetOrientation(Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z));
+
 }
 
 void SceneObject::AddChild(SceneObject * child)
@@ -103,7 +123,7 @@ void SceneObject::SetPosition(const Vector3 & p)
 		XMVECTOR refQ = parent()->GetOrientation(); // parent global orientation
 		XMVECTOR V = parent()->GetPosition();
 		XMVECTOR S = parent()->GetScale();
-		V = p.Load() - V;
+		V = XMLoad(p) - V;
 		refQ = XMQuaternionConjugate(refQ);
 		V = XMVector3Rotate(V, refQ); // V *= Inverse(ref.Orientation)
 		V /= S;
@@ -137,7 +157,7 @@ void SceneObject::SetScale(const Vector3 & s)
 	else
 	{
 		XMVECTOR refS = parent()->GetScale();
-		m_Transform.LclScaling = s.Load() / refS;
+		m_Transform.LclScaling = XMLoad(s) / refS;
 	}
 	SetTransformDirty();
 }
@@ -191,4 +211,13 @@ void SceneObject::UpdateTransformsChildWard()
 			child.UpdateTransformsChildWard();
 		}
 	}
+}
+
+SceneObjectParser::CreatorMapType & Causality::SceneObjectParser::Creators()
+{
+	static std::unique_ptr<CreatorMapType>
+		g_pCreators;
+	if (g_pCreators == nullptr)
+		g_pCreators.reset(new CreatorMapType());
+	return *g_pCreators;
 }

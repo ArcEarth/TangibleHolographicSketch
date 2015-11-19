@@ -10,6 +10,8 @@ namespace Causality
 		SkyDome();
 		~SkyDome();
 
+		virtual void Parse(const ParamArchive* store) override;
+
 		void CreateDeviceResource(ID3D11Device* device, DirectX::EnvironmentMapEffect * pEffect);
 		void SetTexture(DirectX::Texture& texture);
 

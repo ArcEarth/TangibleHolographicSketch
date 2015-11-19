@@ -5,6 +5,13 @@
 #include <ShadowMapEffect.h>
 #include <boost\filesystem.hpp>
 
+#include "Textures.h"
+#include "Models.h"
+#include "Armature.h"
+#include "CharacterBehavier.h"
+#include <Effects.h>
+
+
 using namespace Causality;
 using namespace boost::filesystem;
 using namespace DirectX;
@@ -39,6 +46,215 @@ AssetDictionary::~AssetDictionary()
 		internal_delete(pair.second);
 	//for (auto& pair : effects)
 	//	internal_delete(pair.second);
+}
+
+void AssetDictionary::ParseArchive(const ParamArchive * store)
+{
+	store = GetFirstChildArchive(store);
+	while (store)
+	{
+		const char* type = GetArchiveName(store);
+		if (!strcmp(type, "mesh"))
+			ParseMesh(store);
+		else if (!strcmp(type, "texture"))
+			ParseTexture(store);
+		else if (!strcmp(type, "audio_clip"))
+			ParseAudio(store);
+		else if (!strcmp(type, "armature"))
+			ParseArmature(store);
+		else if (!strcmp(type, "behavier"))
+			ParseBehavier(store);
+		else if (!strcmp(type, "animation_clip"))
+			ParseAnimation(store);
+		else if (!strcmp(type, "phong_material"))
+			ParseMaterial(store);
+
+		store = GetNextSiblingArchive(store);
+	}
+}
+
+AssetDictionary::audio_clip_type * AssetDictionary::ParseAudio(const ParamArchive * store)
+{
+	return nullptr;
+}
+
+AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * store)
+{
+	auto type = GetArchiveName(store);
+	const char* name = nullptr;
+	const char* src = nullptr;
+	const char* mat = nullptr;
+	GetParam(store, "src", src);
+	GetParam(store, "name", name);
+	GetParam(store, "material", mat);
+
+	if (!strcmp(type, "box"))
+	{
+	}
+	else if (!strcmp(type, "cylinder"))
+	{
+	}
+	else if (!strcmp(type, "sphere"))
+	{
+	}
+	else if (!strcmp(type, "mesh"))
+	{
+		if (src != nullptr && strlen(src) != 0)
+		{
+			boost::filesystem::path ref(src);
+			if (ref.extension().string() == ".obj")
+			{
+				auto mesh = LoadObjMesh(name, src);
+				return mesh;
+			}
+			else if (ref.extension().string() == ".fbx")
+			{
+				sptr<IMaterial> pMat;
+
+				// Material overhaul
+				if (mat != nullptr && mat[0] == '{') // asset reference
+				{
+					const std::string key(mat + 1, mat + strlen(mat) - 1);
+					pMat = GetMaterial(key);
+				}
+
+				if (pMat != nullptr)
+				{
+					auto mesh = LoadFbxMesh(name, src, pMat);
+					return mesh;
+				}
+				else
+				{
+					// import material
+					auto mesh = LoadFbxMesh(name, src, true);
+					return mesh;
+				}
+			}
+		}
+	}
+	return GetMesh("default");
+}
+
+sptr<AssetDictionary::material_type> AssetDictionary::ParseMaterial(const ParamArchive * store)
+{
+	assert(!strcmp(GetArchiveName(store), "phong_material"));
+
+	DirectX::Scene::PhongMaterialData data;
+	GetParam(store,"name", data.Name);
+
+	GetParam(store, "diffuse_map", data.DiffuseMapName);
+	GetParam(store, "normal_map", data.NormalMapName);
+	GetParam(store, "ambient_map", data.AmbientMapName);
+	GetParam(store, "displace_map", data.DisplaceMapName);
+	GetParam(store, "specular_map", data.SpecularMapName);
+	GetParam(store, "alpha_discard", data.UseAlphaDiscard);
+
+	GetParam(store, "diffuse_color", data.DiffuseColor);
+	GetParam(store, "ambient_color", data.AmbientColor);
+	GetParam(store, "specular_color", data.SpecularColor);
+	GetParam(store, "emissive_color", data.EmissiveColor);
+	GetParam(store, "reflection_color", data.RelfectionColor);
+
+	auto pPhong = std::make_shared<DirectX::Scene::PhongMaterial>(data, GetTextureDirectory().wstring(), GetRenderDevice());
+	AddMaterial(data.Name, pPhong);
+	return pPhong;
+}
+
+AssetDictionary::texture_type * AssetDictionary::ParseTexture(const ParamArchive * store)
+{
+	const char* src = nullptr, * name = nullptr;
+	GetParam(store, "name", name);
+	GetParam(store, "src", src);
+
+	if (!strcmp(GetArchiveName(store), "texture"))
+	{
+		return LoadTexture(name, src);
+	}
+	return GetTexture("default");
+}
+
+AssetDictionary::armature_type * AssetDictionary::ParseArmature(const ParamArchive * store)
+{
+	using armature_type = AssetDictionary::armature_type;
+	const char* src = nullptr, *name = nullptr;
+	GetParam(store, "name", name);
+	GetParam(store, "src", src);
+	if (src != nullptr)
+	{
+		return LoadArmature(name, src);
+	}
+	else // no file armature define
+	{
+		GetFirstChildArchive(store,"joint");
+	}
+	return nullptr;//GetAsset<armature_type>("default");
+}
+
+AssetDictionary::animation_clip_type * AssetDictionary::ParseAnimation(const ParamArchive * store)
+{
+	using clip_type = AssetDictionary::animation_clip_type;
+	const char* src = nullptr, *name = nullptr;
+	GetParam(store, "name", name);
+	GetParam(store, "src", src);
+	return LoadAnimation(name, src);
+}
+
+
+AssetDictionary::behavier_type * AssetDictionary::ParseBehavier(const ParamArchive * store)
+{
+	using behavier_type = AssetDictionary::behavier_type;
+	const char* src = nullptr, *name = nullptr;
+	GetParam(store, "name", name);
+	GetParam(store, "src", src);
+	if (!strcmp(GetArchiveName(store), "behavier"))
+	{
+		if (src)
+		{
+			return LoadBehavierFbx(name, src);
+		}
+
+		const char* arma = nullptr;
+		GetParam(store, "armature", arma);
+		if (arma)
+		{
+			auto actions = GetFirstChildArchive(store,"behavier.actions");
+			if (actions)
+			{
+				list<std::pair<string, string>> actionlist;
+				for (auto action = GetFirstChildArchive(actions,"action"); action != nullptr; action = GetNextSiblingArchive(action,"action"))
+				{
+					const char* asrc = nullptr, *aname = nullptr;
+					GetParam(action, "name", aname);
+					GetParam(action, "src", asrc);
+					if (aname && asrc)
+						actionlist.emplace_back(aname, asrc);
+				}
+				return LoadBehavierFbxs(name, arma, actionlist);
+			}
+		}
+		//else
+		//{
+		//	auto& behavier = assets.AddBehavier(node->Attribute("name"), new behavier_type);
+		//	attr = node->Attribute("armature");
+		//	if (attr[0] == '{')
+		//	{
+		//		string key(attr + 1, attr + strlen(attr) - 1);
+		//		auto& armature = assets.GetAsset<AssetDictionary::armature_type>(key);
+		//		behavier.SetArmature(armature);
+		//	}
+
+		//	auto clip = node->FirstChildElement("animation_clip");
+		//	while (clip)
+		//	{
+		//		auto& aniClip = ParseAnimation(assets, clip);
+		//		aniClip.SetArmature(behavier.Armature());
+		//		behavier.AddAnimationClip(clip->Attribute("name"), move(aniClip));
+		//		clip = node->NextSiblingElement("animation_clip");
+		//	}
+		//	return behavier;
+		//}
+	}
+	return nullptr;
 }
 
 inline std::wstring towstring(const string& str)
@@ -104,7 +320,7 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 	return meshes[key];
 }
 
-AssetDictionary::mesh_type * Causality::AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, bool importMaterial)
+AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, bool importMaterial)
 {
 	typedef DefaultSkinningModel model_type;
 
@@ -155,27 +371,27 @@ AssetDictionary::mesh_type * Causality::AssetDictionary::LoadFbxMesh(const strin
 	return meshes[key];
 }
 
-AssetDictionary::texture_type & AssetDictionary::LoadTexture(const string & key, const string & fileName)
+AssetDictionary::texture_type * AssetDictionary::LoadTexture(const string & key, const string & fileName)
 {
 	textures[key] = DirectX::Texture::CreateFromDDSFile(render_device.Get(), (texture_directory / fileName).c_str());
-	return *textures[key];
+	return textures[key];
 }
 
-AssetDictionary::armature_type & AssetDictionary::LoadArmature(const string & key, const string & fileName)
+AssetDictionary::armature_type * AssetDictionary::LoadArmature(const string & key, const string & fileName)
 {
 	std::ifstream file((mesh_directory / fileName).wstring());
 	auto pArmature = new armature_type(file);
 	assets[key] = pArmature;
-	return *pArmature;
+	return pArmature;
 }
 
-AssetDictionary::animation_clip_type& AssetDictionary::LoadAnimation(const string & key, const string & fileName)
+AssetDictionary::animation_clip_type* AssetDictionary::LoadAnimation(const string & key, const string & fileName)
 {
 	using clip_type = AssetDictionary::animation_clip_type;
 	std::ifstream stream((animation_directory / fileName).wstring());
 	if (stream.is_open())
 	{
-		animations.emplace(key, clip_type(stream));
+		animations.emplace(key, new clip_type(stream));
 		return animations[key];
 	}
 	return animations[key];
@@ -211,27 +427,27 @@ AssetDictionary::behavier_type * AssetDictionary::LoadBehavierFbxs(const string 
 	return behavier;
 }
 
-task<AssetDictionary::mesh_type*>& AssetDictionary::LoadMeshAsync(const string & key, const string & fileName)
-{
-	using namespace std::placeholders;
-	task<mesh_type*> load_mesh([this, key,fileName] () 
-	{ 
-		return this->LoadObjMesh(key,fileName);
-	});
-	loading_meshes[fileName] = std::move(load_mesh);
-	return loading_meshes[fileName];
-}
+//task<AssetDictionary::mesh_type*>& AssetDictionary::LoadMeshAsync(const string & key, const string & fileName)
+//{
+//	using namespace std::placeholders;
+//	task<mesh_type*> load_mesh([this, key,fileName] () 
+//	{ 
+//		return this->LoadObjMesh(key,fileName);
+//	});
+//	loading_meshes[fileName] = std::move(load_mesh);
+//	return loading_meshes[fileName];
+//}
+//
+//task<AssetDictionary::texture_type*>& AssetDictionary::LoadTextureAsync(const string & key, const string & fileName)
+//{
+//	task<texture_type*> loading_texture([this,key, fileName]() { return this->LoadTexture(key,fileName); });
+//	loading_textures[key] = std::move(loading_texture);
+//	return loading_textures[key];
+//}
 
-task<AssetDictionary::texture_type*>& AssetDictionary::LoadTextureAsync(const string & key, const string & fileName)
+AssetDictionary::audio_clip_type* AssetDictionary::GetAudio(const string & key)
 {
-	task<texture_type*> loading_texture([this,key, fileName]() { return &this->LoadTexture(key,fileName); });
-	loading_textures[key] = std::move(loading_texture);
-	return loading_textures[key];
-}
-
-AssetDictionary::audio_clip_type & AssetDictionary::GetAudio(const string & key)
-{
-	return GetAsset<audio_clip_type>(key);
+	return nullptr;// GetAsset<audio_clip_type>(key);
 }
 
 void AssetDictionary::SetRenderDevice(IRenderDevice * device)

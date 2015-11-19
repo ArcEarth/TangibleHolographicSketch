@@ -1,0 +1,14 @@
+boost 1.5.9+
+DirectXTK 
+CGAL
+FBX SDK 2015+
+Eigen 3.2.6+
+Kinect SDK 2.0+
+Leap SDK 2.31+
+Windows SDK 10.0.10240+
+
+bullet physics [optional]
+
+tinyXML2 (included)
+tinyObjLoader (included)
+

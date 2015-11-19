@@ -34,6 +34,8 @@ namespace Causality
 		Light();
 		Light(IRenderDevice* deivce, const UINT& shadowResolution = 1024U);
 
+		virtual void Parse(const ParamArchive* store) override;
+
 		// using Camera to implement IViewControl interface
 		using Camera::ViewCount;
 		using Camera::GetViewMatrix;

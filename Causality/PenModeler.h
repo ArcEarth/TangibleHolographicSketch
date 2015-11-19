@@ -1,9 +1,18 @@
 #pragma once
 #include "VisualObject.h"
 #include "SmartPointers.h"
+#include "Geometrics\SpaceCurve.h"
 
 namespace Causality
 {
+	using Geometrics::SpaceCurve;
+	struct ExtrutedGeometry
+	{
+		SpaceCurve curveFrom;
+		SpaceCurve curveTo;
+		SpaceCurve extrusionPath;
+	};
+
 	class PenModeler : public VisualObject
 	{
 	public:
@@ -36,8 +45,9 @@ namespace Causality
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);
 
 	private:
-		// dragable areas
-		vector<vector<Vector4, AlignedAllocator<XMVECTOR>>> m_patches;
+		// the curves we sketched on the surface
+		vector<SpaceCurve> m_curves;
+		vector<ExtrutedGeometry> m_extrusions;
 
 		PenModelerStateEnum m_state;
 

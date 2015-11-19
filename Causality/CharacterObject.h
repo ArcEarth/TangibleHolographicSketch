@@ -16,6 +16,8 @@ namespace Causality
 		CharacterObject();
 		~CharacterObject();
 
+		virtual void					Parse(const ParamArchive* store) override;
+
 		void							EnabeAutoDisplacement(bool is_enable);
 
 		const frame_type&				GetCurrentFrame() const;

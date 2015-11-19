@@ -15,23 +15,23 @@ using namespace Causality;
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::Scene;
-//using namespace Platform;
 using namespace boost;
-//std::unique_ptr<Causality::DXAppMain> m_main;
-std::wstring sceneFile = L"ArSketch.xml";
+
+//std::wstring sceneFile = L"ArSketch.xml";
+std::wstring sceneFile = L"SelectorScene.xml";
 
 
-Causality::IAppComponent::~IAppComponent()
+IAppComponent::~IAppComponent()
 {
 	Unregister();
 }
 
-void Causality::IAppComponent::Register()
+void IAppComponent::Register()
 {
 	App::Current()->RegisterComponent(this);
 }
 
-void Causality::IAppComponent::Unregister()
+void IAppComponent::Unregister()
 {
 	App::Current()->UnregisterComponent(this);
 }
@@ -51,16 +51,16 @@ App::~App()
 	}
 }
 
-Causality::Application::Application()
+Application::Application()
 {
 	hInstance = GetModuleHandle(NULL);
 }
 
-Causality::Application::~Application()
+Application::~Application()
 {
 }
 
-int Causality::Application::Run(const std::vector<std::string>& args)
+int Application::Run(const std::vector<std::string>& args)
 {
 	OnStartup(args);
 	while (!exitProposal)
@@ -91,7 +91,7 @@ void Application::Exit()
 	PostQuitMessage(0);
 }
 
-void Causality::App::OnStartup(const std::vector<std::string>& args)
+void App::OnStartup(const std::vector<std::string>& args)
 {
 	ResourceDirectory = filesystem::current_path() / "Resources";
 	
@@ -151,7 +151,7 @@ void Causality::App::OnStartup(const std::vector<std::string>& args)
 		cout << "[Scene] Loading ...";
 		CoInitializeEx(NULL, COINIT::COINIT_APARTMENTTHREADED);
 		
-		selector->LoadFromXML((ResourceDirectory / sceneFile).string());
+		selector->LoadFromFile((ResourceDirectory / sceneFile).string());
 
 		XMMATRIX kinectCoord = XMMatrixRigidTransform(
 			XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
@@ -164,7 +164,7 @@ void Causality::App::OnStartup(const std::vector<std::string>& args)
 	});
 }
 
-void Causality::App::RegisterComponent(IAppComponent *pComponent)
+void App::RegisterComponent(IAppComponent *pComponent)
 {
 	auto pCursorInteractive = pComponent->As<ICursorInteractive>();
 	auto& Regs = ComponentsEventRegisterations[pComponent];
@@ -193,7 +193,7 @@ void Causality::App::RegisterComponent(IAppComponent *pComponent)
 	//Components.push_back(std::move(pComponent));
 }
 
-void Causality::App::UnregisterComponent(IAppComponent * pComponent)
+void App::UnregisterComponent(IAppComponent * pComponent)
 {
 	auto itr = ComponentsEventRegisterations.find(pComponent);
 	if (itr != ComponentsEventRegisterations.end())
@@ -202,11 +202,11 @@ void Causality::App::UnregisterComponent(IAppComponent * pComponent)
 }
 
 
-void Causality::App::OnExit()
+void App::OnExit()
 {
 }
 
-void Causality::App::OnIdle()
+void App::OnIdle()
 {
 	//ComPtr<IBodyFrame> pBodyFrame;
 	//HRESULT hr = pKinect->BodyFrameReader()->AcquireLatestFrame(&pBodyFrame);
@@ -252,25 +252,25 @@ void Causality::App::OnIdle()
 	pDeviceResources->Present();
 }
 
-void Causality::App::OnDeviceLost()
+void App::OnDeviceLost()
 {
 }
 
-void Causality::App::OnDeviceRestored()
+void App::OnDeviceRestored()
 {
 }
 
-boost::filesystem::path Causality::App::GetResourcesDirectory() const
+boost::filesystem::path App::GetResourcesDirectory() const
 {
 	return ResourceDirectory.wstring();
 }
 
-void Causality::App::SetResourcesDirectory(const std::wstring & dir)
+void App::SetResourcesDirectory(const std::wstring & dir)
 {
 	ResourceDirectory = dir;
 }
 
-void XM_CALLCONV Causality::App::RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection)
+void XM_CALLCONV App::RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection)
 {
 	//auto pContext = pDeviceResources->GetD3DDeviceContext();
 	//for (auto& pScene : Components)

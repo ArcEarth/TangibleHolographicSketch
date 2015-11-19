@@ -844,10 +844,10 @@ namespace Causality
 					// Fix Quaternion 
 					{
 						using namespace DirectX;
-						XMVECTOR prev_axis = prev_axiss[nodeIdx].Load();
+						XMVECTOR prev_axis = XMLoad(prev_axiss[nodeIdx]);
 						float prev_ang = prev_angs[nodeIdx];
 
-						XMVECTOR q = bone.LclRotation.LoadA();
+						XMVECTOR q = XMLoadA(bone.LclRotation);
 						XMVECTOR axis;
 						float ang;
 						XMQuaternionToAxisAngle(&axis, &ang, q);
@@ -868,7 +868,7 @@ namespace Causality
 							)
 						{
 							q = -q;
-							bone.LclRotation.StoreA(q);
+							XMStoreA(bone.LclRotation,q);
 							XMQuaternionToAxisAngle(&axis, &ang, q);
 						}
 

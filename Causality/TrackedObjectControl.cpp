@@ -6,6 +6,8 @@ using namespace Causality;
 using namespace Causality::Devices;
 using namespace Math;
 
+REGISTER_SCENE_OBJECT_IN_PARSER(tracked_object, TrackedObjectControl);
+
 class TrackedObjectControl::Impl
 {
 public:

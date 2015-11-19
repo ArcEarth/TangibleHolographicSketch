@@ -58,7 +58,7 @@ namespace Causality
 
 		static uptr<Scene> LoadSceneFromXML(const string& xml_file);
 
-		void LoadFromXML(const string& xml_file);
+		void LoadFromFile(const string& xml_file);
 
 		static Scene& GetSceneForCurrentView();
 

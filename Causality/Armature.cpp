@@ -38,8 +38,8 @@ void Bone::UpdateGlobalData(const Bone & reference)
 	XMVECTOR Q = XMQuaternionMultiply(XMLoadA(LclRotation), ParQ);
 	XMVECTOR ParS = XMLoadA(reference.GblScaling);
 	XMVECTOR S = ParS * XMLoadA(LclScaling);
-	GblRotation.StoreA(Q);
-	GblScaling.StoreA(S);
+	XMStoreA(GblRotation,Q);
+	XMStoreA(GblScaling,S);
 
 	//OriginPosition = reference.GblTranslation; // should be a constriant
 
@@ -54,7 +54,7 @@ void Bone::UpdateGlobalData(const Bone & reference)
 	V = XMVector3Rotate(V, ParQ);//ParQ
 	V = XMVectorAdd(V, XMLoadA(reference.GblTranslation));
 
-	GblTranslation.StoreA(V);
+	XMStoreA(GblTranslation,V);
 }
 
 // This will assuming LclTranslation is not changed
@@ -65,7 +65,7 @@ void Bone::UpdateLocalData(const Bone& reference)
 	InvParQ = XMQuaternionInverse(InvParQ); // PqInv
 	XMVECTOR Q = GblRotation;
 	Q = XMQuaternionMultiply(Q, InvParQ);
-	LclRotation.StoreA(Q);
+	XMStoreA(LclRotation,Q);
 
 	Q = (XMVECTOR)GblTranslation - (XMVECTOR)reference.GblTranslation;
 	//Q = XMVector3Length(Q);
