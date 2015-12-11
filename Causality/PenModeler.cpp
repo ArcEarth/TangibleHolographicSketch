@@ -4,6 +4,7 @@
 #include "EigenExtension.h"
 #include <PrimitiveVisualizer.h>
 #include <Models.h>
+#include "Vicon.h"
 
 using namespace Causality;
 using namespace Devices;
@@ -17,13 +18,41 @@ class PenModeler::TrackedPen
 public:
 	TrackedPen(int idx)
 	{
+		m_idx = idx;
 		m_pLeap = LeapMotion::GetForCurrentView();
+		m_pVicon = IViconClient::GetFroCurrentView();
+		if (m_pVicon && !m_pVicon->IsStreaming())
+			m_pVicon.reset();
+
 		XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
 		m_pLeap->SetDeviceWorldCoord(world);
 		m_inkingStr = 0;
 		m_dragingStr = 0;
 		m_erasingStr = 0;
 	}
+
+	bool SetObjectCoordinate(SceneObject* object, double dt)
+	{
+		if (m_pVicon)
+			return SetObjectCoordinateFromVicon(object, dt);
+		else if (m_pLeap)
+			return SetObjectCoordinateFromLeap(object, dt);
+	}
+
+	bool SetObjectCoordinateFromVicon(SceneObject* object, double dt)
+	{
+		if (m_pVicon)
+		{
+			auto id = m_pVicon->GetRigidID(object->Name);
+			if (id == -1) return false;
+			auto rigid = m_pVicon->GetRigid(id);
+			object->SetPosition(rigid.Translation);
+			object->SetOrientation(rigid.Rotation);
+			return true;
+
+		}
+	}
+
 
 	bool SetObjectCoordinateFromLeap(SceneObject* object, double dt)
 	{
@@ -34,7 +63,7 @@ public:
 		auto& hands = frame.hands();
 		for (auto& hand : hands)
 		{
-			if (hand.isRight())
+			if (m_idx && hand.isRight() || !m_idx && hand.isLeft())
 			{
 				m_inkingStr = hand.pinchStrength();
 				m_dragingStr = hand.grabStrength();
@@ -50,7 +79,7 @@ public:
 				XMVECTOR xdir = hand.palmNormal().toVector3<Vector3>();
 				XMVECTOR ydir = indexFinger.bone(Leap::Bone::Type::TYPE_DISTAL).direction().toVector3<Vector3>();
 				//XMVECTOR ydir = hand.direction().toVector3<Vector3>();
-				XMVECTOR zdir = XMVector3Cross(xdir,ydir);
+				XMVECTOR zdir = XMVector3Cross(xdir, ydir);
 
 				XMMATRIX rot = XMMatrixIdentity();
 				rot.r[0] = xdir;
@@ -82,11 +111,13 @@ public:
 	}
 
 private:
+	int m_idx;
 	float m_inkingStr;
 	float m_erasingStr;
 	float m_dragingStr;
 
 	sptr<LeapMotion> m_pLeap;
+	sptr<IViconClient> m_pVicon;
 };
 
 PenModeler::PenModeler(int objectIdx)
@@ -159,12 +190,12 @@ void PenModeler::OnAirDragEnd()
 void PenModeler::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
-	bool visible = m_pTracker->SetObjectCoordinateFromLeap(this, time_delta.count());
+	bool visible = m_pTracker->SetObjectCoordinate(this, time_delta.count());
 	m_isVisable = visible;
 	if (m_isVisable)
 	{
 		XMVECTOR pos = m_Transform.LclTranslation;//GetPosition();
-		
+
 		if (m_state == None && m_pTracker->IsInking())
 		{
 			SurfaceSketchBegin(m_target);

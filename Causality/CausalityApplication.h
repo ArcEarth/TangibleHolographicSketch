@@ -24,6 +24,7 @@ namespace Causality
 		class OculusRift;
 		class LeapMotion;
 		class KinectSensor;
+		class IViconClient;
 	}
 
 	class App : public Application, public DirectX::IDeviceNotify
@@ -38,6 +39,7 @@ namespace Causality
 
 		// Inherited via Application
 		virtual void OnStartup(const std::vector<std::string>& args) override;
+		void SetupDevices();
 		virtual void OnExit() override;
 		virtual void OnIdle() override;
 
@@ -73,6 +75,7 @@ namespace Causality
 		sptr<Devices::OculusRift>						pRift;
 		sptr<Devices::KinectSensor>						pKinect;
 		sptr<Devices::LeapMotion>						pLeap;
+		sptr<Devices::IViconClient>						pVicon;
 
 		// Application Logic object
 		std::vector<std::unique_ptr<IAppComponent>>		Components;

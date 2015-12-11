@@ -1,6 +1,7 @@
 #pragma once
 #include "SceneObject.h"
 #include "SmartPointers.h"
+
 namespace Causality
 {
 

@@ -2,6 +2,9 @@
 #include "TrackedObjectControl.h"
 #include "LeapMotion.h"
 
+#include "Vicon.h"
+
+
 using namespace Causality;
 using namespace Causality::Devices;
 using namespace Math;
@@ -15,20 +18,37 @@ public:
 		: m_idx(idx)
 	{
 		m_pLeap = LeapMotion::GetForCurrentView();
+		m_pVicon = IViconClient::GetFroCurrentView();
+		if (m_pVicon && !m_pVicon->IsStreaming())
+			m_pVicon.reset();
+
 		XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
 		m_pLeap->SetDeviceWorldCoord(world);
 	}
 
-	void SetObjectCoordinateFromLeap(SceneObject* object, double dt)
+	bool SetObjectCoordinateFromVicon(SceneObject* object, double dt)
 	{
-		if (!object) return;
+		if (m_pVicon)
+		{
+			auto id = m_pVicon->GetRigidID(object->Name);
+			if (id == -1) return false;
+			auto rigid = m_pVicon->GetRigid(id);
+			object->SetPosition(rigid.Translation);
+			object->SetOrientation(rigid.Rotation);
+			return true;
+		}
+	}
+
+	bool SetObjectCoordinateFromLeap(SceneObject* object, double dt)
+	{
+		if (!object) return false;
 		auto frame = m_pLeap->Controller().frame();
 		XMMATRIX world = m_pLeap->ToWorldTransform();
 
 		auto& hands = frame.hands();
 		for (auto& hand : hands)
 		{
-			if (hand.isLeft() && m_idx == 0)
+			if (m_idx && hand.isRight() || !m_idx && hand.isLeft())
 			{
 				XMVECTOR pos = hand.palmPosition().toVector3<Vector3>();
 				pos = XMVector3TransformCoord(pos, world);
@@ -41,19 +61,20 @@ public:
 				rot.r[0] = xdir;
 				rot.r[1] = ydir;
 				rot.r[2] = zdir;
-				
+
 				//! HACK, since rot(world) == I
 				XMVECTOR rotQ = XMQuaternionRotationMatrix(rot);
 
 				object->SetPosition(pos);
 				object->SetOrientation(rotQ);
-				return;
+				return true;
 			}
 		}
+		return false;
 	}
 
-	sptr<LeapMotion> m_pLeap;
-
+	sptr<LeapMotion>	m_pLeap;
+	sptr<IViconClient>	m_pVicon;
 	int m_idx;
 };
 
@@ -69,5 +90,8 @@ TrackedObjectControl::~TrackedObjectControl()
 void TrackedObjectControl::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
-	m_pImpl->SetObjectCoordinateFromLeap(parent(),time_delta.count());
+	if (m_pImpl->m_pVicon)
+		m_pImpl->SetObjectCoordinateFromVicon(parent(), time_delta.count());
+	else
+		m_pImpl->SetObjectCoordinateFromLeap(parent(), time_delta.count());
 }

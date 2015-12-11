@@ -4,6 +4,7 @@
     <enviroment>
       <gravity>0,0,0</gravity>
     </enviroment>
+    <vicon sever_ip="172.21.12.10"></vicon>
   </scene.settings>
   <scene.assets>
     <mesh name="cube_mesh" src="cube.obj"></mesh>

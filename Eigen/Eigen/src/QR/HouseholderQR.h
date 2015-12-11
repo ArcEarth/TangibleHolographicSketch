@@ -53,8 +53,7 @@ template<typename _MatrixType> class HouseholderQR
     };
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
-    // FIXME should be int
-    typedef typename MatrixType::StorageIndex StorageIndex;
+    typedef typename MatrixType::Index Index;
     typedef Matrix<Scalar, RowsAtCompileTime, RowsAtCompileTime, (MatrixType::Flags&RowMajorBit) ? RowMajor : ColMajor, MaxRowsAtCompileTime, MaxRowsAtCompileTime> MatrixQType;
     typedef typename internal::plain_diag_type<MatrixType>::type HCoeffsType;
     typedef typename internal::plain_row_type<MatrixType>::type RowVectorType;
@@ -92,7 +91,7 @@ template<typename _MatrixType> class HouseholderQR
       * 
       * \sa compute()
       */
-    explicit HouseholderQR(const MatrixType& matrix)
+    HouseholderQR(const MatrixType& matrix)
       : m_qr(matrix.rows(), matrix.cols()),
         m_hCoeffs((std::min)(matrix.rows(),matrix.cols())),
         m_temp(matrix.cols()),
@@ -119,11 +118,11 @@ template<typename _MatrixType> class HouseholderQR
       * Output: \verbinclude HouseholderQR_solve.out
       */
     template<typename Rhs>
-    inline const Solve<HouseholderQR, Rhs>
+    inline const internal::solve_retval<HouseholderQR, Rhs>
     solve(const MatrixBase<Rhs>& b) const
     {
       eigen_assert(m_isInitialized && "HouseholderQR is not initialized.");
-      return Solve<HouseholderQR, Rhs>(*this, b.derived());
+      return internal::solve_retval<HouseholderQR, Rhs>(*this, b.derived());
     }
 
     /** This method returns an expression of the unitary matrix Q as a sequence of Householder transformations.
@@ -188,12 +187,6 @@ template<typename _MatrixType> class HouseholderQR
       * For advanced uses only.
       */
     const HCoeffsType& hCoeffs() const { return m_hCoeffs; }
-    
-    #ifndef EIGEN_PARSED_BY_DOXYGEN
-    template<typename RhsType, typename DstType>
-    EIGEN_DEVICE_FUNC
-    void _solve_impl(const RhsType &rhs, DstType &dst) const;
-    #endif
 
   protected:
     
@@ -231,6 +224,7 @@ namespace internal {
 template<typename MatrixQR, typename HCoeffs>
 void householder_qr_inplace_unblocked(MatrixQR& mat, HCoeffs& hCoeffs, typename MatrixQR::Scalar* tempData = 0)
 {
+  typedef typename MatrixQR::Index Index;
   typedef typename MatrixQR::Scalar Scalar;
   typedef typename MatrixQR::RealScalar RealScalar;
   Index rows = mat.rows();
@@ -269,9 +263,11 @@ template<typename MatrixQR, typename HCoeffs,
 struct householder_qr_inplace_blocked
 {
   // This is specialized for MKL-supported Scalar types in HouseholderQR_MKL.h
-  static void run(MatrixQR& mat, HCoeffs& hCoeffs, Index maxBlockSize=32,
+  static void run(MatrixQR& mat, HCoeffs& hCoeffs,
+      typename MatrixQR::Index maxBlockSize=32,
       typename MatrixQR::Scalar* tempData = 0)
   {
+    typedef typename MatrixQR::Index Index;
     typedef typename MatrixQR::Scalar Scalar;
     typedef Block<MatrixQR,Dynamic,Dynamic> BlockType;
 
@@ -293,8 +289,8 @@ struct householder_qr_inplace_blocked
     for (k = 0; k < size; k += blockSize)
     {
       Index bs = (std::min)(size-k,blockSize);  // actual size of the block
-      Index tcols = cols - k - bs;              // trailing columns
-      Index brows = rows-k;                     // rows of the block
+      Index tcols = cols - k - bs;            // trailing columns
+      Index brows = rows-k;                   // rows of the block
 
       // partition the matrix:
       //        A00 | A01 | A02
@@ -312,38 +308,43 @@ struct householder_qr_inplace_blocked
       if(tcols)
       {
         BlockType A21_22 = mat.block(k,k+bs,brows,tcols);
-        apply_block_householder_on_the_left(A21_22,A11_21,hCoeffsSegment, false); // false == backward
+        apply_block_householder_on_the_left(A21_22,A11_21,hCoeffsSegment.adjoint());
       }
     }
   }
 };
 
-} // end namespace internal
-
-#ifndef EIGEN_PARSED_BY_DOXYGEN
-template<typename _MatrixType>
-template<typename RhsType, typename DstType>
-void HouseholderQR<_MatrixType>::_solve_impl(const RhsType &rhs, DstType &dst) const
+template<typename _MatrixType, typename Rhs>
+struct solve_retval<HouseholderQR<_MatrixType>, Rhs>
+  : solve_retval_base<HouseholderQR<_MatrixType>, Rhs>
 {
-  const Index rank = (std::min)(rows(), cols());
-  eigen_assert(rhs.rows() == rows());
+  EIGEN_MAKE_SOLVE_HELPERS(HouseholderQR<_MatrixType>,Rhs)
 
-  typename RhsType::PlainObject c(rhs);
+  template<typename Dest> void evalTo(Dest& dst) const
+  {
+    const Index rows = dec().rows(), cols = dec().cols();
+    const Index rank = (std::min)(rows, cols);
+    eigen_assert(rhs().rows() == rows);
 
-  // Note that the matrix Q = H_0^* H_1^*... so its inverse is Q^* = (H_0 H_1 ...)^T
-  c.applyOnTheLeft(householderSequence(
-    m_qr.leftCols(rank),
-    m_hCoeffs.head(rank)).transpose()
-  );
+    typename Rhs::PlainObject c(rhs());
 
-  m_qr.topLeftCorner(rank, rank)
-      .template triangularView<Upper>()
-      .solveInPlace(c.topRows(rank));
+    // Note that the matrix Q = H_0^* H_1^*... so its inverse is Q^* = (H_0 H_1 ...)^T
+    c.applyOnTheLeft(householderSequence(
+      dec().matrixQR().leftCols(rank),
+      dec().hCoeffs().head(rank)).transpose()
+    );
 
-  dst.topRows(rank) = c.topRows(rank);
-  dst.bottomRows(cols()-rank).setZero();
-}
-#endif
+    dec().matrixQR()
+       .topLeftCorner(rank, rank)
+       .template triangularView<Upper>()
+       .solveInPlace(c.topRows(rank));
+
+    dst.topRows(rank) = c.topRows(rank);
+    dst.bottomRows(cols-rank).setZero();
+  }
+};
+
+} // end namespace internal
 
 /** Performs the QR factorization of the given matrix \a matrix. The result of
   * the factorization is stored into \c *this, and a reference to \c *this
@@ -371,7 +372,6 @@ HouseholderQR<MatrixType>& HouseholderQR<MatrixType>::compute(const MatrixType& 
   return *this;
 }
 
-#ifndef __CUDACC__
 /** \return the Householder QR decomposition of \c *this.
   *
   * \sa class HouseholderQR
@@ -382,7 +382,6 @@ MatrixBase<Derived>::householderQr() const
 {
   return HouseholderQR<PlainObject>(eval());
 }
-#endif // __CUDACC__
 
 } // end namespace Eigen
 

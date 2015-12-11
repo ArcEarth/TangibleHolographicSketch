@@ -1,5 +1,3 @@
-#include "..\Inc\Textures.h"
-#include "..\Inc\Textures.h"
 #include "pch_directX.h"
 #include "Textures.h"
 #include "DirectXHelper.h"

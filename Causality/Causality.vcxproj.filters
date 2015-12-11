@@ -125,6 +125,10 @@
     <ClCompile Include="CharacterBehavier.cpp">
       <Filter>Armature Animation</Filter>
     </ClCompile>
+    <ClCompile Include="Vicon.cpp">
+      <Filter>Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="StreamDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -267,6 +271,12 @@
     </ClInclude>
     <ClInclude Include="CharacterBehavier.h">
       <Filter>Armature Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Vicon.h">
+      <Filter>Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamDevice.h">
+      <Filter>Devices</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

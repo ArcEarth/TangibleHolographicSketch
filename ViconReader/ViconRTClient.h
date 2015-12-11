@@ -44,19 +44,19 @@ public:
 	void getChannelInfo(void);
 	double getFrame(void); 
 	
-	void showMarkers(int);
-	void showBodies(int);
-	const MarkerData &getMarkerData(const std::string &name);
-	BodyData getBodyData(std::string);
-	int getBodyChannelID(const std::string &name);
-	const BodyData &getBodyDataByID(int i);
+	void showMarkers(int) const;
+	void showBodies(int) const;
+	const MarkerData &getMarkerData(const std::string &name) const;
+	BodyData getBodyData(std::string) const;
+	int getBodyChannelID(const std::string &name) const;
+	const BodyData &getBodyDataByID(int i) const;
 
 	void record(int numframes);
 	void startRecording();
 	void stopRecording();
 
 	void update();
-	void printData();
+	void printData() const;
 
 	static const MarkerData EmptyMarkerData;
 

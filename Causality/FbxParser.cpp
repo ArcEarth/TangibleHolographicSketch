@@ -8,6 +8,7 @@
 
 namespace adaptors = boost::adaptors;
 namespace fbx = fbxsdk;
+using namespace fbx;
 
 //using namespace fbx;
 namespace Causality
@@ -36,7 +37,7 @@ namespace Causality
 	}
 	inline DirectX::Quaternion EularToDxQuaternion(const fbx::FbxVector4& eular)
 	{
-		FbxQuaternion fbxQ;
+		fbx::FbxQuaternion fbxQ;
 		fbxQ.ComposeSphericalXYZ(eular);
 		return ToDx(fbxQ);
 	}
@@ -142,7 +143,7 @@ namespace Causality
 			{
 				fbx::FbxStatus states;
 				auto pDeformer = pMesh->GetDeformer(i, &states);
-				assert(pDeformer->GetDeformerType() == FbxDeformer::eSkin);
+				assert(pDeformer->GetDeformerType() == fbx::FbxDeformer::eSkin);
 				fbx::FbxSkin* pSkin = static_cast<fbx::FbxSkin*>(pDeformer);
 				auto numClusters = pSkin->GetClusterCount();
 				numBones = m_BoneNodes.size();
@@ -443,7 +444,7 @@ namespace Causality
 
 
 			// Material
-			auto pPhong = pMesh->GetNode()->GetSrcObject<FbxSurfacePhong>();
+			auto pPhong = pMesh->GetNode()->GetSrcObject<fbx::FbxSurfacePhong>();
 			if (pPhong)
 			{
 				auto& mat = mesh.Material;
@@ -492,7 +493,7 @@ namespace Causality
 			}
 		}
 
-		void FindBoneAndMesh(FbxScene* lScene)
+		void FindBoneAndMesh(fbx::FbxScene* lScene)
 		{
 			m_MeshNodes.clear();
 			m_BoneNodes.clear();
@@ -506,7 +507,7 @@ namespace Causality
 			ReorderBoneNodeByArmature();
 		}
 
-		void ParseNode(FbxNode* pNode) {
+		void ParseNode(fbx::FbxNode* pNode) {
 			const char* nodeName = pNode->GetName();
 			auto translation = pNode->LclTranslation.Get();
 			auto rotation = pNode->LclRotation.Get();

@@ -71,7 +71,7 @@ template<typename _MatrixType> class HessenbergDecomposition
 
     /** \brief Scalar type for matrices of type #MatrixType. */
     typedef typename MatrixType::Scalar Scalar;
-    typedef Eigen::Index Index; ///< \deprecated since Eigen 3.3
+    typedef typename MatrixType::Index Index;
 
     /** \brief Type for vector of Householder coefficients.
       *
@@ -97,7 +97,7 @@ template<typename _MatrixType> class HessenbergDecomposition
       *
       * \sa compute() for an example.
       */
-    explicit HessenbergDecomposition(Index size = Size==Dynamic ? 2 : Size)
+    HessenbergDecomposition(Index size = Size==Dynamic ? 2 : Size)
       : m_matrix(size,size),
         m_temp(size),
         m_isInitialized(false)
@@ -115,7 +115,7 @@ template<typename _MatrixType> class HessenbergDecomposition
       *
       * \sa matrixH() for an example.
       */
-    explicit HessenbergDecomposition(const MatrixType& matrix)
+    HessenbergDecomposition(const MatrixType& matrix)
       : m_matrix(matrix),
         m_temp(matrix.rows()),
         m_isInitialized(false)
@@ -337,6 +337,7 @@ namespace internal {
 template<typename MatrixType> struct HessenbergDecompositionMatrixHReturnType
 : public ReturnByValue<HessenbergDecompositionMatrixHReturnType<MatrixType> >
 {
+    typedef typename MatrixType::Index Index;
   public:
     /** \brief Constructor.
       *

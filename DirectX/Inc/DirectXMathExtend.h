@@ -80,11 +80,11 @@ namespace DirectX
 	{
 		return XMLoadFloat3A(reinterpret_cast<const XMFLOAT3A*>(pF3A));
 	}
-	inline void XM_CALLCONV XMStoreFloat4(float* pF4,FXMVECTOR V)
+	inline void XM_CALLCONV XMStoreFloat4(float* pF4, FXMVECTOR V)
 	{
 		return XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(pF4), V);
 	}
-	inline void XM_CALLCONV XMStoreFloat3(float* pF3,FXMVECTOR V)
+	inline void XM_CALLCONV XMStoreFloat3(float* pF3, FXMVECTOR V)
 	{
 		return XMStoreFloat3(reinterpret_cast<XMFLOAT3*>(pF3), V);
 	}
@@ -231,7 +231,7 @@ namespace DirectX
 		struct rebind { typedef AlignedAllocator<_T2, _Align_Boundary> other; };
 	};
 
-		// Aligned Aloocator for holding XMVECTOR/16 btyes aligned data
+	// Aligned Aloocator for holding XMVECTOR/16 btyes aligned data
 	typedef AlignedAllocator<XMVECTOR> XMAllocator;
 
 #endif //DIRECTX_ALLIGNED_NEW
@@ -1429,6 +1429,14 @@ namespace DirectX
 		}
 	};
 
+	template <class Derived>
+	inline Vector3 operator*(const Vector3& v, const TransformBase<Derived>& transform)
+	{
+		XMVECTOR V = XMLoad(v);
+		V = XMVector3TransformCoord(V, transform.TransformMatrix());
+		return Vector3(V);
+	}
+
 	XM_ALIGNATTR
 	struct RotationTransform : public TransformBase<RotationTransform>
 	{
@@ -1462,6 +1470,15 @@ namespace DirectX
 			//Rotation.StoreA(rot);
 		}
 	};
+
+	inline Vector3 operator*(const Vector3& v, const RotationTransform& transform)
+	{
+		XMVECTOR V = XMLoad(v);
+		XMVECTOR Q = XMLoad(transform.Rotation);
+		V = XMVector3Rotate(V, Q);
+		return Vector3(V);
+	}
+
 	XM_ALIGNATTR
 	struct TranslationTransform : public TransformBase<TranslationTransform>
 	{
@@ -1488,6 +1505,12 @@ namespace DirectX
 			//Translation.StoreA(tra);
 		}
 	};
+
+	inline Vector3 operator*(const Vector3& v, const TranslationTransform& transform)
+	{
+		return v + transform.Translation;
+	}
+
 	XM_ALIGNATTR
 	struct ScaleTransform : public TransformBase<ScaleTransform>
 	{
@@ -1513,6 +1536,11 @@ namespace DirectX
 			XMStoreA(Scale, scl);
 		}
 	};
+
+	inline Vector3 operator*(const Vector3& v, const ScaleTransform& transform)
+	{
+		return XMLoad(v) * XMLoadA(transform.Scale);
+	}
 
 	XM_ALIGNATTR
 		// Composition of Translation and Rotation
@@ -1621,6 +1649,16 @@ namespace DirectX
 			return (PosDiff.LengthSquared() <= tEpsilon*tEpsilon && AngDiff <= rEpsilon);
 		}
 	};
+
+	inline Vector3 operator*(const Vector3& v, const RigidTransform& transform)
+	{
+		XMVECTOR V = XMLoad(v);
+		XMVECTOR Q = XMLoadA(transform.Rotation);
+		V = XMVector3Rotate(V, Q);
+		Q = XMLoadA(transform.Translation);
+		V += Q;
+		return Vector3(V);
+	}
 
 	XM_ALIGNATTR
 		// (Scale*)-Rotation-Translation
@@ -1830,11 +1868,24 @@ namespace DirectX
 			out.Scale = XMVectorLerpV(XMLoadA(t0.Scale), XMLoadA(t1.Scale), tv);
 			out.Translation = XMVectorLerpV(XMLoadA(t0.Translation), XMLoadA(t1.Translation), tv);
 			out.Rotation = XMQuaternionSlerpV(XMLoadA(t0.Rotation), XMLoadA(t1.Rotation), tv);
-		}	
-};
+		}
+	};
+
+
+	inline Vector3 operator*(const Vector3& v, const IsometricTransform& transform)
+	{
+		XMVECTOR V = XMLoad(v);
+		XMVECTOR Q = XMLoadA(transform.Scale);
+		V = XMVectorMultiply(V, Q);
+		Q = XMLoadA(transform.Rotation);
+		V = XMVector3Rotate(V, Q);
+		Q = XMLoadA(transform.Translation);
+		V = XMVectorAdd(V,Q);
+		return Vector3(V);
+	}
 
 	XM_ALIGNATTR
-	struct LinearTransform : public TransformBase<LinearTransform> , public Matrix4x4
+	struct LinearTransform : public TransformBase<LinearTransform>, public Matrix4x4
 	{
 		using Matrix4x4::operator();
 		using Matrix4x4::operator+=;
@@ -1971,8 +2022,7 @@ namespace DirectX
 // Extending std lib for output
 #ifdef _OSTREAM_
 #include <iomanip>
-namespace std
-{
+
 	inline std::ostream& operator << (std::ostream& lhs, const DirectX::XMFLOAT2& rhs)
 	{
 		lhs << '(' << std::setw(6) << setiosflags(std::ios::fixed) << std::setprecision(3) << rhs.x
@@ -2006,7 +2056,7 @@ namespace std
 			<< "," << std::setw(6) << setiosflags(std::ios::fixed) << std::setprecision(3) << theta << "*Pi)";
 		return lhs;
 	};
-}
+
 #endif
 
 #endif

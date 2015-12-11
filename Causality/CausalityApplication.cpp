@@ -9,6 +9,7 @@
 #include "Kinect.h"
 #include "OculusRift.h"
 #include "LeapMotion.h"
+#include "Vicon.h"
 
 using namespace Causality;
 using namespace std;
@@ -17,7 +18,7 @@ using namespace DirectX::Scene;
 
 wstring g_SceneFile = L"ArSketch.xml";
 wstring g_ResourcesDirectory(L"D:\\User\\Yupeng\\Documents\\GitHub\\PPARM\\Assets");
-
+string	g_ViconSeverIP = "172.21.12.10";
 //std::wstring sceneFile = L"SelectorScene.xml";
 
 
@@ -133,13 +134,7 @@ void App::OnStartup(const std::vector<std::string>& args)
 	//		pRift = nullptr;
 	//}
 
-	pLeap = Devices::LeapMotion::GetForCurrentView();
-	pKinect = Devices::KinectSensor::GetForCurrentView();
-	XMMATRIX kinectCoord = XMMatrixRigidTransform(
-		XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
-		XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
-	pKinect->SetDeviceCoordinate(kinectCoord);
-
+	SetupDevices();
 	//auto loadingScene = new Scene;
 	//Scenes.emplace_back(loadingScene);
 	//loadingScene->SetRenderDeviceAndContext(pDevice, pContext);
@@ -157,6 +152,26 @@ void App::OnStartup(const std::vector<std::string>& args)
 		CoUninitialize();
 		cout << "[Scene] Loading Finished!";
 	});
+}
+
+void Causality::App::SetupDevices()
+{
+	pVicon = Devices::IViconClient::Create(g_ViconSeverIP);
+	if (pVicon)
+		pVicon->Start();
+
+	pLeap = Devices::LeapMotion::GetForCurrentView();
+
+	pKinect = Devices::KinectSensor::GetForCurrentView();
+
+	if (pKinect)
+	{
+		XMMATRIX kinectCoord = XMMatrixRigidTransform(
+			XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
+			XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
+
+		pKinect->SetDeviceCoordinate(kinectCoord);
+	}
 }
 
 void App::RegisterComponent(IAppComponent *pComponent)
@@ -203,33 +218,12 @@ void App::OnExit()
 
 void App::OnIdle()
 {
-	//ComPtr<IBodyFrame> pBodyFrame;
-	//HRESULT hr = pKinect->BodyFrameReader()->AcquireLatestFrame(&pBodyFrame);
-	//if (SUCCEEDED(hr))
-	//{
-	//	IBody *pBodys[6];
-	//	hr = pBodyFrame->GetAndRefreshBodyData(6, pBodys);
-	//	INT64 nTime = 0;
-	//	hr = pBodyFrame->get_RelativeTime(&nTime);
-
-	//	int count = 0;
-	//	while (pBodys[count] != nullptr && count < 6)
-	//		count++;
-
-	//	if (hr)
-	//		for (const auto& pComponent : Components)
-	//		{
-	//			auto pBodyInteractive = pComponent->As<IUserBodyInteractive>();
-	//			if (pBodyInteractive)
-	//			{
-	//				pBodyInteractive->OnBodyFrameUpdated(nTime, count, pBodys);
-	//			}
-	//		}
-	//}
-
-	// Processing & Distribute Extra Input
 	if (pLeap)
 		pLeap->PullFrame();
+
+	if (pVicon)
+		pVicon->Update();
+
 	//if (pKinect)
 	//	pKinect->ProcessFrame();
 

@@ -127,7 +127,7 @@
       <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2013\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
+      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
 copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
@@ -157,7 +157,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
       <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2013\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
+      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
 copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
@@ -182,6 +182,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
       <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>__AVX__</UndefinePreprocessorDefinitions>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,7 +192,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
       <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2013\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
+      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
 copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
@@ -226,7 +227,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
       <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2013\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
+      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
 copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
@@ -275,7 +276,9 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     </ClCompile>
     <ClCompile Include="SkinningModelFromFbx.cpp" />
     <ClCompile Include="SkyDome.cpp" />
+    <ClCompile Include="StreamDevice.cpp" />
     <ClCompile Include="TrackedObjectControl.cpp" />
+    <ClCompile Include="Vicon.cpp" />
     <ClCompile Include="VisualObject.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -310,8 +313,10 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="Math3D.h" />
     <ClInclude Include="SmartPointers.h" />
+    <ClInclude Include="StreamDevice.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="TrackedObjectControl.h" />
+    <ClInclude Include="Vicon.h" />
     <ClInclude Include="VisualObject.h" />
     <ClInclude Include="OculusRift.h" />
     <ClInclude Include="pch_bcl.h" />

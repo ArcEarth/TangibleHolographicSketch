@@ -122,7 +122,10 @@ public:
 		ClientCodes::CompareNames comparitor;
 		return comparitor(Name, a_rName);
 	}
-
+	bool operator!=(const std::string & a_rName)
+	{
+		return !this->operator==(a_rName);
+	}
 };
 
 
@@ -208,6 +211,11 @@ public:
 	{
 		ClientCodes::CompareNames comparitor;
 		return comparitor(Name, a_rName);
+	}
+
+	bool operator!=(const std::string & a_rName)
+	{
+		return !this->operator==(a_rName);
 	}
 };
 
