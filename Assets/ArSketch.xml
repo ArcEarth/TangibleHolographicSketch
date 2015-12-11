@@ -19,7 +19,7 @@
         <first_person_keyboard_mouse_control />
       </hmd_camera>
 
-      <skydome name="sky" background="Skydome\Sunny_01B.dds"/>
+      <skydome name="sky" background="Sunny_01B.dds"/>
 
       <coordinate_axis/>
 

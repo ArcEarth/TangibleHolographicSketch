@@ -175,11 +175,11 @@ void PhongMaterial::SetupEffect(IEffect *pEffect) const
 	auto pPhongEffect = dynamic_cast<IEffectPhongMaterial*>(pEffect);
 	if (pPhongEffect)
 	{
-		pPhongEffect->SetAlpha(GetAlpha());
 		pPhongEffect->SetDiffuseColor(DiffuseColor);
 		pPhongEffect->SetEmissiveColor(EmissiveColor);
 		pPhongEffect->SetSpecularColor(SpecularColor);
 		pPhongEffect->SetSpecularPower(SpecularColor.A());
+		pPhongEffect->SetAlpha(GetAlpha());
 		pPhongEffect->SetDiffuseMap(GetDiffuseMap());
 		pPhongEffect->SetNormalMap(GetNormalMap());
 		pPhongEffect->SetSpecularMap(GetSpecularMap());
@@ -303,7 +303,7 @@ ID3D11ShaderResourceView * PhongMaterial::GetNormalMap() const
 
 ID3D11ShaderResourceView * PhongMaterial::GetSpecularMap() const
 {
-	return nullptr;
+	return SpecularMap.Get();
 }
 
 ID3D11ShaderResourceView * PhongMaterial::GetDisplaceMap() const

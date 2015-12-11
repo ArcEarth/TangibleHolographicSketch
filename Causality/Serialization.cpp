@@ -16,114 +16,132 @@ namespace Causality
 		{
 			auto str = store->Attribute(name);
 			if (str != nullptr)
+			{
 				param = str;
+				return true;
+			}
 			else
-				return false;
+			{
+				store = store->FirstChildElement(name);
+				if (store != nullptr)
+				{
+					param = store->GetText();
+					return true;
+				}
+			}
+			return false;
 		}
 
 		bool GetString(const ParamArchive * store, const char * name, string & param)
 		{
 			auto str = store->Attribute(name);
 			if (str != nullptr)
+			{
 				param = str;
+				return true;
+			}
 			else
-				return false;
+			{
+				store = store->FirstChildElement(name);
+				if (store != nullptr)
+				{
+					param = store->GetText();
+					return true;
+				}
+			}
+			return false;
 		}
+
+#define GetTypedParam(Type) \
+			if (store->Query##Type##Attribute(name, &param)) \
+			{ \
+				store = store->FirstChildElement(name); \
+				return store != nullptr && !store->Query##Type##Text(&param); \
+			} \
+			return false;
 
 		bool GetBool(const ParamArchive * store, const char * name, bool & param)
 		{
-			return !store->QueryBoolAttribute(name, &param);
+			GetTypedParam(Bool);
 		}
 
 		bool GetFloat(const ParamArchive * store, const char * name, float & param)
 		{
-			return !store->QueryFloatAttribute(name, &param);
+			GetTypedParam(Float);
 		}
 
 		bool GetDouble(const ParamArchive * store, const char * name, double & param)
 		{
-			return !store->QueryDoubleAttribute(name, &param);
+			GetTypedParam(Double);
 		}
 
 		bool GetInt(const ParamArchive * store, const char * name, int & param)
 		{
-			return !store->QueryIntAttribute(name, &param);
+			GetTypedParam(Int);
 		}
 
 		bool GetUint(const ParamArchive * store, const char * name, unsigned & param)
 		{
-			return !store->QueryUnsignedAttribute(name, &param);
+			GetTypedParam(Unsigned);
 		}
 
-		bool GetVector2(const ParamArchive * store, const char * name, Vector2 & param)
+		bool ParseVector2(const char* attrval, Vector2 & param)
 		{
-			auto attrval = store->Attribute(name);
-			if (attrval != nullptr)
+			if (attrval == nullptr) return false;
+			string str(attrval);
+			if (str.find_first_of(',') != string::npos)
 			{
-				string str(attrval);
-				if (str.find_first_of(',') != string::npos)
-				{
-					stringstream ss(str);
-					char ch;
-					ss >> param.x >> ch >> param.y;
-					return true;
-				}
-				else
-				{
-					param.x = param.y = (float)atof(attrval); // replicate
-					return true;
-				}
+				stringstream ss(str);
+				char ch;
+				ss >> param.x >> ch >> param.y;
+				return true;
 			}
-			return false;
-		}
-
-		bool GetVector3(const ParamArchive * store, const char * name, Vector3 & param)
-		{
-			auto attrval = store->Attribute(name);
-			if (attrval != nullptr)
+			else
 			{
-				string str(attrval);
-				if (str.find_first_of(',') != string::npos)
-				{
-					stringstream ss(str);
-					char ch;
-					ss >> param.x >> ch >> param.y >> ch >> param.z;
-					return true;
-				}
-				else
-				{
-					param.x = param.y = param.z = (float)atof(attrval); // replicate
-					return true;
-				}
+				param.x = param.y = (float)atof(attrval); // replicate
+				return true;
 			}
-			return false;
 		}
 
-		bool GetVector4(const ParamArchive * store, const char * name, Vector4 & param)
+		bool ParseVector3(const char* attrval, Vector3 & param)
 		{
-			auto attrval = store->Attribute(name);
-			if (attrval != nullptr)
+			if (attrval == nullptr) return false;
+			string str(attrval);
+			if (str.find_first_of(',') != string::npos)
 			{
-				string str(attrval);
-				if (str.find_first_of(',') != string::npos)
-				{
-					stringstream ss(str);
-					char ch;
-					ss >> param.x >> ch >> param.y >> ch >> param.z >> ch >> param.w;
-					return true;
-				}
-				else
-				{
-					param.x = param.y = param.z = param.w = (float)atof(attrval); // replicate
-					return true;
-				}
+				stringstream ss(str);
+				char ch;
+				ss >> param.x >> ch >> param.y >> ch >> param.z;
+				return true;
 			}
-			return false;
+			else
+			{
+				param.x = param.y = param.z = (float)atof(attrval); // replicate
+				return true;
+			}
 		}
 
-		bool GetColor(const ParamArchive * store, const char * name, Color & param)
+		bool ParseVector4(const char* attrval, Vector4 & param)
 		{
-			auto attrval = store->Attribute(name);
+			if (attrval == nullptr) return false;
+			string str(attrval);
+			if (str.find_first_of(',') != string::npos)
+			{
+				stringstream ss(str);
+				char ch;
+				ss >> param.x >> ch >> param.y >> ch >> param.z >> ch >> param.w;
+				return true;
+			}
+			else
+			{
+				param.x = param.y = param.z = param.w = (float)atof(attrval); // replicate
+				return true;
+			}
+		}
+
+		bool ParseColor(const char* attrval, Color & param)
+		{
+			if (attrval == nullptr) return false;
 			if (attrval != nullptr && attrval[0] == '#') // for hex code literal
 			{
 				char* end;
@@ -136,10 +154,32 @@ namespace Causality
 			}
 			else if (attrval != nullptr && (std::isdigit(attrval[0]) || attrval[0] == '.')) // for Vector4 literal
 			{
-				Serialization::GetVector4(store, name, reinterpret_cast<Vector4&>(param));
-				return true;
+				return ParseVector4(attrval, reinterpret_cast<Vector4&>(param));
 			}
-			return false;
+		}
+
+		bool GetVector2(const ParamArchive * store, const char * name, Vector2 & param)
+		{
+			const char* attrval = nullptr;
+			return GetString(store, name, attrval) && ParseVector2(attrval, param);
+		}
+
+		bool GetVector3(const ParamArchive * store, const char * name, Vector3 & param)
+		{
+			const char* attrval = nullptr;
+			return GetString(store, name, attrval) && ParseVector3(attrval, param);
+		}
+
+		bool GetVector4(const ParamArchive * store, const char * name, Vector4 & param)
+		{
+			const char* attrval = nullptr;
+			return GetString(store, name, attrval) && ParseVector4(attrval, param);
+		}
+
+		bool GetColor(const ParamArchive * store, const char * name, Color & param)
+		{
+			const char* attrval = nullptr;
+			return GetString(store, name, attrval) && ParseColor(attrval, param);
 		}
 	}
 

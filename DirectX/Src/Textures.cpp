@@ -1,3 +1,5 @@
+#include "..\Inc\Textures.h"
+#include "..\Inc\Textures.h"
 #include "pch_directX.h"
 #include "Textures.h"
 #include "DirectXHelper.h"
@@ -79,9 +81,9 @@ Texture2D::Texture2D(_In_ ID3D11Device* pDevice, _In_ unsigned int Width, _In_ u
 		TextureDesc.ArraySize = 6;
 
 	HRESULT hr = pDevice->CreateTexture2D(&TextureDesc, NULL, &m_pTexture);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 	hr = m_pTexture.As<ID3D11Resource>(&m_pResource);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 
 	if ((bindFlags & D3D11_BIND_DEPTH_STENCIL) || !(bindFlags & D3D11_BIND_SHADER_RESOURCE) || DXGIFormatTraits::IsTypeless(format))
 	{
@@ -95,7 +97,7 @@ Texture2D::Texture2D(_In_ ID3D11Device* pDevice, _In_ unsigned int Width, _In_ u
 	CD3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc(m_pTexture.Get(), srvDim);
 
 	hr = pDevice->CreateShaderResourceView(m_pResource.Get(), &SRVDesc, &m_pShaderResourceView);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 }
 
 Texture2D::Texture2D(ID3D11Device * pDevice, const wchar_t * szFileName, ID3D11DeviceContext * pDeviceContext, size_t maxsize, D3D11_USAGE usage, unsigned int bindFlags, unsigned int cpuAccessFlags, unsigned int miscFlags, bool forceSRGB)
@@ -108,7 +110,7 @@ Texture2D::Texture2D(ID3D11Texture2D* pTexture, ID3D11ShaderResourceView* pResou
 	assert(pTexture);
 	m_pTexture = pTexture;
 	HRESULT hr = m_pTexture.As<ID3D11Resource>(&m_pResource);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 
 	m_pTexture->GetDesc(&m_Description);
 	m_pShaderResourceView = pResourceView;
@@ -119,7 +121,7 @@ Texture2D::Texture2D(ID3D11ShaderResourceView* pResourceView)
 	ComPtr<ID3D11Resource> pResource;
 	pResourceView->GetResource(&pResource);
 	HRESULT hr = pResource.As(&m_pTexture);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 	m_pTexture->GetDesc(&m_Description);
 	m_pShaderResourceView = pResourceView;
 	m_pResource = std::move(pResource);
@@ -154,11 +156,11 @@ ID2D1Bitmap1* RenderableTexture2D::CreateD2DBitmapView(ID2D1DeviceContext *pCont
 			);
 
 	ComPtr<IDXGISurface2> dxgiSurface;
-	DirectX::ThrowIfFailed(
+	ThrowIfFailed(
 		m_pTexture.As(&dxgiSurface)
 	);
 
-	DirectX::ThrowIfFailed(
+	ThrowIfFailed(
 		pContext->CreateBitmapFromDxgiSurface(
 			dxgiSurface.Get(),
 			&bitmapProperties,
@@ -172,6 +174,19 @@ ID2D1Bitmap1* RenderableTexture2D::CreateD2DBitmapView(ID2D1DeviceContext *pCont
 
 
 
+void * DynamicTexture2D::Map(ID3D11DeviceContext * pContext)
+{
+	D3D11_MAPPED_SUBRESOURCE Resouce;
+	auto hr = pContext->Map(m_pResource.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Resouce);
+	ThrowIfFailed(hr);
+	return Resouce.pData;
+}
+
+void DynamicTexture2D::Unmap(ID3D11DeviceContext * pContext)
+{
+	pContext->Unmap(m_pResource.Get(),0);
+}
+
 void DynamicTexture2D::SetData(ID3D11DeviceContext* pContext, const void* Raw_Data, size_t element_size)
 {
 	assert(element_size == 0 || element_size == DXGIFormatTraits::SizeofDXGIFormatInBytes(Format()));
@@ -182,7 +197,7 @@ void DynamicTexture2D::SetData(ID3D11DeviceContext* pContext, const void* Raw_Da
 
 	D3D11_MAPPED_SUBRESOURCE Resouce;
 	auto hr = pContext->Map(m_pResource.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &Resouce);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 
 	memcpy(Resouce.pData, Raw_Data, element_size * Width() * Height());
 	pContext->Unmap(m_pResource.Get(), 0);
@@ -205,7 +220,7 @@ RenderableTexture2D::RenderableTexture2D(_In_ ID3D11Device* pDevice, _In_ unsign
 
 	// Create the render target view.
 	HRESULT hr = pDevice->CreateRenderTargetView(m_pResource.Get(), nullptr, &m_pRenderTargetView);
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 
 	m_pD2dBitmap = nullptr;
 }
@@ -218,7 +233,7 @@ RenderableTexture2D::RenderableTexture2D(ID3D11Texture2D* pTexture, ID3D11Render
 	m_pD2dBitmap = nullptr;
 }
 
-inline DirectX::RenderableTexture2D::RenderableTexture2D(ID3D11RenderTargetView * pRenderTargetView)
+inline RenderableTexture2D::RenderableTexture2D(ID3D11RenderTargetView * pRenderTargetView)
 {
 	m_pRenderTargetView = pRenderTargetView;
 	pRenderTargetView->GetResource(&m_pResource);
@@ -286,13 +301,13 @@ DepthStencilBuffer& DepthStencilBuffer::operator = (DepthStencilBuffer&&source)
 
 
 
-DirectX::DepthStencilBuffer::DepthStencilBuffer(ID3D11Texture2D * pTexture, ID3D11DepthStencilView * pDSV)
+DepthStencilBuffer::DepthStencilBuffer(ID3D11Texture2D * pTexture, ID3D11DepthStencilView * pDSV)
 	: Texture2D(pTexture, nullptr)
 {
 	m_pDepthStencilView = pDSV;
 }
 
-DirectX::DepthStencilBuffer::DepthStencilBuffer(ID3D11DepthStencilView * pDSV)
+DepthStencilBuffer::DepthStencilBuffer(ID3D11DepthStencilView * pDSV)
 {
 	m_pDepthStencilView = pDSV;
 	m_pDepthStencilView->GetResource(&m_pResource);
@@ -311,21 +326,21 @@ DepthStencilBuffer::DepthStencilBuffer(ID3D11Device* pDevice, unsigned int Width
 	CD3D11_DEPTH_STENCIL_VIEW_DESC DSVDesc(D3D11_DSV_DIMENSION_TEXTURE2D, Format);
 	// Create the depth stencil view.
 	HRESULT hr = pDevice->CreateDepthStencilView(pTexture, MultiSampleCount > 1 ? NULL : &DSVDesc, m_pDepthStencilView.GetAddressOf());
-	DirectX::ThrowIfFailed(hr);
+	ThrowIfFailed(hr);
 
 	if (MultiSampleCount <= 1)
 	{
 		CD3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc(m_pTexture.Get(), D3D11_SRV_DIMENSION_TEXTURE2D, DXGIConvertFormatDSVToSRV(Format));
 		// Create shader resources view
 		hr = pDevice->CreateShaderResourceView(m_pResource.Get(), &SRVDesc, &m_pShaderResourceView);
-		DirectX::ThrowIfFailed(hr);
+		ThrowIfFailed(hr);
 	}
 }
 
 Texture::Texture()
 {}
 
-DirectX::Texture::Texture(ID3D11Resource * pResource, ID3D11ShaderResourceView * pResourceView)
+Texture::Texture(ID3D11Resource * pResource, ID3D11ShaderResourceView * pResourceView)
 {
 	m_pResource = pResource;
 	m_pShaderResourceView = pResourceView;
@@ -351,7 +366,7 @@ RenderableTexture2D::~RenderableTexture2D()
 void RenderableTexture2D::Clear(ID3D11DeviceContext * pDeviceContext, FXMVECTOR Color)
 {
 	XMFLOAT4A col;
-	DirectX::XMStoreFloat4A(&col, Color);
+	XMStoreFloat4A(&col, Color);
 	if (m_pRenderTargetView)
 		pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), &col.x);
 }
@@ -377,7 +392,7 @@ Texture* Texture::CreateFromDDSFile(_In_ ID3D11Device* pDevice, _In_z_ const wch
 	ID3D11ShaderResourceView *pView;
 	if (exName == L"DDS")
 	{
-		hr = DirectX::CreateDDSTextureFromFileEx(pDevice, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &pResource, &pView);
+		hr = CreateDDSTextureFromFileEx(pDevice, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &pResource, &pView);
 
 		if (FAILED(hr))
 			return nullptr;
@@ -438,7 +453,7 @@ bool Texture2D::CreateFromWICFile(_In_ ID3D11Device* pDevice,
 	Texture2D& texture = *this;
 	if (exName == L"DDS")
 	{
-		hr = DirectX::CreateDDSTextureFromFileEx(pDevice, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &texture.m_pResource, &texture.m_pShaderResourceView);
+		hr = CreateDDSTextureFromFileEx(pDevice, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &texture.m_pResource, &texture.m_pShaderResourceView);
 		ThrowIfFailed(hr);
 		D3D11_RESOURCE_DIMENSION dimension;
 		texture.m_pResource->GetType(&dimension);
@@ -456,7 +471,7 @@ bool Texture2D::CreateFromWICFile(_In_ ID3D11Device* pDevice,
 	}
 	else
 	{
-		hr = DirectX::CreateWICTextureFromFileEx(pDevice, pDeviceContext, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &texture.m_pResource, &texture.m_pShaderResourceView);
+		hr = CreateWICTextureFromFileEx(pDevice, pDeviceContext, szFileName, maxsize, usage, bindFlags, cpuAccessFlags, miscFlags, forceSRGB, &texture.m_pResource, &texture.m_pShaderResourceView);
 		ThrowIfFailed(hr);
 		ID3D11Texture2D* pTexInterface;
 		texture.Resource()->QueryInterface<ID3D11Texture2D>(&pTexInterface);
@@ -758,9 +773,16 @@ StagingTexture2D::StagingTexture2D(ID3D11Texture2D* pTexture)
 {
 }
 
-DirectX::RenderTarget::RenderTarget() {}
+RenderTarget::RenderTarget() {
+	m_Viewport.TopLeftX = 0;
+	m_Viewport.TopLeftY = 0;
+	m_Viewport.Width = 0;
+	m_Viewport.Height = 0;
+	m_Viewport.MinDepth = D3D11_MIN_DEPTH;
+	m_Viewport.MaxDepth = D3D11_MAX_DEPTH;
+}
 
-DirectX::RenderTarget::RenderTarget(RenderableTexture2D & colorBuffer, DepthStencilBuffer & dsBuffer)
+RenderTarget::RenderTarget(RenderableTexture2D & colorBuffer, DepthStencilBuffer & dsBuffer)
 	:m_ColorBuffer(colorBuffer), m_DepthStencilBuffer(dsBuffer)
 {
 	m_Viewport.TopLeftX = 0;
@@ -771,11 +793,11 @@ DirectX::RenderTarget::RenderTarget(RenderableTexture2D & colorBuffer, DepthSten
 	m_Viewport.MaxDepth = D3D11_MAX_DEPTH;
 }
 
-DirectX::RenderTarget::RenderTarget(RenderableTexture2D & colorBuffer, DepthStencilBuffer & dsBuffer, const D3D11_VIEWPORT & viewPort)
+RenderTarget::RenderTarget(RenderableTexture2D & colorBuffer, DepthStencilBuffer & dsBuffer, const D3D11_VIEWPORT & viewPort)
 	: m_ColorBuffer(colorBuffer), m_DepthStencilBuffer(dsBuffer), m_Viewport(viewPort)
 {}
 
-DirectX::RenderTarget::RenderTarget(ID3D11Device * pDevice, size_t width, size_t height ,_In_opt_ DXGI_FORMAT colorFormat , _In_opt_ DXGI_FORMAT depthFormat )
+RenderTarget::RenderTarget(ID3D11Device * pDevice, size_t width, size_t height ,_In_opt_ DXGI_FORMAT colorFormat , _In_opt_ DXGI_FORMAT depthFormat )
 	: m_ColorBuffer(pDevice, width, height, colorFormat), m_DepthStencilBuffer(pDevice, width, height, depthFormat)
 {
 	m_Viewport.TopLeftX = 0;
@@ -786,7 +808,7 @@ DirectX::RenderTarget::RenderTarget(ID3D11Device * pDevice, size_t width, size_t
 	m_Viewport.MaxDepth = D3D11_MAX_DEPTH;
 }
 
-DirectX::RenderableTexture2D::RenderableTexture2D(IDXGISwapChain * pSwapChain)
+RenderableTexture2D::RenderableTexture2D(IDXGISwapChain * pSwapChain)
 {
 	ThrowIfFailed(
 		pSwapChain->GetBuffer(0, IID_PPV_ARGS(&m_pTexture))
@@ -800,7 +822,7 @@ DirectX::RenderableTexture2D::RenderableTexture2D(IDXGISwapChain * pSwapChain)
 		);
 }
 
-RenderTarget DirectX::RenderTarget::Subview(const D3D11_VIEWPORT & viewport)
+RenderTarget RenderTarget::Subview(const D3D11_VIEWPORT & viewport)
 {
 	RenderTarget target(m_ColorBuffer, m_DepthStencilBuffer, viewport);
 	return target;
@@ -811,12 +833,12 @@ RenderTarget DirectX::RenderTarget::Subview(const D3D11_VIEWPORT & viewport)
 /// </summary>
 /// <returns> the return value is default to be (0,0) at left-top corner , while min-max depth is (0,1000) </returns>
 
-const D3D11_VIEWPORT & DirectX::RenderTarget::ViewPort() const
+const D3D11_VIEWPORT & RenderTarget::ViewPort() const
 {
 	return m_Viewport;
 }
 
-void DirectX::RenderTarget::Clear(ID3D11DeviceContext * pContext, FXMVECTOR Color)
+void RenderTarget::Clear(ID3D11DeviceContext * pContext, FXMVECTOR Color)
 {
 	m_ColorBuffer.Clear(pContext, Color);
 	m_DepthStencilBuffer.Clear(pContext);
@@ -827,27 +849,27 @@ void DirectX::RenderTarget::Clear(ID3D11DeviceContext * pContext, FXMVECTOR Colo
 /// </summary>
 /// <returns> the return value is default to be (0,0) at left-top corner , while min-max depth is (0,1000) </returns>
 
-D3D11_VIEWPORT & DirectX::RenderTarget::ViewPort()
+D3D11_VIEWPORT & RenderTarget::ViewPort()
 {
 	return m_Viewport;
 }
 
-RenderableTexture2D & DirectX::RenderTarget::ColorBuffer()
+RenderableTexture2D & RenderTarget::ColorBuffer()
 {
 	return m_ColorBuffer;
 }
 
-const RenderableTexture2D & DirectX::RenderTarget::ColorBuffer() const
+const RenderableTexture2D & RenderTarget::ColorBuffer() const
 {
 	return m_ColorBuffer;
 }
 
-DepthStencilBuffer & DirectX::RenderTarget::DepthBuffer()
+DepthStencilBuffer & RenderTarget::DepthBuffer()
 {
 	return m_DepthStencilBuffer;
 }
 
-const DepthStencilBuffer & DirectX::RenderTarget::DepthBuffer() const
+const DepthStencilBuffer & RenderTarget::DepthBuffer() const
 {
 	return m_DepthStencilBuffer;
 }
@@ -858,43 +880,43 @@ const DepthStencilBuffer & DirectX::RenderTarget::DepthBuffer() const
 /// <param name="pDeviceContext">The pointer to device context.</param>
 /// <param name="pDepthStencil">The pointer to depth stencil view.</param>
 
-void DirectX::RenderTarget::SetAsRenderTarget(ID3D11DeviceContext * pDeviceContext)
+void RenderTarget::SetAsRenderTarget(ID3D11DeviceContext * pDeviceContext)
 {
 	auto pTargetView = m_ColorBuffer.RenderTargetView();
 	pDeviceContext->RSSetViewports(1, &m_Viewport);
 	pDeviceContext->OMSetRenderTargets(1, &pTargetView, m_DepthStencilBuffer);
 }
 
-DirectX::CubeTexture::CubeTexture(ID3D11Resource * pResource, ID3D11ShaderResourceView * pResourceView)
+CubeTexture::CubeTexture(ID3D11Resource * pResource, ID3D11ShaderResourceView * pResourceView)
 	: Texture(pResource, pResourceView)
 {
 }
 
-void DirectX::CubeTexture::Initialize(ID3D11Device * pDevice, const std::wstring(&TextureFiles)[6])
+void CubeTexture::Initialize(ID3D11Device * pDevice, const std::wstring(&TextureFiles)[6])
 {
 	for (int i = 0; i < 6; i++)
 	{
-		DirectX::ThrowIfFailed(DirectX::CreateDDSTextureFromFile(pDevice, TextureFiles[i].c_str(), &(m_pTextures[i]), &(m_pTextureView[i])));
+		ThrowIfFailed(CreateDDSTextureFromFile(pDevice, TextureFiles[i].c_str(), &(m_pTextures[i]), &(m_pTextureView[i])));
 	}
 }
 
-DirectX::CubeTexture::CubeTexture(ID3D11Device * pDevice, const std::wstring(&TextureFiles)[6])
+CubeTexture::CubeTexture(ID3D11Device * pDevice, const std::wstring(&TextureFiles)[6])
 {
 	Initialize(pDevice, TextureFiles);
 }
 
-DirectX::CubeTexture::CubeTexture()
+CubeTexture::CubeTexture()
 {}
 
-DirectX::CubeTexture::~CubeTexture()
+CubeTexture::~CubeTexture()
 {}
 
-ID3D11ShaderResourceView * DirectX::CubeTexture::at(unsigned int face)
+ID3D11ShaderResourceView * CubeTexture::at(unsigned int face)
 {
 	return m_pTextureView[face];
 }
 
-ID3D11ShaderResourceView * const * DirectX::CubeTexture::ResourcesView()
+ID3D11ShaderResourceView * const * CubeTexture::ResourcesView()
 {
 	return m_pTextureView;
 }
@@ -917,7 +939,7 @@ EnvironmentTexture::EnvironmentTexture(ID3D11Device * pDevice, const wchar_t * s
 	}
 }
 
-EnvironmentTexture DirectX::EnvironmentTexture::CreateFromDDSFile(ID3D11Device * pDevice, const wchar_t * szFileName)
+EnvironmentTexture EnvironmentTexture::CreateFromDDSFile(ID3D11Device * pDevice, const wchar_t * szFileName)
 {
 	return EnvironmentTexture(pDevice,szFileName);
 }
@@ -927,18 +949,18 @@ void EnvironmentTexture::GenerateMips(ID3D11DeviceContext * pContext)
 	pContext->GenerateMips(m_pShaderResourceView.Get());
 }
 
-ID3D11RenderTargetView * DirectX::EnvironmentTexture::RenderTargetView(int face)
+ID3D11RenderTargetView * EnvironmentTexture::RenderTargetView(int face)
 {
 	return m_pRenderTargetViews[face].Get();
 }
 
-ID3D11RenderTargetView * const * DirectX::EnvironmentTexture::RenderTargetViews()
+ID3D11RenderTargetView * const * EnvironmentTexture::RenderTargetViews()
 {
 	static_assert(sizeof(ComPtr<ID3D11RenderTargetView>) == sizeof(ID3D11RenderTargetView*), "issue with compiler");
 	return m_pRenderTargetViews[0].GetAddressOf();
 }
 
-void DirectX::EnvironmentTexture::CreateRenderTargetViewArray(ID3D11Device * pDevice, DXGI_FORMAT format)
+void EnvironmentTexture::CreateRenderTargetViewArray(ID3D11Device * pDevice, DXGI_FORMAT format)
 {
 	if (format == DXGI_FORMAT_UNKNOWN)
 		format = m_Description.Format;
@@ -949,7 +971,7 @@ void DirectX::EnvironmentTexture::CreateRenderTargetViewArray(ID3D11Device * pDe
 	}
 }
 
-DirectX::EnvironmentTexture::EnvironmentTexture(ID3D11Resource * pTexture, ID3D11ShaderResourceView * pResourceView)
+EnvironmentTexture::EnvironmentTexture(ID3D11Resource * pTexture, ID3D11ShaderResourceView * pResourceView)
 	: Texture2D(pResourceView)
 {
 }

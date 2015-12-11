@@ -193,7 +193,7 @@ float Metaball::EffectiveRadiusRatio(float ISO , float precise/* = 1e-6*/)
 	return std::sqrtf(t);
 }
 
-inline float Metaball::eval(DirectX::FXMVECTOR pos) const
+float XM_CALLCONV Metaball::eval(FXMVECTOR pos) const
 {
 	float r2 = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(pos - XMLoadA(Position)));
 	float R2 = Radius*Radius;
@@ -202,7 +202,7 @@ inline float Metaball::eval(DirectX::FXMVECTOR pos) const
 	return DecayFunction(t);
 }
 
-inline DirectX::XMVECTOR Metaball::grad(DirectX::FXMVECTOR pos) const
+XMVECTOR XM_CALLCONV Metaball::grad(FXMVECTOR pos) const
 {
 	XMVECTOR vtr = pos - XMLoadA(Position);
 	float r2 = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(vtr));
@@ -220,7 +220,7 @@ inline DirectX::XMVECTOR Metaball::grad(DirectX::FXMVECTOR pos) const
 	}
 }
 
-XMVECTOR Metaball::evalgrad(DirectX::FXMVECTOR pos) const
+XMVECTOR XM_CALLCONV Metaball::evalgrad(FXMVECTOR pos) const
 {
 	XMVECTOR vtr = pos - XMLoadA(Position);
 	float r2 = DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(vtr));
@@ -358,7 +358,7 @@ struct RayIntersectionOperator
 	}
 };
 
-inline float MetaBallModel::eval(DirectX::FXMVECTOR vtr) const
+float XM_CALLCONV MetaBallModel::eval(DirectX::FXMVECTOR vtr) const
 {
 	float sum  = - m_ISO;
 
@@ -383,7 +383,7 @@ inline float MetaBallModel::eval(DirectX::FXMVECTOR vtr) const
 /// </summary>
 /// <param name="vtr">The VTR.</param>
 /// <returns></returns>
-inline Vector3 MetaBallModel::grad(DirectX::FXMVECTOR vtr) const
+XMVECTOR XM_CALLCONV MetaBallModel::grad(DirectX::FXMVECTOR vtr) const
 {
 	XMVECTOR sum = g_XMZero;
 
@@ -400,7 +400,7 @@ inline Vector3 MetaBallModel::grad(DirectX::FXMVECTOR vtr) const
 	return (Vector3)sum;
 }
 
-DirectX::XMVECTOR Geometrics::MetaBallModel::evalgrad(DirectX::FXMVECTOR vtr) const
+XMVECTOR XM_CALLCONV MetaBallModel::evalgrad(DirectX::FXMVECTOR vtr) const
 {
 	XMVECTOR sum = g_XMZero;
 

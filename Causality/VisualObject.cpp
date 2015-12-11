@@ -88,14 +88,17 @@ RenderFlags VisualObject::GetRenderFlags() const
 
 void VisualObject::Render(IRenderContext * pContext, IEffect* pEffect)
 {
+	auto& drawer = g_PrimitiveDrawer;
 	if (g_ShowCharacterMesh && m_pRenderModel)
+	{
+		pContext->RSSetState(drawer.GetStates()->CullNone());
 		m_pRenderModel->Render(pContext, GlobalTransformMatrix(), pEffect);
+	}
 
 	if (g_ShowCharacterMesh && g_DebugView && m_pRenderModel)
 	{
 		BoundingGeometry geo(m_pRenderModel->GetBoundingBox());
 		geo.Transform(geo, GlobalTransformMatrix());
-		auto& drawer = g_PrimitiveDrawer;
 		drawer.Begin();
 		DrawGeometryOutline(geo, Colors::Orange);
 		drawer.End();
@@ -120,7 +123,7 @@ void VisualObject::Parse(const ParamArchive* store)
 	float mass = 1.0f;
 	GetParam(store, "mass", mass);
 
-	auto& assets = Scene->Assets();
+	auto& m_assets = Scene->Assets();
 	const char* path = nullptr;
 	GetParam(store, "mesh", path);
 	if (path != nullptr && strlen(path) != 0)
@@ -128,7 +131,7 @@ void VisualObject::Parse(const ParamArchive* store)
 		if (path[0] == '{') // asset reference
 		{
 			const std::string key(path + 1, path + strlen(path) - 1);
-			SetRenderModel(assets.GetMesh(key));
+			SetRenderModel(m_assets.GetMesh(key));
 		}
 	}
 	else
@@ -137,7 +140,7 @@ void VisualObject::Parse(const ParamArchive* store)
 		if (nMesh)
 		{
 			nMesh = GetFirstChildArchive(nMesh);
-			auto model = assets.ParseMesh(nMesh);
+			auto model = m_assets.ParseMesh(nMesh);
 			SetRenderModel(model);
 		}
 	}

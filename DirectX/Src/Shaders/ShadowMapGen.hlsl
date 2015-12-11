@@ -3,8 +3,8 @@
 
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
-	matrix WorldLightProj;
-	float4 ShadowColor;
+    float4x4 WorldLightProj;
+	float4   ShadowColor;
 	float4x3 Bones[MAX_BONES];
 };
 

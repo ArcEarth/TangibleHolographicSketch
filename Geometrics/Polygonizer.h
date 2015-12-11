@@ -9,11 +9,7 @@ is simply the original code morphed into C++.
 J. Andreas Bærentzen 2003.
 
 **********************************************************************/
-
-
-
-
-
+#pragma once
 #ifndef POLYGONIZER_H
 #define POLYGONIZER_H
 
@@ -39,8 +35,8 @@ namespace Polygonizer{
 	public:
 	  //virtual float eval(float,float,float) const = 0;
 	  //virtual DirectX::Vector3 grad(const DirectX::Vector3 &p) const = 0;
-	  virtual float eval(DirectX::FXMVECTOR p) const = 0;
-	  virtual DirectX::Vector3 grad(DirectX::FXMVECTOR p) const = 0;
+	  virtual float XM_CALLCONV eval(DirectX::FXMVECTOR p) const = 0;
+	  virtual DirectX::XMVECTOR XM_CALLCONV grad(DirectX::FXMVECTOR p) const = 0;
 	};
 
 	typedef DirectX::Vector3 Point3D;

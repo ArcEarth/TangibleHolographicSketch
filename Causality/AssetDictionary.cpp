@@ -20,10 +20,7 @@ using boost::any;
 
 AssetDictionary::AssetDictionary()
 {
-	asset_directory = current_path() / "Resources";
-	mesh_directory = asset_directory / "Models";
-	texture_directory = asset_directory / "Textures";
-	animation_directory = asset_directory / "Animations";
+	SetAssetDirectory(current_path() / "Assets");
 }
 
 template <typename T>
@@ -84,9 +81,11 @@ AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * sto
 	const char* name = nullptr;
 	const char* src = nullptr;
 	const char* mat = nullptr;
+	bool flipNormal = false;
 	GetParam(store, "src", src);
 	GetParam(store, "name", name);
 	GetParam(store, "material", mat);
+	GetParam(store, "flip_normal", flipNormal);
 
 	if (!strcmp(type, "box"))
 	{
@@ -104,7 +103,7 @@ AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * sto
 			boost::filesystem::path ref(src);
 			if (ref.extension().string() == ".obj")
 			{
-				auto mesh = LoadObjMesh(name, src);
+				auto mesh = LoadObjMesh(name, src, flipNormal);
 				return mesh;
 			}
 			else if (ref.extension().string() == ".fbx")
@@ -140,7 +139,7 @@ sptr<AssetDictionary::material_type> AssetDictionary::ParseMaterial(const ParamA
 	assert(!strcmp(GetArchiveName(store), "phong_material"));
 
 	DirectX::Scene::PhongMaterialData data;
-	GetParam(store,"name", data.Name);
+	GetParam(store, "name", data.Name);
 
 	GetParam(store, "diffuse_map", data.DiffuseMapName);
 	GetParam(store, "normal_map", data.NormalMapName);
@@ -150,6 +149,8 @@ sptr<AssetDictionary::material_type> AssetDictionary::ParseMaterial(const ParamA
 	GetParam(store, "alpha_discard", data.UseAlphaDiscard);
 
 	GetParam(store, "diffuse_color", data.DiffuseColor);
+	if (!GetParam(store, "alpha", data.Alpha) && data.DiffuseColor.A() != 1.0f)
+		data.Alpha = data.DiffuseColor.A();
 	GetParam(store, "ambient_color", data.AmbientColor);
 	GetParam(store, "specular_color", data.SpecularColor);
 	GetParam(store, "emissive_color", data.EmissiveColor);
@@ -162,7 +163,7 @@ sptr<AssetDictionary::material_type> AssetDictionary::ParseMaterial(const ParamA
 
 AssetDictionary::texture_type * AssetDictionary::ParseTexture(const ParamArchive * store)
 {
-	const char* src = nullptr, * name = nullptr;
+	const char* src = nullptr, *name = nullptr;
 	GetParam(store, "name", name);
 	GetParam(store, "src", src);
 
@@ -185,7 +186,7 @@ AssetDictionary::armature_type * AssetDictionary::ParseArmature(const ParamArchi
 	}
 	else // no file armature define
 	{
-		GetFirstChildArchive(store,"joint");
+		GetFirstChildArchive(store, "joint");
 	}
 	return nullptr;//GetAsset<armature_type>("default");
 }
@@ -217,11 +218,11 @@ AssetDictionary::behavier_type * AssetDictionary::ParseBehavier(const ParamArchi
 		GetParam(store, "armature", arma);
 		if (arma)
 		{
-			auto actions = GetFirstChildArchive(store,"behavier.actions");
+			auto actions = GetFirstChildArchive(store, "behavier.actions");
 			if (actions)
 			{
 				list<std::pair<string, string>> actionlist;
-				for (auto action = GetFirstChildArchive(actions,"action"); action != nullptr; action = GetNextSiblingArchive(action,"action"))
+				for (auto action = GetFirstChildArchive(actions, "action"); action != nullptr; action = GetNextSiblingArchive(action, "action"))
 				{
 					const char* asrc = nullptr, *aname = nullptr;
 					GetParam(action, "name", aname);
@@ -262,10 +263,10 @@ inline std::wstring towstring(const string& str)
 	return std::wstring(str.begin(), str.end());
 }
 
-AssetDictionary::mesh_type * AssetDictionary::LoadObjMesh(const string & key, const string & fileName)
+AssetDictionary::mesh_type * AssetDictionary::LoadObjMesh(const string & key, const string & fileName, bool flipNormal)
 {
 	typedef DefaultStaticModel mesh_type;
-	auto *pObjModel = DefaultStaticModel::CreateFromObjFile((mesh_directory / fileName).wstring(), render_device.Get(), texture_directory.wstring());
+	auto *pObjModel = DefaultStaticModel::CreateFromObjFile((mesh_directory / fileName).wstring(), m_device.Get(), texture_directory.wstring(), flipNormal);
 	if (!pObjModel)
 		return nullptr;
 	meshes[key] = pObjModel;
@@ -288,7 +289,7 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 	typedef DefaultSkinningModel model_type;
 
 	FbxParser fbx;
-	fbx.ImportMesh((mesh_directory / fileName).string(),true); // with rewind
+	fbx.ImportMesh((mesh_directory / fileName).string(), true); // with rewind
 	auto datas = fbx.GetMeshs();
 	if (datas.size() == 0)
 		return nullptr;
@@ -297,7 +298,7 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 	// Force clear Diffuse Map
 	mesh.Material.DiffuseMapName = "";
 
-	auto pModel = model_type::CreateFromData(&mesh, texture_directory.wstring(), render_device.Get());
+	auto pModel = model_type::CreateFromData(&mesh, texture_directory.wstring(), m_device.Get());
 	//auto pModel = model_type::CreateCube(render_device,1.0f);
 
 	pModel->SetName(fileName);
@@ -352,7 +353,7 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 		}
 	}
 
-	pModel->CreateDeviceResource(render_device.Get());
+	pModel->CreateDeviceResource(m_device.Get());
 
 	int i = 0;
 	for (auto& part : pModel->Parts)
@@ -373,7 +374,7 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 
 AssetDictionary::texture_type * AssetDictionary::LoadTexture(const string & key, const string & fileName)
 {
-	textures[key] = DirectX::Texture::CreateFromDDSFile(render_device.Get(), (texture_directory / fileName).c_str());
+	textures[key] = DirectX::Texture::CreateFromDDSFile(m_device.Get(), (texture_directory / fileName).c_str());
 	return textures[key];
 }
 
@@ -381,7 +382,7 @@ AssetDictionary::armature_type * AssetDictionary::LoadArmature(const string & ke
 {
 	std::ifstream file((mesh_directory / fileName).wstring());
 	auto pArmature = new armature_type(file);
-	assets[key] = pArmature;
+	m_assets[key] = pArmature;
 	return pArmature;
 }
 
@@ -452,7 +453,7 @@ AssetDictionary::audio_clip_type* AssetDictionary::GetAudio(const string & key)
 
 void AssetDictionary::SetRenderDevice(IRenderDevice * device)
 {
-	render_device = device;
+	m_device = device;
 	if (!effect_factory)
 	{
 		auto up_factory = std::make_unique<DirectX::EffectFactory>(device);
@@ -468,8 +469,8 @@ void AssetDictionary::SetRenderDevice(IRenderDevice * device)
 		auto pMainEffect = std::make_shared<DirectX::ShadowMapEffect>(device);
 		pMainEffect->SetWeightsPerVertex(0); // Disable Skinning
 		pMainEffect->SetLightEnabled(0, true);
-		pMainEffect->SetLightView(0,XMMatrixLookToRH(XMVectorSet(0, 5, 0, 1), XMVectorSet(0, -1, 0, 0), XMVectorSet(0, 0, -1,0)));
-		pMainEffect->SetLightProjection(0, XMMatrixOrthographicRH(5,5,0.01f,10.0f));
+		pMainEffect->SetLightView(0, XMMatrixLookToRH(XMVectorSet(0, 5, 0, 1), XMVectorSet(0, -1, 0, 0), XMVectorSet(0, 0, -1, 0)));
+		pMainEffect->SetLightProjection(0, XMMatrixOrthographicRH(5, 5, 0.01f, 10.0f));
 		default_effect = pMainEffect;
 
 		default_skinned_effect = default_effect;
@@ -513,4 +514,8 @@ void AssetDictionary::SetMeshDirectory(const path & dir)
 void AssetDictionary::SetAssetDirectory(const path & dir)
 {
 	asset_directory = dir;
+	mesh_directory = asset_directory / "Models";
+	texture_directory = asset_directory / "Textures";
+	animation_directory = asset_directory / "Animations";
+
 }

@@ -6,6 +6,7 @@
 #include "LightObject.h"
 #include "VisualObject.h"
 #include <HUD.h>
+#include <tinyxml2.h>
 
 using namespace Causality;
 using namespace std;
@@ -15,16 +16,14 @@ Scene::Scene()
 	time_scale = 1.0f;
 	is_paused = false;
 	is_loaded = false;
-	primary_cameral = nullptr;
-	assets = make_unique<AssetDictionary>();
+	m_primCamera = nullptr;
+	m_assets = make_unique<AssetDictionary>();
 }
 
 Scene::~Scene()
 {
 	int* p = nullptr;
 }
-
-
 
 // Contens operations
 
@@ -38,48 +37,51 @@ inline void Causality::Scene::SetHudCanvas(HUDCanvas * canvas) { m_hudRoot.reset
 
 ICamera * Scene::PrimaryCamera()
 {
-	return primary_cameral;
+	return m_primCamera;
 }
 
 bool Scene::SetAsPrimaryCamera(ICamera * camera)
 {
 	//if (camera->Scene != this) return false;
-	primary_cameral = camera;
+	m_primCamera = camera;
 	//camera->SetRenderTarget(Canvas());
 	return true;
 }
 
 void Scene::SetRenderDeviceAndContext(IRenderDevice * device, IRenderContext * context)
 {
-	assets->SetRenderDevice(device);
-	render_device = device;
-	render_context = context;
+	m_assets->SetRenderDevice(device);
+	m_device = device;
+	m_context = context;
 }
 
 void Scene::SetCanvas(DirectX::RenderTarget & canvas) {
-	scene_canvas = canvas;
+	for (auto& camera : m_cameras)
+	{
+	}
+	m_canvas = canvas;
 	//back_buffer = canvas.ColorBuffer();
-	//scene_canvas = DirectX::RenderTarget(DirectX::RenderableTexture2D(render_device, back_buffer.Width(), back_buffer.Height(), back_buffer.Format()), canvas.DepthBuffer());
+	//m_canvas = DirectX::RenderTarget(DirectX::RenderableTexture2D(render_device, back_buffer.Width(), back_buffer.Height(), back_buffer.Format()), canvas.DepthBuffer());
 }
 
 void Scene::UpdateRenderViewCache()
 {
 	if (!camera_dirty) return;
-	cameras.clear();
-	renderables.clear();
-	lights.clear();
-	effects.clear();
+	m_cameras.clear();
+	m_renderables.clear();
+	m_lights.clear();
+	m_effects.clear();
 
-	auto& aseffects = assets->GetEffects();
+	auto& aseffects = m_assets->GetEffects();
 	for (auto pe : aseffects)
-		effects.push_back(pe);
+		m_effects.push_back(pe);
 
 	for (auto& obj : m_sceneRoot->nodes())
 	{
 		auto pCamera = obj.As<ICamera>();
 		if (pCamera != nullptr)
 		{
-			cameras.push_back(pCamera);
+			m_cameras.push_back(pCamera);
 
 			//  Register camera render effects
 			for (size_t i = 0; i < pCamera->ViewCount(); i++)
@@ -88,19 +90,19 @@ void Scene::UpdateRenderViewCache()
 				{
 					auto pRender = pCamera->GetViewRenderer(i, j);
 					auto pEffect = pRender->GetRenderEffect();
-					if (pRender != nullptr && std::find(effects.begin(), effects.end(), pEffect) == effects.end())
-						effects.push_back(pEffect);
+					if (pRender != nullptr && std::find(m_effects.begin(), m_effects.end(), pEffect) == m_effects.end())
+						m_effects.push_back(pEffect);
 				}
 			}
 		}
 
 		auto pLight = obj.As<ILight>();
 		if (pLight != nullptr)
-			lights.push_back(pLight);
+			m_lights.push_back(pLight);
 
 		auto pRenderable = obj.As<IVisual>();
 		if (pRenderable != nullptr)
-			renderables.push_back(pRenderable);
+			m_renderables.push_back(pRenderable);
 	}
 	camera_dirty = false;
 }
@@ -111,8 +113,8 @@ void Scene::Update()
 
 	if (is_paused) return;
 	lock_guard<mutex> guard(content_mutex);
-	step_timer.Tick([this]() {
-		time_seconds deltaTime(step_timer.GetElapsedSeconds() * time_scale);
+	m_timer.Tick([this]() {
+		time_seconds deltaTime(m_timer.GetElapsedSeconds() * time_scale);
 		for (auto& pObj : m_sceneRoot->nodes())
 		{
 			if (pObj.IsEnabled())
@@ -135,10 +137,10 @@ void Scene::Render(IRenderContext * context)
 	SetupEffectsLights(nullptr);
 
 	std::vector<IVisual*> visibles;
-	visibles.reserve(renderables.size());
+	visibles.reserve(m_renderables.size());
 
 	// Render 3D Scene
-	for (auto pCamera : cameras) // cameras
+	for (auto pCamera : m_cameras) // cameras
 	{
 		auto viewCount = pCamera->ViewCount();
 
@@ -153,7 +155,7 @@ void Scene::Render(IRenderContext * context)
 			auto passCount = pCamera->ViewRendererCount(view);
 
 			visibles.clear();
-			for (auto pRenderable : renderables)
+			for (auto pRenderable : m_renderables)
 			{
 				if (pRenderable->IsVisible(viewFrustum))
 					visibles.push_back(pRenderable);
@@ -180,11 +182,11 @@ void Scene::Render(IRenderContext * context)
 
 	if (m_hudRoot)
 		m_hudRoot->Render(m_2dContext.Get());
-	//context->CopyResource(back_buffer.Resource(), scene_canvas.ColorBuffer().Resource());
+	//context->CopyResource(back_buffer.Resource(), m_canvas.ColorBuffer().Resource());
 }
 
 vector<DirectX::IEffect*>& Scene::GetEffects() {
-	return effects;
+	return m_effects;
 }
 
 void Scene::SetupEffectsViewProject(DirectX::IEffect* pEffect, const DirectX::XMMATRIX &v, const DirectX::XMMATRIX &p)
@@ -196,7 +198,7 @@ void Scene::SetupEffectsViewProject(DirectX::IEffect* pEffect, const DirectX::XM
 		pME->SetProjection(p);
 	}
 
-	for (auto pEff : effects)
+	for (auto pEff : m_effects)
 	{
 		pME = dynamic_cast<DirectX::IEffectMatrices*>(pEff);
 		if (pME)
@@ -221,14 +223,14 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 		ID3D11ShaderResourceView* shadow;
 	};
 
-	XMVECTOR ambient = XMVectorSet(0.35, 0.35, 0.35, 1.0f);
+	XMVECTOR ambient = XMVectorSet(0.5f, 0.5f, 0.5f, 1.0f);
 
 	static const int MaxLights = IEffectLights::MaxDirectionalLights;
 	LightParam Lps[MaxLights];
 
-	for (int i = 0; i < std::min((int)lights.size(), MaxLights); i++)
+	for (int i = 0; i < std::min((int)m_lights.size(), MaxLights); i++)
 	{
-		auto pLight = lights[i];
+		auto pLight = m_lights[i];
 		Lps[i].color = pLight->GetColor();
 		Lps[i].direction = pLight->GetFocusDirection();
 		Lps[i].shadow = pLight->GetShadowMap();
@@ -240,7 +242,7 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 		}
 	}
 
-	for (auto pEff : effects)
+	for (auto pEff : m_effects)
 	{
 		auto pELS = dynamic_cast<DirectX::IEffectLightsShadow*>(pEff);
 		auto pEL = dynamic_cast<DirectX::IEffectLights*>(pEff);
@@ -249,9 +251,9 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 		{
 			pEL->SetAmbientLightColor(ambient);
 
-			for (int i = 0; i < std::min((int)lights.size(), MaxLights); i++)
+			for (int i = 0; i < std::min((int)m_lights.size(), MaxLights); i++)
 			{
-				auto pLight = lights[i];
+				auto pLight = m_lights[i];
 				pEL->SetLightEnabled(i, true);
 				pEL->SetLightDiffuseColor(i, Lps[i].color);
 				pEL->SetLightSpecularColor(i, Lps[i].color);

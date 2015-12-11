@@ -6,12 +6,13 @@
 
 using namespace DirectX;
 
+using namespace DirectX::HLSLVectors;
 XM_ALIGNATTR
 struct ShadowMapGenerationEffectConstants
 {
-	XMMATRIX	WorldLightProj;
-	XMVECTOR	ShadowColor;
-	XMFLOAT3X4	Bones[ShadowMapGenerationEffect::MaxBones];
+	float4x4	WorldLightProj;
+	float4		ShadowColor;
+	float4x3	Bones[ShadowMapGenerationEffect::MaxBones];
 };
 
 namespace DirectX
@@ -46,6 +47,7 @@ SharedResourcePool<ID3D11Device*, EffectBaseType::DeviceResources> EffectBaseTyp
 
 using Microsoft::WRL::ComPtr;
 
+_MM_ALIGN16
 class ShadowMapGenerationEffect::Impl : public EffectBaseType
 {
 public:
@@ -70,6 +72,9 @@ public:
 			pDepthMap(NULL),
 			boneColorsBuffer(device)
 		{
+			auto addr = (uintptr_t)&constants.WorldLightProj;
+			assert((addr & 0xf) == 0);
+
 			static_assert(_countof(Base::VertexShaderIndices) == Traits::ShaderPermutationCount, "array/max mismatch");
 			static_assert(_countof(Base::VertexShaderBytecode) == Traits::VertexShaderCount, "array/max mismatch");
 			static_assert(_countof(Base::PixelShaderBytecode) == Traits::PixelShaderCount, "array/max mismatch");
@@ -109,12 +114,14 @@ public:
 	void Apply(ID3D11DeviceContext* deviceContext)
 	{
 		// Compute derived parameter values.
-		matrices.SetConstants(dirtyFlags, constants.WorldLightProj);
+		matrices.SetConstants(dirtyFlags, reinterpret_cast<XMMATRIX&>(constants.WorldLightProj));
 
-		if (dirtyFlags & EffectDirtyFlags::AlphaTest)
+		if (dirtyFlags & EffectDirtyFlags::AlphaTest && texture != nullptr)
 		{
-			ID3D11ShaderResourceView* pSrvs[] = { texture.Get(), NULL, NULL, NULL, NULL, NULL };
+			ID3D11ShaderResourceView* pSrvs[] = { texture.Get()/*, NULL, NULL, NULL, NULL, NULL*/ };
 			deviceContext->PSSetShaderResources(0, 1, pSrvs);
+			auto pSampler = commonStates.LinearWrap();
+			deviceContext->PSSetSamplers(0, 1, &pSampler);
 			dirtyFlags &= ~EffectDirtyFlags::AlphaTest;
 		}
 
@@ -135,11 +142,12 @@ public:
 			deviceContext->OMSetRenderTargets(1, rtvs, pDepthMap);
 		}
 
-		ApplyShaders(deviceContext, GetCurrentShaderPermutation());
-		auto pSampler = commonStates.PointWrap();
+		// Set Blend and depth state
 		deviceContext->OMSetDepthStencilState(commonStates.DepthDefault(), -1);
 		deviceContext->OMSetBlendState(commonStates.Opaque(), g_XMOne.f, -1);
-		deviceContext->PSSetSamplers(0, 1, &pSampler);
+
+		ApplyShaders(deviceContext, GetCurrentShaderPermutation());
+
 	}
 };
 

@@ -91,6 +91,19 @@ PSInputOneLightTex VS_OneLightNoBoneTex(VSInputTex vin)
 	return vout;
 }
 
+PSInputOneLightTexBump VS_OneLightNoBoneTexBump(VSInputTexTangentWeights vin)
+{
+    PSInputOneLightTexBump vout;
+
+	SetPositionNormalToEyeTangentBinormal;
+
+	SetTextureCoord;
+
+	SetLightUVOne;
+
+    return vout;
+}
+
 PSInputOneLightNoTex VS_OneLightOneBoneNoTex(VSInputNoTexWeights vin)
 {
 	PSInputOneLightNoTex vout;
@@ -173,6 +186,21 @@ PSInputOneLightTex VS_OneLightFourBoneTex(VSInputTexWeights vin)
 	SetLightUVOne;
 
 	return vout;
+}
+
+PSInputOneLightTexBump VS_OneLightFourBoneTexBump(VSInputTexTangentWeights vin)
+{
+    PSInputOneLightTexBump vout;
+
+    SkinVertexTexBump(vin, 4);
+
+	SetPositionNormalToEyeTangentBinormal;
+
+	SetTextureCoord;
+
+	SetLightUVOne;
+
+    return vout;
 }
 
 PSInputScreenSpaceTex VS_ScreenSpaceNoBoneTex(VSInputTex vin)

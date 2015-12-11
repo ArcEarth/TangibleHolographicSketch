@@ -51,14 +51,8 @@ namespace Causality
 
 	namespace adaptors = boost::adaptors;
 
-	//using boost::any;
-	//using boost::any_cast;
-	//using boost::any_range;
-
 	using gsl::owner;
-	using gsl::array_view;
 	using gsl::byte;
-	using gsl::string_view;
 	using gsl::not_null;
 
 	using stdx::tree_node;

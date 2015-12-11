@@ -1,12 +1,10 @@
 //-----------------------------------------------------------------------------
 //	Vicon RT Client
 //-----------------------------------------------------------------------------
-
-
 #pragma once
 
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <cassert>
 #include <string>
 #include <fstream>

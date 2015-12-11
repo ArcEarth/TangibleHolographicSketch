@@ -17,8 +17,10 @@ using namespace DirectX;
 using namespace DirectX::Scene;
 using namespace boost;
 
-//std::wstring sceneFile = L"ArSketch.xml";
-std::wstring sceneFile = L"SelectorScene.xml";
+wstring g_SceneFile = L"ArSketch.xml";
+wstring g_ResourcesDirectory(L"D:\\User\\Yupeng\\Documents\\GitHub\\PPARM\\Assets");
+
+//std::wstring sceneFile = L"SelectorScene.xml";
 
 
 IAppComponent::~IAppComponent()
@@ -35,9 +37,6 @@ void IAppComponent::Unregister()
 {
 	App::Current()->UnregisterComponent(this);
 }
-
-
-wstring ResourcesDirectory(L"C:\\Users\\Yupeng\\Documents\\GitHub\\VR\\Causality\\Resources\\");
 
 App::App()
 {
@@ -93,7 +92,7 @@ void Application::Exit()
 
 void App::OnStartup(const std::vector<std::string>& args)
 {
-	ResourceDirectory = filesystem::current_path() / "Resources";
+	ResourceDirectory = g_ResourcesDirectory;
 	
 	// Initialize Windows
 	pConsole = make_shared<DebugConsole>();
@@ -104,7 +103,7 @@ void App::OnStartup(const std::vector<std::string>& args)
 
 	pWindow = make_shared<NativeWindow>();
 	if (!pRift)
-		pWindow->Initialize(std::string("Ghost Trick"), 1920, 1080, false);
+		pWindow->Initialize(std::string("Ghost Trick"), 1800, 1080, false);
 	else
 	{
 		//auto res = pRift->Resoulution();
@@ -118,6 +117,7 @@ void App::OnStartup(const std::vector<std::string>& args)
 	pDeviceResources->SetNativeWindow(pWindow->Handle());
 	// Register to be notified if the Device is lost or recreated
 	pDeviceResources->RegisterDeviceNotify(this);
+	pWindow->SizeChanged += MakeEventHandler(&App::OnResize, this);
 
 	//return;
 
@@ -137,6 +137,11 @@ void App::OnStartup(const std::vector<std::string>& args)
 
 	pLeap = Devices::LeapMotion::GetForCurrentView();
 	pKinect = Devices::KinectSensor::GetForCurrentView();
+	XMMATRIX kinectCoord = XMMatrixRigidTransform(
+		XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
+		XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
+	pKinect->SetDeviceCoordinate(kinectCoord);
+
 	//auto loadingScene = new Scene;
 	//Scenes.emplace_back(loadingScene);
 	//loadingScene->SetRenderDeviceAndContext(pDevice, pContext);
@@ -150,15 +155,7 @@ void App::OnStartup(const std::vector<std::string>& args)
 	concurrency::task<void> loadScene([&]() {
 		cout << "[Scene] Loading ...";
 		CoInitializeEx(NULL, COINIT::COINIT_APARTMENTTHREADED);
-		
-		selector->LoadFromFile((ResourceDirectory / sceneFile).string());
-
-		XMMATRIX kinectCoord = XMMatrixRigidTransform(
-			XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
-			XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
-		pKinect->SetDeviceCoordinate(kinectCoord);
-		pKinect->Start();
-
+		selector->LoadFromFile((ResourceDirectory / g_SceneFile).string());
 		CoUninitialize();
 		cout << "[Scene] Loading Finished!";
 	});
@@ -258,6 +255,16 @@ void App::OnDeviceLost()
 
 void App::OnDeviceRestored()
 {
+}
+
+void App::OnResize(const Vector2 & size)
+{
+	//pDeviceResources->SetLogicalSize(DeviceResources::Size(size.x,size.y));
+	//auto& bb = pDeviceResources->GetBackBufferRenderTarget();
+	//for (auto& scene : Scenes)
+	//{
+	//	scene->SetCanvas(bb);
+	//}
 }
 
 boost::filesystem::path App::GetResourcesDirectory() const

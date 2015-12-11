@@ -1,9 +1,9 @@
 #pragma once
 #include "BCL.h"
-#include "Armature.h"
-#include "CharacterBehavier.h"
 #include <VertexTypes.h>
 #include <MeshData.h>
+#include "Armature.h"
+#include "CharacterBehavier.h"
 
 namespace Causality
 {

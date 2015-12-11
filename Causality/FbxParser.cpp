@@ -2,7 +2,6 @@
 #include <fbxsdk.h>
 #include "FbxParser.h"
 #include "EigenExtension.h"
-#include "BoneFeatures.h"
 #include <iostream>
 #include <DirectXMathSSE4.h>
 
@@ -61,8 +60,6 @@ namespace Causality
 
 		BehavierSpace*         m_Behavier;
 		StaticArmature*        m_Armature;
-
-		static const Eigen::DenseIndex DimPerBone = CharacterFeature::Dimension;
 
 		std::list<SkinMeshData>  m_SkinnedMeshes;
 		vector<int>				m_ParentMap;
@@ -767,7 +764,8 @@ namespace Causality
 			buffer.resize(frameCount);
 
 			std::vector<float> prev_angs(numBones);
-			std::vector<DirectX::Vector3> prev_axiss(numBones);
+			std::vector<XM_ALIGNATTR DirectX::Vector4,
+				DirectX::AlignedAllocator<XMVECTOR>> prev_axiss(numBones);
 			for (int bidx = 0; bidx < numBones; bidx++)
 			{
 				DirectX::XMVECTOR q = dframe[bidx].LclRotation;
@@ -844,32 +842,59 @@ namespace Causality
 					// Fix Quaternion 
 					{
 						using namespace DirectX;
-						XMVECTOR prev_axis = XMLoad(prev_axiss[nodeIdx]);
+						XMVECTOR prev_axis = XMLoadA(prev_axiss[nodeIdx]);
 						float prev_ang = prev_angs[nodeIdx];
 
 						XMVECTOR q = XMLoadA(bone.LclRotation);
 						XMVECTOR axis;
 						float ang;
 						XMQuaternionToAxisAngle(&axis, &ang, q);
+						if (ang > XM_PI)
+							ang -= XM_PI;
+
+						XMVECTOR lnQ = XMQuaternionLn(q);
+						XMVECTOR lnNegQ = XMQuaternionLn(-q);
 
 						XMVECTOR dis = XMVectorZero();
-						//if (i > 0)
-						//	dis = XMVector4Length(buffer[i - 1][nodeIdx].LclRotation.LoadA() - q);
+						XMVECTOR flipDis = XMVectorZero();
 
-						if (i >= 0
-							&& XMVector4Less(XMVector3Dot(prev_axis, axis), XMVectorZero())
+						XMVECTOR prevQ;
+						if (i > 0)
+						{
+							prevQ = XMLoadA(buffer[i - 1][nodeIdx].LclRotation);
+						}
+						else
+						{
+							prevQ = XMLoadA(dframe[nodeIdx].LclRotation);
+						}
+
+						flipDis = XMVector4Length(prevQ + q);
+						dis = XMVector4Length(prevQ - q);
+
+						/*if (i == 0 && ang > XM_PIDIV2)
+						{
+							q = -q;
+							XMStoreA(bone.LclRotation, q);
+							XMQuaternionToAxisAngle(&axis, &ang, q);
+							if (ang > XM_PI)
+								ang -= XM_PI;
+						}
+						else */if (/*i > 0
+							&& */XMVector4Less(XMVector3Dot(prev_axis, axis), XMVectorZero())
 							//&& abs(ang - prev_ang) > 0.05f
 
 							//&& ((abs(ang + prev_ang - XM_2PI) < QuaternionFlipLimit)
 							//	|| (abs(ang - prev_ang) > 0.05f && abs(ang + prev_ang) < QuaternionFlipLimit2))
 
-							&& XMVector4Greater(dis, XMVectorReplicate(0.05))
+							&& XMVector4Greater(dis, flipDis * 10.0f)
 
 							)
 						{
 							q = -q;
-							XMStoreA(bone.LclRotation,q);
+							XMStoreA(bone.LclRotation, q);
 							XMQuaternionToAxisAngle(&axis, &ang, q);
+							if (ang > XM_PI)
+								ang -= XM_PI;
 						}
 
 						prev_angs[nodeIdx] = ang;
@@ -887,7 +912,7 @@ namespace Causality
 					//bone.GblTranslation = Vector3(gt[0], gt[1], gt[2]);
 				}
 				//frame.Time = time_seconds(time.GetSecondDouble());
-				frame.RebuildGlobal(*m_Armature);
+				FrameRebuildGlobal(*m_Armature, frame);
 
 				time += interval;
 			}

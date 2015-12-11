@@ -4,7 +4,7 @@
 //#endif
 
 
-#include "DirectXMathExtend.h"
+#include <DirectXMathExtend.h>
 #include "Polygonizer.h"
 #include <DirectXCollision.h>
 #include <vector>
@@ -84,10 +84,10 @@ namespace Geometrics{
 		static bool  Connected(const Metaball& lhs, const Metaball& rhs , float ISO);
 		static float ConnectionStrength(const Metaball& lhs, const Metaball& rhs , float ISO);
 	public:
-		float eval(DirectX::FXMVECTOR pos) const;
-		DirectX::XMVECTOR grad(DirectX::FXMVECTOR pos) const;
+		float XM_CALLCONV eval(DirectX::FXMVECTOR pos) const;
+		DirectX::XMVECTOR XM_CALLCONV grad(DirectX::FXMVECTOR pos) const;
 		// return gradiant and value at same time, retval.w == eval
-		DirectX::XMVECTOR evalgrad(DirectX::FXMVECTOR pos) const;
+		DirectX::XMVECTOR XM_CALLCONV evalgrad(DirectX::FXMVECTOR pos) const;
 
 		inline ClipType GetBezierFunctionInLine(float Delta) const
 		{
@@ -142,9 +142,9 @@ namespace Geometrics{
 		virtual ~MetaBallModel(void);
 	public:
 		// Methods for polygonlizer to use
-		float eval(DirectX::FXMVECTOR vtr) const override;
-		DirectX::Vector3 grad(DirectX::FXMVECTOR vtr) const override;
-		DirectX::XMVECTOR evalgrad(DirectX::FXMVECTOR pos) const;
+		float XM_CALLCONV eval(DirectX::FXMVECTOR vtr) const override;
+		DirectX::XMVECTOR XM_CALLCONV grad(DirectX::FXMVECTOR vtr) const override;
+		DirectX::XMVECTOR XM_CALLCONV evalgrad(DirectX::FXMVECTOR pos) const;
 
 		float GetISO() const{
 			return m_ISO;

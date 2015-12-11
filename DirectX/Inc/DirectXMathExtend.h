@@ -18,16 +18,16 @@
 #include <DirectXColors.h>
 
 //#ifdef __SSE3__
-#include <DirectXMathSSE3.h>
+#include "DirectXMathSSE3.h"
 //#endif
 #ifdef __SSE4__
-#include <DirectXMathSSE4.h>
+#include "DirectXMathSSE4.h"
 #endif
 #ifdef __AVX__
-#include <DirectXMathAVX.h>
+#include "DirectXMathAVX.h"
 #endif
 #ifdef __AVX2__
-#include <DirectXMathAVX2.h>
+#include "DirectXMathAVX2.h"
 #endif
 
 #include <SimpleMath.h>

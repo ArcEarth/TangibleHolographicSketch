@@ -1,0 +1,11 @@
+<settings>
+	<devices>
+		<kinect></kinect>
+		<leapmotion></leapmotion>
+	</devices>
+  <assets path="..\Assets\"></assets>
+	<scenes path="ArSketch.xml"></scenes>
+	<window width="1800" height="1200" fullscreen="false"></window>
+	<console width="640" height="720"></console>
+	
+</settings>

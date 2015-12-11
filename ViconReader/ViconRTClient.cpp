@@ -1,4 +1,4 @@
-
+#define _USE_MATH_DEFINES
 #include "ViconRTClient.h"
 #include <iostream>     // std::cout, std::fixed
 #include <iomanip>      // std::setprecision

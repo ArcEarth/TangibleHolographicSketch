@@ -42,10 +42,6 @@ SETTING_REGISTERATION(float, IKLimitWeight, 1.0)
 
 SETTING_REGISTERATION(float, DebugArmatureThinkness, 0.005f)
 
-SETTING_REGISTERATION(float, RevampLikilyhoodThreshold, 0.05f)
-
-SETTING_REGISTERATION(float, RevampLikilyhoodTimeThreshold, 1.0f)
-
 SETTING_REGISTERATION(bool, DebugView, false)
 
 SETTING_REGISTERATION(bool, ShowCharacterMesh, true)
@@ -56,5 +52,32 @@ SETTING_REGISTERATION(bool, UseJointLengthWeight, false)
 
 SETTING_REGISTERATION(bool, UseStylizedIK, true)
 SETTING_REGISTERATION(bool, UseVelocity, false)
+SETTING_REGISTERATION(float, VelocityNormalizeThreshold, 0.01)
+
+
+SETTING_REGISTERATION(bool, ForceRemappingAlwaysOn, false)
+SETTING_REGISTERATION(float, RevampLikilyhoodThreshold, 0.05f)
+SETTING_REGISTERATION(float, RevampLikilyhoodTimeThreshold, 1.0f)
+SETTING_REGISTERATION(float, RevampActiveSupportThreshold, 0.65f)
+
+SETTING_REGISTERATION(float, StructrualSymtricBonus, 0.2f)
+SETTING_REGISTERATION(float, StructrualDisSymtricPenalty, -0.2f)
+SETTING_REGISTERATION(float, MaxiumTimeDelta, 1.0 / 30.0)
+
+SETTING_REGISTERATION(float, DynamicTraderKeyEnergy, 0.2f)
+SETTING_REGISTERATION(double, DynamicTraderCurvePower, 1.0)
+SETTING_REGISTERATION(double, DynamicTraderSpeedFilterCutoffFrequency, 1.0)
+SETTING_REGISTERATION(double, CharacterJointFilterCutoffFrequency, 1.0)
 
 SETTING_REGISTERATION(float, DefaultTrackerCovierence, 1000000000)
+SETTING_REGISTERATION(int, TrackerTopK, 30)
+SETTING_REGISTERATION(int, TrackerSubStep, 5)
+SETTING_REGISTERATION(int, TrackerVtSubdivide, 1)
+SETTING_REGISTERATION(int, TrackerSclSubdivide, 3)
+SETTING_REGISTERATION(double, TrackerTimeSubdivide, 1.0)
+SETTING_REGISTERATION(double, TrackerStDevVt, 0.3)
+SETTING_REGISTERATION(double, TrackerStDevScale, 0.3)
+SETTING_REGISTERATION(double, TrackerVtProgationStep, 0.1)
+SETTING_REGISTERATION(double, TrackerScaleProgationStep, 0.1)
+SETTING_REGISTERATION(double, TrackerSwitchCondifidentThreshold, 0.5)
+SETTING_REGISTERATION(double, TrackerSwitchTimeThreshold, 1.0)

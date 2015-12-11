@@ -177,6 +177,21 @@ const DirectX::IsometricTransform & SceneObject::GetGlobalTransform() const
 
 bool SceneObject::GetBoundingBox(BoundingBox & box) const
 {
+	if (has_child())
+	{
+		bool flag = true;
+		for (auto& child : children())
+		{
+			if (flag)
+				child.GetBoundingBox(box);
+			else
+			{
+				BoundingBox tbox;
+				child.GetBoundingBox(tbox);
+				BoundingBox::CreateMerged(box, box, box);
+			}
+		}
+	}
 	return false;
 }
 

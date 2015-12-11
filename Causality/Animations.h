@@ -28,83 +28,6 @@ namespace Causality
 		//concept frame_type& operator[]
 	};
 
-	typedef std::vector<DirectX::IsometricTransform, DirectX::XMAllocator> IsometricTransformFrame;
-
-	class BoneHiracheryFrame : public std::vector<Bone, DirectX::XMAllocator>
-	{
-	public:
-		typedef BoneHiracheryFrame self_type;
-
-		typedef public std::vector<Bone, DirectX::XMAllocator> BaseType;
-		using BaseType::operator[];
-		//using BaseType::operator=;
-
-		BoneHiracheryFrame() = default;
-		explicit BoneHiracheryFrame(size_t size);
-		// copy from default frame
-		explicit BoneHiracheryFrame(const IArmature& armature);
-		BoneHiracheryFrame(const BoneHiracheryFrame&) = default;
-		BoneHiracheryFrame(BoneHiracheryFrame&& rhs) { *this = std::move(rhs); }
-		BoneHiracheryFrame& operator=(const BoneHiracheryFrame&) = default;
-		BoneHiracheryFrame& operator=(BoneHiracheryFrame&& rhs)
-		{
-			BaseType::_Assign_rv(std::move(rhs));
-			return *this;
-		}
-
-		//const IArmature& Armature() const;
-		//// Which skeleton this state fram apply for
-		//IArmature* pArmature;
-
-		void RebuildGlobal(const IArmature& armature);
-		void RebuildLocal(const IArmature& armature);
-
-		// Lerp the local-rotation and scaling, "interpolate in Time"
-		static void Lerp(BoneHiracheryFrame& out, const BoneHiracheryFrame &lhs, const BoneHiracheryFrame &rhs, float t, const IArmature& armature);
-
-		static void Difference(BoneHiracheryFrame& out, const BoneHiracheryFrame &from, const BoneHiracheryFrame &to);
-		static void Deform(BoneHiracheryFrame& out, const BoneHiracheryFrame &from, const BoneHiracheryFrame &deformation);
-
-		// Blend Two Animation Frame, "Blend different parts in Space"
-		static void Blend(BoneHiracheryFrame& out, const BoneHiracheryFrame &lhs, const BoneHiracheryFrame &rhs, float* blend_weights, const IArmature& armature);
-
-		static void TransformMatrix(DirectX::XMFLOAT3X4* pOut, const self_type &from, const self_type& to, size_t numOut = 0);
-		static void TransformMatrix(DirectX::XMFLOAT4X4* pOut, const self_type &from, const self_type& to, size_t numOut = 0);
-		//void BlendMatrixFrom(DirectX::XMFLOAT3X4* pOut, const StateFrame &from)
-		//{
-
-		//}
-
-		// number of float elements per bone
-		static const auto BoneWidth = sizeof(Bone) / sizeof(float);
-		//! not the eigen vector in math !!!
-		//typedef Eigen::Map<VectorX, Eigen::Aligned> EigenVectorType;
-
-		//// return a 20N x 1 column vector of this frame, where 20 = BoneWidth
-		//EigenVectorType AsEigenVector()
-		//{
-		//	return EigenVectorType(&(*this)[0].LclRotation.x, size() * BoneWidth);
-		//}
-
-		//typedef Eigen::Map<Eigen::Matrix<float, BoneWidth, Eigen::Dynamic>, Eigen::Aligned> EigenMatrixType;
-		//// return a 20 x N matrix of this frame
-		//EigenMatrixType AsEigenMatrix()
-		//{
-		//	return EigenMatrixType(&(*this)[0].LclRotation.x, BoneWidth, size());
-		//}
-	};
-
-	void ScaleFrame(_Inout_ BoneHiracheryFrame& frame, _In_ const BoneHiracheryFrame& ref, float scale);
-
-	class BoneVelocityFrame : public std::vector<BoneVelocity, DirectX::XMAllocator>
-	{
-	public:
-		typedef std::vector<BoneVelocity, DirectX::XMAllocator> base_type;
-		using base_type::base_type;
-		using base_type::operator[];
-		using base_type::operator=;
-	};
-
 	class LinearFrame
 	{};
 	class SpineFrame
@@ -115,16 +38,6 @@ namespace Causality
 	class AnimationManager
 	{
 
-	};
-
-	template <typename FrameType>
-	class IFrameAnimation
-	{
-	public:
-		virtual ~IFrameAnimation()
-		{}
-
-		virtual bool GetFrameAt(FrameType& outFrame, TimeScalarType time) const = 0;
 	};
 
 	class LinearWarp
@@ -139,10 +52,14 @@ namespace Causality
 
 	// The underline resources of an animation, not for "Play" Control
 	// Handles Interpolations and warps in Time
-	template <typename FrameType>
-	class KeyframeAnimation : public IFrameAnimation<FrameType>
+	template <typename FrameType, typename FrameViewType>
+	class KeyframeAnimation
 	{
 	public:
+		typedef FrameType frame_type;
+		typedef FrameViewType frame_view;
+
+
 		string								Name;
 		std::list<KeyFrame<FrameType>>		KeyFrames;
 		TimeScalarType						Duration;
@@ -164,20 +81,6 @@ namespace Causality
 		//self_type& operator=(const self_type& rhs) = default;
 
 		KeyframeAnimation(self_type&& rhs) = default;
-		//{
-		//	*this = std::move(rhs);
-		//}
-
-		//self_type& operator=(const self_type&& rhs) = default;
-		//{
-		//	Name = std::move(rhs.Name);
-		//	KeyFrames = std::move(rhs.KeyFrames);
-		//	m_pDefaultFrame = rhs.m_pDefaultFrame;
-		//	Duration = rhs.Duration;
-		//	FrameInterval = rhs.FrameInterval;
-		//	TimeWarpFunction = std::move(rhs.TimeWarpFunction);
-		//	return *this;
-		//}
 
 		const FrameType& DefaultFrame() const { return *m_pDefaultFrame; }
 		void SetDefaultFrame(const FrameType &default_frame)
@@ -202,22 +105,21 @@ namespace Causality
 
 	public:
 		// Frame Retrival
-		virtual bool GetFrameAt(FrameType& outFrame, TimeScalarType time) const;
+		virtual bool GetFrameAt(FrameViewType outFrame, TimeScalarType time) const;
 
 	};
 
-	template<typename FrameType>
-	inline bool KeyframeAnimation<FrameType>::GetFrameAt(FrameType & outFrame, TimeScalarType time) const
+	template<typename FrameType, typename FrameViewType>
+	inline bool KeyframeAnimation<FrameType, FrameViewType>::GetFrameAt(FrameViewType outFrame, TimeScalarType time) const
 	{
 		return false;
 	}
 
-	class ArmatureFrameAnimation : public KeyframeAnimation<BoneHiracheryFrame>
+	class ArmatureFrameAnimation : public KeyframeAnimation<ArmatureFrame, ArmatureFrameView>
 	{
 	public:
 		typedef ArmatureFrameAnimation self_type;
-		typedef KeyframeAnimation<BoneHiracheryFrame> base_type;
-		typedef BoneHiracheryFrame frame_type;
+		typedef KeyframeAnimation<ArmatureFrame, ArmatureFrameView> base_type;
 
 		self_type() = default;
 		self_type(const self_type& rhs) = default;
@@ -240,7 +142,7 @@ namespace Causality
 		std::vector<frame_type>& GetFrameBuffer() { return frames; }
 
 		bool InterpolateFrames(double frameRate);
-		virtual bool GetFrameAt(BoneHiracheryFrame& outFrame, TimeScalarType time) const override;
+		bool GetFrameAt(frame_view outFrame, TimeScalarType time) const override;
 
 		enum DataType
 		{
@@ -282,28 +184,27 @@ namespace Causality
 		{
 		}
 
-		typedef BoneHiracheryFrame frame_type;
+		typedef ArmatureFrame frame_type;
+		typedef ArmatureFrameView frame_view;
+		typedef ArmatureFrameConstView const_frame_view;
 
-		const IArmature& SourceArmature() const { return *pSource; }
-		const IArmature& TargetArmature() const { return *pTarget; }
-		void SetSourceArmature(const IArmature& armature) { pSource = &armature; }
-		void SetTargetArmature(const IArmature& armature) { pTarget = &armature; }
+		const IArmature& SourceArmature() const { return *m_sArmature; }
+		const IArmature& TargetArmature() const { return *m_tArmature; }
+		void SetSourceArmature(const IArmature& armature) { m_sArmature = &armature; }
+		void SetTargetArmature(const IArmature& armature) { m_tArmature = &armature; }
 
 		int GetBindIndex(int sourceIdx) const;
 		int GetInverseBindIndex(int tragetIdx) const;
 
-		virtual void Transform(_Out_ frame_type& target_frame, _In_ const frame_type& source_frame) const = 0;
+		virtual void Transform(_Out_ frame_view target_frame, _In_ const_frame_view source_frame) = 0;
 
 		// Transform with history data
-		virtual void Transform(_Out_ frame_type& target_frame, _In_ const frame_type& source_frame, _In_ const BoneHiracheryFrame& last_frame, float frame_time) const
-		{
-			Transform(target_frame, source_frame);
-		}
+		virtual void Transform(_Out_ frame_view target_frame, _In_ const_frame_view source_frame, _In_ const_frame_view last_frame, float frame_time);
 
-		virtual void TransformBack(_Out_ frame_type& source_frame, _In_ const frame_type& target_frame) const;
+		virtual void TransformBack(frame_view target_frame, const_frame_view source_frame);
 
 	protected:
-		const IArmature	*pSource, *pTarget;
+		const IArmature	*m_sArmature, *m_tArmature;
 	};
 
 	template <typename FrameType>
@@ -325,10 +226,10 @@ namespace Causality
 		virtual const FrameType& PeekFrame() const = 0;
 	};
 
-	class IArmatureStreamAnimation : public IStreamAnimation<BoneHiracheryFrame>
+	class IArmatureStreamAnimation : public IStreamAnimation<ArmatureFrame>
 	{
 	public:
-		typedef BoneHiracheryFrame frame_type;
+		typedef ArmatureFrame frame_type;
 
 		virtual const IArmature& GetArmature() const = 0;
 	};

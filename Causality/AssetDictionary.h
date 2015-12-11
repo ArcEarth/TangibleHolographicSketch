@@ -57,7 +57,7 @@ namespace Causality
 		animation_clip_type* ParseAnimation(const ParamArchive* store);
 		behavier_type*		 ParseBehavier(const ParamArchive* store);
 
-		mesh_type*		     LoadObjMesh(const string & key, const string& fileName);
+		mesh_type*		     LoadObjMesh(const string & key, const string& fileName, bool flipNormal = false);
 		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, const std::shared_ptr<material_type> &pMaterial = nullptr);
 		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, bool importMaterial);
 		texture_type*	     LoadTexture(const string & key, const string& fileName);
@@ -145,8 +145,8 @@ namespace Causality
 		//{
 		//}
 
-		IRenderDevice* GetRenderDevice() { return render_device.Get(); }
-		const IRenderDevice* GetRenderDevice() const { return render_device.Get(); }
+		IRenderDevice* GetRenderDevice() { return m_device.Get(); }
+		const IRenderDevice* GetRenderDevice() const { return m_device.Get(); }
 		void SetRenderDevice(IRenderDevice* device);
 		void SetParentDictionary(AssetDictionary* dict);
 		void SetTextureDirectory(const path& dir);
@@ -155,7 +155,7 @@ namespace Causality
 		void SetAssetDirectory(const path& dir);
 
 	private:
-		cptr<IRenderDevice>					render_device;
+		cptr<IRenderDevice>					m_device;
 
 		AssetDictionary*					parent_dictionary;
 
@@ -184,7 +184,7 @@ namespace Causality
 		map<std::type_index, cptr<ID3D11InputLayout>> layouts;
 
 		// other assets
-		map<string, any_type>		assets;
+		map<string, any_type>		m_assets;
 
 	public:
 
@@ -204,7 +204,7 @@ namespace Causality
 			void const* shaderByteCode;
 			size_t byteCodeLength;
 			pEffct->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
-			pLayout = CreateInputLayout<VertexType>(render_device.Get(), shaderByteCode, byteCodeLength);
+			pLayout = CreateInputLayout<VertexType>(m_device.Get(), shaderByteCode, byteCodeLength);
 		}
 		return pLayout;
 	}

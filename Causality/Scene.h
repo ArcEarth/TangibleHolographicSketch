@@ -83,7 +83,7 @@ namespace Causality
 
 		time_seconds	GetLocalTime() const
 		{
-			return time_seconds(step_timer.GetTotalSeconds());
+			return time_seconds(m_timer.GetTotalSeconds());
 		}
 
 		double	GetTimeScale() const { return time_scale; }
@@ -96,15 +96,17 @@ namespace Causality
 		HUDCanvas*		GetHudCanvas();
 		void			SetHudCanvas(HUDCanvas* canvas);
 
-		AssetDictionary& Assets() { return *assets; }
-		const AssetDictionary& Assets() const { return *assets; }
+		AssetDictionary& Assets() { return *m_assets; }
+		const AssetDictionary& Assets() const { return *m_assets; }
+
+		const ParamArchive* GetSceneSettings() const { return m_settings; }
 
 		ICamera *PrimaryCamera();
 
 		bool SetAsPrimaryCamera(ICamera* camera);
 
-		IRenderDevice*			GetRenderDevice() { return render_device.Get(); }
-		IRenderContext*			GetRenderContext() { return render_context.Get(); }
+		IRenderDevice*			GetRenderDevice() { return m_device.Get(); }
+		IRenderContext*			GetRenderContext() { return m_context.Get(); }
 		I2DContext*				Get2DContext() { return m_2dContext.Get(); }
 		I2DFactory*				Get2DFactory() { return m_2dFactory.Get(); }
 		ITextFactory*			GetTextFactory() { return m_textFactory.Get(); }
@@ -112,15 +114,15 @@ namespace Causality
 		void SetRenderDeviceAndContext(IRenderDevice* device, IRenderContext* context);
 		void SetHudRenderDevice(I2DFactory* pD2dFactory, ITextFactory* pTextFactory);
 
-		DirectX::RenderTarget&			Canvas() { return scene_canvas; }
-		const DirectX::RenderTarget&	Canvas() const { return scene_canvas; }
-		void							SetCanvas(DirectX::RenderTarget& canvas);
+		RenderTarget&		Canvas() { return m_canvas; }
+		const RenderTarget&	Canvas() const { return m_canvas; }
+		void							SetCanvas(RenderTarget& canvas);
 
-		vector<ICamera*>&				GetCameras() { return cameras; }
-		vector<ILight*>&				GetLights() { return lights; }
-		const vector<const ICamera*>&	GetCameras() const { return reinterpret_cast<const vector<const ICamera*>&>(cameras); }
-		const vector<const ILight*>&	GetLights() const { return reinterpret_cast<const vector<const ILight*>&>(lights); }
-		vector<DirectX::IEffect*>&		GetEffects();
+		vector<ICamera*>&				GetCameras() { return m_cameras; }
+		vector<ILight*>&				GetLights() { return m_lights; }
+		const vector<const ICamera*>&	GetCameras() const { return reinterpret_cast<const vector<const ICamera*>&>(m_cameras); }
+		const vector<const ILight*>&	GetLights() const { return reinterpret_cast<const vector<const ILight*>&>(m_lights); }
+		vector<IEffect*>&		GetEffects();
 
 		void SetupEffectsViewProject(IEffect* pEffect, const DirectX::XMMATRIX &v, const DirectX::XMMATRIX &p);
 		void SetupEffectsLights(IEffect* pEffect);
@@ -134,34 +136,37 @@ namespace Causality
 	private:
 		SceneTimeLineType			timeline_type;
 		double						time_scale;
-		StepTimer					step_timer;
+		StepTimer					m_timer;
 
-		cptr<IRenderDevice>			render_device;
-		cptr<IRenderContext>		render_context;
+		cptr<IRenderDevice>			m_device;
+		cptr<IRenderContext>		m_context;
 		cptr<I2DFactory>			m_2dFactory;
 		cptr<ITextFactory>			m_textFactory;
 		cptr<I2DContext>			m_2dContext;
 
 		uptr<AssetDictionary>
-									assets;
+									m_assets;
 
 		uptr<SceneObject>			m_sceneRoot;
 		uptr<HUDCanvas>				m_hudRoot;
 
-		RenderTarget				scene_canvas;
-		RenderableTexture2D			back_buffer;
+
+		ParamArchive*				m_settings;
+		uptr<ParamDocument>			m_sourceDoc;
+
+		RenderTarget				m_canvas;
+		//RenderableTexture2D			back_buffer;
 
 		bool						is_paused;
 		bool						is_loaded;
 		int							loading_count;
 
-		ICamera						*primary_cameral;
-
 		// Caches
-		vector<ICamera*>			cameras;
-		vector<ILight*>				lights;
-		vector<IVisual*>			renderables;
-		vector<IEffect*>			effects;
+		ICamera						*m_primCamera;
+		vector<ICamera*>			m_cameras;
+		vector<ILight*>				m_lights;
+		vector<IVisual*>			m_renderables;
+		vector<IEffect*>			m_effects;
 
 		std::mutex					content_mutex;
 

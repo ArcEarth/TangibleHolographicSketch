@@ -121,7 +121,7 @@ ID3D11ShaderResourceView * Causality::Light::GetColorMap() const {
 
 // Inherited via IVisual
 
-RenderFlags Light::GetRenderFlags() const { return RenderFlags::Lights; }
+RenderFlags Light::GetRenderFlags() const { return RenderFlags::Lights | RenderFlags::SpecialEffects; }
 
 bool Light::IsVisible(const BoundingGeometry & viewFrustum) const
 {

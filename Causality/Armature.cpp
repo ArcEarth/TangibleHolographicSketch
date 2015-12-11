@@ -12,21 +12,6 @@
 using namespace DirectX;
 using namespace Causality;
 
-//void Bone::UpdateGlobalData(const Bone & reference)
-//{
-//	XMVECTOR ParQ = reference.GblRotation;
-//	XMVECTOR Q = XMQuaternionMultiply(ParQ, LclRotation);
-//	GblRotation = Q;
-//
-//	OriginPosition = reference.GblTranslation;
-//	//XMVECTOR V = LclScaling;
-//	//V = XMVectorMultiply(V, g_XMIdentityR1.v);
-//	//V = XMVector3Rotate(V, Q);
-//
-//	V = XMVectorAdd(V, OriginPosition);
-//	GblTranslation = V;
-//}
-
 Bone::Bone()
 	: LclScaling(1.0f), LclLength(1.0f), GblScaling(1.0f), GblLength(1.0f), LclTw(1.0f), GblTw(1.0f)
 {
@@ -146,7 +131,184 @@ XMDUALVECTOR Bone::RigidTransformDualQuaternion(const Bone & from, const Bone & 
 	return XMDualQuaternionRigidTransform(XMLoadA(from.GblTranslation), rot, tra);
 }
 
-StaticArmature::StaticArmature(gsl::array_view<JointBasicData> data)
+ArmatureFrame::ArmatureFrame(size_t size)
+	: BaseType(size)
+{
+}
+
+ArmatureFrame::ArmatureFrame(const IArmature & armature)
+	: BaseType(armature.default_frame())
+{
+	assert(this->size() == armature.size());
+}
+
+ArmatureFrame::ArmatureFrame(ArmatureFrameView frameView)
+	: BaseType(frameView.begin(), frameView.end())
+{
+}
+
+ArmatureFrame::ArmatureFrame(ArmatureFrameConstView frameView)
+	: BaseType(frameView.begin(), frameView.end())
+{
+}
+
+ArmatureFrame::ArmatureFrame(const ArmatureFrame &) = default;
+
+ArmatureFrame::ArmatureFrame(ArmatureFrame && rhs)
+{
+	*this = std::move(rhs);
+}
+
+ArmatureFrame& ArmatureFrame::operator=(const ArmatureFrame&) = default;
+ArmatureFrame& ArmatureFrame::operator=(ArmatureFrame&& rhs)
+{
+	BaseType::_Assign_rv(std::move(rhs));
+	return *this;
+}
+ArmatureFrame& ArmatureFrame::operator=(ArmatureFrameView frameView)
+{
+	BaseType::assign(frameView.begin(), frameView.end());
+	return *this;
+}
+ArmatureFrame& ArmatureFrame::operator=(ArmatureFrameConstView frameView)
+{
+	BaseType::assign(frameView.begin(), frameView.end());
+	return *this;
+}
+
+
+namespace Causality
+{
+	void FrameRebuildGlobal(const IArmature& armature, ArmatureFrameView frame)
+	{
+		for (auto& joint : armature.joints())
+		{
+			auto& bone = frame[joint.ID];
+			if (joint.is_root())
+			{
+				bone.GblRotation = bone.LclRotation;
+				bone.GblScaling = bone.LclScaling;
+				bone.GblTranslation = bone.LclTranslation;
+				bone.LclLength = bone.GblLength = 1.0f; // Length of root doesnot have any meaning
+			}
+			else
+			{
+				//bone.OriginPosition = at(joint.ParentID).GblTranslation;
+
+				bone.UpdateGlobalData(frame[joint.ParentID]);
+			}
+		}
+	}
+
+	void FrameRebuildLocal(const IArmature& armature, ArmatureFrameView frame)
+	{
+		for (auto& joint : armature.joints())
+		{
+			auto& bone = frame[joint.ID];
+			if (joint.is_root())
+			{
+				bone.LclRotation = bone.GblRotation;
+				bone.LclScaling = bone.GblScaling;
+				bone.LclTranslation = bone.GblTranslation;
+				bone.LclLength = bone.GblLength = 1.0f; // Length of root doesnot have any meaning
+			}
+			else
+			{
+				bone.UpdateLocalData(frame[joint.ParentID]);
+			}
+		}
+	}
+
+	void FrameLerp(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float t, const IArmature& armature)
+	{
+		//assert((Armature == lhs.pArmature) && (lhs.pArmature == rhs.pArmature));
+		XMVECTOR vt = XMVectorReplicate(t);
+		for (size_t i = 0; i < armature.size(); i++)
+		{
+			XMStoreA(out[i].LclRotation, DirectX::XMQuaternionSlerpV(XMLoadA(lhs[i].LclRotation), XMLoadA(rhs[i].LclRotation), vt));
+			XMStoreA(out[i].LclScaling, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclScaling), XMLoadA(rhs[i].LclScaling), vt));
+			XMStoreA(out[i].LclTranslation, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclTranslation), XMLoadA(rhs[i].LclTranslation), vt));
+		}
+		FrameRebuildGlobal(armature, out);
+	}
+
+	void FrameDifference(ArmatureFrameView out, ArmatureFrameConstView from, ArmatureFrameConstView to)
+	{
+		auto n = std::min(from.size(), to.size());
+		assert(out.size() >= n);
+		for (size_t i = 0; i < n; i++)
+		{
+			auto& lt = out[i];
+			lt.LocalTransform() = from[i].LocalTransform();
+			lt.LocalTransform().Inverse();
+			lt.LocalTransform() *= to[i].LocalTransform();
+
+			lt.GlobalTransform() = from[i].GlobalTransform();
+			lt.GlobalTransform().Inverse();
+			lt.GlobalTransform() *= to[i].GlobalTransform();
+		}
+	}
+
+	void FrameDeform(ArmatureFrameView out, ArmatureFrameConstView from, ArmatureFrameConstView deformation)
+	{
+		auto n = std::min(from.size(), deformation.size());
+		assert(out.size() >= n);
+		for (size_t i = 0; i < n; i++)
+		{
+			auto& lt = out[i];
+			lt.LocalTransform() = from[i].LocalTransform();
+			lt.LocalTransform() *= deformation[i].LocalTransform();
+		}
+	}
+
+	void FrameScale(_Inout_ ArmatureFrameView frame, _In_ ArmatureFrameConstView  ref, float scale)
+	{
+		auto n = std::min(frame.size(), ref.size());
+		XMVECTOR sv = XMVectorReplicate(scale);
+		for (size_t i = 0; i < n; i++)
+		{
+			auto& lt = frame[i].LocalTransform();
+			auto& rt = ref[i].LocalTransform();
+			IsometricTransform::LerpV(lt, rt, lt, sv);
+		}
+	}
+
+	void FrameBlend(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float* blend_weights, const IArmature& armature)
+	{
+
+	}
+
+	void FrameTransformMatrix(XMFLOAT3X4* pOut, ArmatureFrameConstView from, ArmatureFrameConstView to, size_t numOut)
+	{
+		using namespace std;
+		size_t n = min(from.size(), to.size());
+		if (numOut > 0)
+			n = min(n, numOut);
+		for (int i = 0; i < n; ++i)
+		{
+			XMMATRIX mat = Bone::TransformMatrix(from[i], to[i]);
+			mat = XMMatrixTranspose(mat);
+			XMStoreFloat3x4(pOut + i, mat);
+		}
+	}
+
+	void FrameTransformMatrix(XMFLOAT4X4* pOut, ArmatureFrameConstView from, ArmatureFrameConstView to, size_t numOut)
+	{
+		using namespace std;
+		size_t n = min(from.size(), to.size());
+		if (numOut > 0)
+			n = min(n, numOut);
+		for (int i = 0; i < n; ++i)
+		{
+			XMMATRIX mat = Bone::TransformMatrix(from[i], to[i]);
+			//mat = XMMatrixTranspose(mat);
+			XMStoreFloat4x4(pOut + i, mat);
+		}
+	}
+}
+
+
+StaticArmature::StaticArmature(array_view<JointBasicData> data)
 {
 	size_t jointCount = data.size();
 	Joints.resize(jointCount);
@@ -175,7 +337,7 @@ StaticArmature::StaticArmature(std::istream & file)
 	file >> jointCount;
 
 	Joints.resize(jointCount);
-	DefaultFrame.reset(new BoneHiracheryFrame(jointCount));
+	DefaultFrame.reset(new ArmatureFrame(jointCount));
 
 	// Joint line format: 
 	// Hip(Name) -1(ParentID)
@@ -202,13 +364,13 @@ StaticArmature::StaticArmature(std::istream & file)
 	}
 
 	CaculateTopologyOrder();
-	default_frame().RebuildGlobal(*this);
+	FrameRebuildGlobal(*this, default_frame());
 }
 
 StaticArmature::StaticArmature(size_t JointCount, int * Parents, const char* const* Names)
 	: Joints(JointCount)
 {
-	DefaultFrame.reset(new BoneHiracheryFrame(JointCount));
+	DefaultFrame.reset(new ArmatureFrame(JointCount));
 	for (size_t i = 0; i < JointCount; i++)
 	{
 		Joints[i].SetID(i);
@@ -381,7 +543,7 @@ bool is_similar(_In_ const stdx::tree_node<Derived, ownnersip> *p, _In_ const st
 	return pc == nullptr && qc == nullptr;
 }
 
-void Causality::BuildJointMirrorRelation(Joint * root, const BoneHiracheryFrame & frame)
+void Causality::BuildJointMirrorRelation(Joint* root, ArmatureFrameConstView frame)
 {
 	float epsilon = 1.00f;
 	auto _children = root->descendants();

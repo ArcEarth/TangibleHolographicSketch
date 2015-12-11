@@ -362,6 +362,10 @@ namespace DirectX {
 			SetData(pContext, Raw_Data, 0);
 		}
 
+		void* Map(ID3D11DeviceContext* pContext);
+
+		void Unmap(ID3D11DeviceContext* pContext);
+
 		DynamicTexture2D& operator=(nullptr_t) { Reset(); return *this; }
 
 	protected:

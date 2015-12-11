@@ -37,6 +37,7 @@ namespace DirectX
 	namespace Scene
 	{
 		struct MeshBuffer;
+		struct DynamicMeshBuffer;
 		struct ModelPart;
 		struct SkinMeshData;
 
@@ -77,6 +78,7 @@ namespace Causality
 	using DirectX::IRigid;
 
 	using DirectX::Scene::MeshBuffer;
+	using DirectX::Scene::DynamicMeshBuffer;
 	using DirectX::Scene::IModelNode;
 	using DirectX::Scene::ISkinningModel;
 	using DirectX::Scene::IDynamicAsset;

@@ -437,7 +437,7 @@ namespace DirectX
 			typedef uint16_t								IndexType;
 			typedef FacetPrimitives::Triangle<IndexType>	TriangleType;
 
-			static DefaultStaticModel * CreateFromObjFile(const std::wstring &file, ID3D11Device * pDevice = nullptr, const std::wstring& textureDir = L"");
+			static DefaultStaticModel * CreateFromObjFile(const std::wstring &file, ID3D11Device * pDevice = nullptr, const std::wstring& textureDir = L"", bool flipNormal = false);
 			static DefaultStaticModel * CreateFromFbxFile(const std::wstring &file, ID3D11Device * pDevice = nullptr, const std::wstring& textureDir = L"");
 			static DefaultStaticModel * CreateFromSmxFile(ID3D11Device *pDevice, const std::wstring &file);
 

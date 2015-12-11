@@ -1,5 +1,6 @@
 #include "pch_bcl.h"
 #include "NativeWindow.h"
+#include "resource.h"
 
 namespace Causality
 {
@@ -99,6 +100,14 @@ namespace Causality
 		}
 	}
 
+	void NativeWindow::OnResize(size_t width, size_t height)
+	{
+		if (!SizeChanged.empty())
+		{
+			SizeChanged(Vector2(width, height));
+		}
+	}
+
 	NativeWindow::~NativeWindow()
 	{
 		Close();
@@ -122,7 +131,7 @@ namespace Causality
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = m_hInstance;
-		wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+		wc.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
 		wc.hIconSm = wc.hIcon;
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
@@ -162,7 +171,7 @@ namespace Causality
 
 		// Create the window with the screen settings and get the handle to it.
 		m_hWnd = CreateWindowEx(WS_EX_APPWINDOW, wc.lpszClassName, wc.lpszClassName,
-			WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+			WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME,
 			posX, posY, screenWidth, screenHeight, NULL, NULL, m_hInstance, NULL);
 
 		Application::WindowsLookup[m_hWnd] = this->shared_from_this();
@@ -235,6 +244,11 @@ namespace Causality
 		}
 		break;
 
+		case WM_SIZE:
+		{
+			window->OnResize(LOWORD(lparam), HIWORD(lparam));
+		}
+		break;
 		// Check if the window is being closed.
 		case WM_CLOSE:
 		{
@@ -392,6 +406,10 @@ void DebugConsole::OnKeyDown(unsigned char key)
 }
 
 void DebugConsole::OnKeyUp(unsigned char key)
+{
+}
+
+void DebugConsole::OnResize(size_t width, size_t height)
 {
 }
 

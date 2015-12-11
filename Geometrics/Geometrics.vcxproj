@@ -21,8 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CDF563C5-5714-413C-B987-CF0CDCEF24B2}</ProjectGuid>
     <RootNamespace>Geometrics</RootNamespace>
-    <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -73,8 +72,12 @@
     <DirectXTKDir>D:\SDKs\DirectXTK</DirectXTKDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(BOOST_ROOT);$(DirectXTKDir)\Inc;$(CGALDIR)\include;..\..\DirectX\Inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(BOOST_ROOT);$(DirectXTKDir)\Inc;$(CGALDIR)\include;..\DirectX\Inc;..\GSL\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -132,15 +135,20 @@
     <ClInclude Include="BezierClip.h" />
     <ClInclude Include="BezierMesh.h" />
     <ClInclude Include="BVAlgorithmsExt.h" />
+    <ClInclude Include="csg.h" />
+    <ClInclude Include="Extrusion.h" />
     <ClInclude Include="MetaBallModel.h" />
     <ClInclude Include="KdBVH.h" />
     <ClInclude Include="Polygonizer.h" />
     <ClInclude Include="SpaceCurve.h" />
+    <ClInclude Include="TriangleMesh.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="csg.cpp" />
+    <ClCompile Include="Extrusion.cpp" />
     <ClCompile Include="MetaBallModel.cpp" />
     <ClCompile Include="Polygonizer.cpp" />
     <ClCompile Include="SpaceCurve.cpp" />

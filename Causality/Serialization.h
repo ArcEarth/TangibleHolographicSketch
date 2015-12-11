@@ -5,12 +5,14 @@
 namespace tinyxml2
 {
 	class XMLElement;
+	class XMLDocument;
 }
 
 
 namespace Causality
 {
 	using ParamArchive = tinyxml2::XMLElement;
+	using ParamDocument = tinyxml2::XMLDocument;
 
 	namespace Serialization
 	{

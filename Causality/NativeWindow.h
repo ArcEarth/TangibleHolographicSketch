@@ -83,6 +83,7 @@ namespace Causality
 		virtual void EnterFullScreen() = 0;
 		virtual void ExitFullScreen() = 0;
 
+		virtual void OnResize(size_t width, size_t height) = 0;
 		virtual void OnMouseMove(int x, int y) = 0;
 		virtual void OnKeyDown(unsigned char key) = 0;
 		virtual void OnKeyUp(unsigned char key) = 0;
@@ -154,6 +155,8 @@ namespace Causality
 		virtual void OnMouseMove(int x, int y) override;
 		virtual void OnKeyDown(unsigned char key) override;
 		virtual void OnKeyUp(unsigned char key) override;
+		virtual void OnResize(size_t width, size_t height) override;
+
 
 	private:
 		HWND hWnd;
@@ -185,6 +188,7 @@ namespace Causality
 		virtual void OnMouseMove(int x, int y) override;
 		virtual void OnKeyDown(unsigned char key) override;
 		virtual void OnKeyUp(unsigned char key) override;
+		virtual void OnResize(size_t width, size_t height) override;
 
 		HWND Handle() const
 		{
@@ -200,6 +204,8 @@ namespace Causality
 		{
 			return m_Boundary;
 		}
+
+		Event<const Vector2&> SizeChanged;
 
 	private:
 		std::wstring		m_Title;

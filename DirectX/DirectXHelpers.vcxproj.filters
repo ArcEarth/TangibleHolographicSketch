@@ -133,9 +133,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config">
-      <Filter>Include</Filter>
-    </None>
     <None Include="Src\Shaders\CompileShaders.cmd">
       <Filter>Shaders</Filter>
     </None>

@@ -1,13 +1,12 @@
 Texture2D DiffuseTex : register(t0);
 Texture2D<float2> NormalTex : register(t1);
-Texture2D ShadowTex : register(t2);
+Texture2D SpecularTex : register(t2);
+Texture2D ShadowTex : register(t3);
 
-SamplerState DiffuseSampler : register(s0);
-SamplerState NormalSampler : register(s1);
-
-// Should be linear
+// linear 
+SamplerState MaterialSampler : register(s0);
+SamplerComparisonState ShadowSampleCmpState : register(s1);
 SamplerState ShadowSampler : register(s2);
-SamplerComparisonState ShadowSampleCmpState : register(s3);
 
 #define REGISTER(b) : register(b)
 
@@ -95,7 +94,7 @@ float4 PS_OneLightNoTex(PSInputOneLightNoTex pixel) : SV_TARGET
 
 float4 PS_OneLightTex(PSInputOneLightTex pixel) : SV_TARGET
 {
-	float4 texDiffuse = DiffuseTex.Sample(DiffuseSampler, pixel.uv);
+    float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv);
 
 	clip(texDiffuse.a - 0.15);
 
@@ -124,14 +123,14 @@ float4 PS_OneLightTex(PSInputOneLightTex pixel) : SV_TARGET
 
 float4 PS_OneLightTexBump(PSInputOneLightTexBump pixel) : SV_TARGET
 {
-	float4 texDiffuse = DiffuseTex.Sample(DiffuseSampler, pixel.uv).rgba;
+	float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv).rgba;
 
 	clip(texDiffuse.a - 0.15);
 
 	float3 toEyeVector = normalize(pixel.toEye);
 
 	// Sample the pixel in the bump map.
-	float2 texBump = NormalTex.Sample(NormalSampler, pixel.uv);
+	float2 texBump = NormalTex.Sample(MaterialSampler, pixel.uv);
 	texBump = (texBump * 2.0f) - 1.0f;
 	// Calculate the normal from the data in the bump map.
 	float3 worldNormal = pixel.normal + texBump.x * pixel.tangent + texBump.y * pixel.binormal;
@@ -154,6 +153,41 @@ float4 PS_OneLightTexBump(PSInputOneLightTexBump pixel) : SV_TARGET
 	diffuse = saturate(diffuse + specular);
 
 	return float4(diffuse, MaterialDiffuse.a * texDiffuse.a);
+}
+
+float4 PS_OneLightTexBumpSpecular(PSInputOneLightTexBump pixel) : SV_TARGET
+{
+    float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv).rgba;
+
+    clip(texDiffuse.a - 0.15);
+
+    float3 toEyeVector = normalize(pixel.toEye);
+
+	// Sample the pixel in the bump map.
+    float2 texBump = NormalTex.Sample(MaterialSampler, pixel.uv);
+    texBump = (texBump * 2.0f) - 1.0f;
+	// Calculate the normal from the data in the bump map.
+    float3 worldNormal = pixel.normal + texBump.x * pixel.tangent + texBump.y * pixel.binormal;
+    worldNormal = normalize(worldNormal);
+
+
+    float3 diffuse = MaterialAmbient.rgb * AmbientLight.rgb * texDiffuse.rgb;
+    float3 matDiffuse = MaterialDiffuse.rgb * texDiffuse.rgb;
+
+    float4 matSpecular = SpecularTex.Sample(MaterialSampler, pixel.uv);
+    float3 specular = matSpecular * AmbientLight.rgb;
+
+	[unroll]
+    for (int i = 0; i < 1; i++)
+    {
+        NormalizeLightUV(pixel.lightUv[i]);
+        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
+        diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
+        specular += shadowAmount * SpecularContribution(toEyeVector, LightDirection[i].xyz, worldNormal, matSpecular.rgb, MaterialSpecularPower, LightColor[i].a, LightColor[i].rgb);
+    }
+    diffuse = saturate(diffuse + specular);
+
+    return float4(diffuse, MaterialDiffuse.a * texDiffuse.a);
 }
 
 
@@ -184,7 +218,7 @@ float4 PS_ScreenSpaceNoTex(PSInputScreenSpaceNoTex pixel) : SV_TARGET
 
 float4 PS_ScreenSpaceTex(PSInputScreenSpaceTex pixel) : SV_TARGET
 {
-	float4 texDiffuse = DiffuseTex.Sample(DiffuseSampler, pixel.uv);
+	float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv);
 
 	clip(texDiffuse.a - 0.15);
 
@@ -211,12 +245,12 @@ float4 PS_ScreenSpaceTex(PSInputScreenSpaceTex pixel) : SV_TARGET
 
 float4 PS_ScreenSpaceTexBump(PSInputScreenSpaceTex pixel) : SV_TARGET
 {
-	float4 texDiffuse = DiffuseTex.Sample(DiffuseSampler, pixel.uv);
+	float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv);
 
 	clip(texDiffuse.a - 0.15);
 
 	// Sample the pixel in the bump map.
-	float2 texBump = NormalTex.Sample(NormalSampler, pixel.uv).rg;
+	float2 texBump = NormalTex.Sample(MaterialSampler, pixel.uv).rg;
 	texBump = (texBump * 2.0f) - 1.0f;
 	// Calculate the normal from the data in the bump map.
 	float3 worldNormal = pixel.normal + texBump.x * pixel.tangent + texBump.y * pixel.binormal;
@@ -263,7 +297,7 @@ float4 PS_BinaryOneLightNoTex(PSInputBinaryOneLightNoTex pixel) : SV_TARGET
 
 float4 PS_BinaryOneLightTex(PSInputBinaryOneLightTex pixel) : SV_TARGET
 {
-	float4 texDiffuse = DiffuseTex.Sample(DiffuseSampler, pixel.uv);
+	float4 texDiffuse = DiffuseTex.Sample(MaterialSampler, pixel.uv);
 
 	clip(texDiffuse.a - 0.15f); // Sample Alpha clip texture
 	float alpha = texDiffuse.a;

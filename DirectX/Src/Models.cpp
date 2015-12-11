@@ -109,7 +109,7 @@ void MeshBuffer::Draw(ID3D11DeviceContext *pContext, IEffect *pEffect) const
 	return;
 }
 
-DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & fileName, ID3D11Device * pDevice, const std::wstring & textureDir)
+DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & fileName, ID3D11Device * pDevice, const std::wstring & textureDir, bool flipNormal)
 {
 	typedef VertexPositionNormalTexture VertexType;
 	using namespace tinyobj;
@@ -184,13 +184,22 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 			}
 		}
 		stride_range<Vector3> Nor(reinterpret_cast<Vector3*>(&shape.mesh.normals[0]), sizeof(float) * 3, N);
+
+		stride_range<Vector2> Tex(reinterpret_cast<Vector2*>(&shape.mesh.texcoords[0]), sizeof(float) * 2, N);
+
 		if (shape.mesh.texcoords.size() != 0)
 		{
-			stride_range<Vector2> Tex(reinterpret_cast<Vector2*>(&shape.mesh.texcoords[0]), sizeof(float) * 2, N);
-			for (size_t i = 0; i < N; i++)
-			{
-				Vertices.emplace_back(Pos[i], Nor[i], Tex[i]);
-			}
+			if (flipNormal)
+				for (size_t i = 0; i < N; i++)
+				{
+					Vector2 uv(Tex[i].x, 1.0f - Tex[i].y);
+					Vertices.emplace_back(Pos[i], Nor[i], uv);
+				}
+			else
+				for (size_t i = 0; i < N; i++)
+				{
+					Vertices.emplace_back(Pos[i], Nor[i], Tex[i]);
+				}
 		}
 		else
 		{
@@ -199,7 +208,6 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 				Vertices.emplace_back(Pos[i], Nor[i], Vector2(0, 0));
 			}
 		}
-
 
 		auto mesh = std::make_shared<MeshBuffer>();
 		Parts.emplace_back();
@@ -605,7 +613,7 @@ XMUINT4 UnpackBlendIndices(uint32_t val)
 void DefaultSkinningModel::CaculateBoneBoxes(_In_reads_(m_BonesCount) const Matrix4x4* defaultBoneTransforms)
 {
 	assert(!Positions.empty() && !BlendWeights.empty());
-	std::vector<XMFLOAT4A,XMAllocator> points;
+	std::vector<XMFLOAT4A, XMAllocator> points;
 	points.reserve(m_IndexCount);
 	m_BoneBoxes.resize(m_BonesCount);
 	BoundingBox box;
@@ -694,7 +702,7 @@ void DefaultSkinningModel::CaculateBoneBoxes(_In_reads_(m_BonesCount) const Matr
 			}
 		}
 		else
-			m_BoneBoxes[bone].Extents = {0,0,0};
+			m_BoneBoxes[bone].Extents = { 0,0,0 };
 	}
 }
 
@@ -832,7 +840,7 @@ bool DefaultSkinningModel::Reload()
 
 void DefaultSkinningModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4 & transform, IEffect * pEffect)
 {
-	if (pEffect == nullptr) 
+	if (pEffect == nullptr)
 		pEffect = this->Parts[0].pEffect.get();
 	auto pSkinning = dynamic_cast<IEffectSkinning*>(pEffect);
 	if (pSkinning && m_BonesCount > 0)
@@ -851,11 +859,11 @@ void DefaultSkinningModel::Render(ID3D11DeviceContext * pContext, const Matrix4x
 
 void DefaultSkinningModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4 & transform, const XMMATRIX * boneTransforms, IEffect * pEffect)
 {
-	if (pEffect == nullptr) 
+	if (pEffect == nullptr)
 		pEffect = this->Parts[0].pEffect.get();
 	auto pSkinning = dynamic_cast<IEffectSkinning*>(pEffect);
 	if (pSkinning && m_BonesCount > 0 && boneTransforms != nullptr)
-		pSkinning->SetBoneTransforms(boneTransforms,m_BonesCount);
+		pSkinning->SetBoneTransforms(boneTransforms, m_BonesCount);
 	if (boneTransforms == nullptr)
 		pSkinning->ResetBoneTransforms();
 }
@@ -1073,7 +1081,7 @@ namespace DirectX {
 			//}
 
 
-			std::shared_ptr<MeshBufferType> CreateSphere(ID3D11Device * pDevice, float radius, size_t tessellation , bool rhcoords, bool inside_facing)
+			std::shared_ptr<MeshBufferType> CreateSphere(ID3D11Device * pDevice, float radius, size_t tessellation, bool rhcoords, bool inside_facing)
 			{
 				typedef VertexPositionNormalTexture VertexType;
 				typedef uint16_t IndexType;
@@ -1178,7 +1186,7 @@ namespace DirectX {
 
 			if (verticesCount > VertexBufferCapacity)
 				throw out_of_range("Input vertices data out of buffer capacity");
-			
+
 			auto hr = pContext->Map(pVertexBuffer.Get(), 0, D3D11_MAP::D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			ThrowIfFailed(hr);
 
@@ -1203,5 +1211,5 @@ namespace DirectX {
 			pContext->Unmap(pIndexBuffer.Get(), 0);
 			IndexCount = indicesCount;
 		}
-}
+	}
 }

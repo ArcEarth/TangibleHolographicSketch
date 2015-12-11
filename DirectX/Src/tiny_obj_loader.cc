@@ -621,12 +621,12 @@ std::string LoadObj(
       sscanf(token, "%s", namebuf);
 
 	  // *Added by Yupeng
-	  bool ret = exportFaceGroupToShape(shape, vertexCache, v, vn, vt, faceGroup, material, name, true);
-	  if (ret) {
-		  shapes.push_back(shape);
-	  }
+	  //bool ret = exportFaceGroupToShape(shape, vertexCache, v, vn, vt, faceGroup, material, name, true);
+	  //if (ret) {
+		 // shapes.push_back(shape);
+		 // shape = shape_t();
+	  //}
 
-	  shape = shape_t();
 	  // End modifify
 
 	  faceGroup.clear();
@@ -664,9 +664,9 @@ std::string LoadObj(
       bool ret = exportFaceGroupToShape(shape, vertexCache, v, vn, vt, faceGroup, material, name, true);
       if (ret) {
         shapes.push_back(shape);
-      }
 
-      shape = shape_t();
+		shape = shape_t();
+	  }
 
       //material = -1;
       faceGroup.clear();
@@ -697,11 +697,11 @@ std::string LoadObj(
       bool ret = exportFaceGroupToShape(shape, vertexCache, v, vn, vt, faceGroup, material, name, true);
       if (ret) {
         shapes.push_back(shape);
-      }
+		//material = -1;
+		faceGroup.clear();
+		shape = shape_t();
+	  }
 
-      //material = -1;
-      faceGroup.clear();
-      shape = shape_t();
 
       // @todo { multiple object name? }
       char namebuf[4096];

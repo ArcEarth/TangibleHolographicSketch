@@ -12,11 +12,6 @@
 #include "Armature.h"
 #include "Animations.h"
 #include "Common\Filter.h"
-#include "BoneFeatures.h"
-
-//#define BOOST_CB_DISABLE_DEBUG
-//#include <boost\circular_buffer.hpp>
-//#undef BOOST_CB_DISABLE_DEBUG
 #include "Events.h"
 
 namespace Causality
@@ -106,7 +101,7 @@ namespace Causality
 		//}
 
 		BufferedStreamViewer(size_t BackBufferSize = 30U)
-			: m_paused(false) , m_Capicity(BackBufferSize)
+			: m_paused(false), m_Capicity(BackBufferSize)
 		{
 		}
 
@@ -144,40 +139,51 @@ namespace Causality
 			m_StreamingBuffer.emplace_back(std::move(frame));
 		}
 
-		pointer MoveNext() const
+		pointer GetCurrent() const
 		{
-			if (m_StreamingBuffer.empty()) return nullptr;
+			return &m_ReadingBuffer;
+		}
+
+		pointer Peek(int idx = 0) const
+		{
+			if (idx == 0)
+				return &m_ReadingBuffer;
+			else if (idx - 1 < m_StreamingBuffer.size())
+				return &m_StreamingBuffer[idx - 1];
+			else return nullptr;
+		}
+
+		pointer PeekLatest() const
+		{
+			if (m_StreamingBuffer.empty())
+				return &m_ReadingBuffer;
+			return &m_StreamingBuffer.back();
+		}
+
+		bool MoveNext()
+		{
+			if (m_StreamingBuffer.empty()) return false;
 
 			std::lock_guard<std::mutex> guard(m_BufferMutex);
 
 			m_ReadingBuffer = m_StreamingBuffer.front();
 			m_StreamingBuffer.pop_front();
 
-			return &m_ReadingBuffer;
+			return true;
 		}
 
-		pointer GetCurrent() const
+		int MoveToLatest()
 		{
-			return &m_ReadingBuffer;
-		}
-
-		pointer MoveToLatest() const 
-		{
-			if (m_StreamingBuffer.empty()) return &m_ReadingBuffer;
+			if (m_StreamingBuffer.empty()) return 0;
 
 			std::lock_guard<std::mutex> guard(m_BufferMutex);
 
 			m_ReadingBuffer = m_StreamingBuffer.back();
+
+			int jump = m_StreamingBuffer.size();
 			m_StreamingBuffer.clear();
 
-			return &m_ReadingBuffer;
-		}
-
-		pointer PeekLatest() const
-		{
-			if (m_StreamingBuffer.empty())
-				return nullptr;
-			return &m_StreamingBuffer.back();
+			return jump;
 		}
 
 		std::deque<_Ty>& LockBuffer()
@@ -209,17 +215,17 @@ namespace Causality
 		mutable std::mutex			m_BufferMutex;
 	};
 
-	typedef Causality::BoneHiracheryFrame BodyFrame;
+	typedef Causality::ArmatureFrame BodyFrame;
 
 	// TrackedBody will host frames streaming from the Sensor
 	// You can select to process all frams incoming or the lastest one only
 	class TrackedBody : public IArmatureStreamAnimation
 	{
 	public:
-		typedef Causality::BoneHiracheryFrame		FrameType;
+		typedef Causality::ArmatureFrame		FrameType;
 
-		typedef LowPassDynamicFilter<Vector3, float>			Vector3DynamicFilter;
-		typedef LowPassDynamicFilter<QuaternionWrapper, float>  QuaternionDynamicFilter;
+		typedef LowPassDynamicFilter<Vector3, float>	Vector3DynamicFilter;
+		typedef LowPassDynamicFilter<Quaternion, float> QuaternionDynamicFilter;
 
 		// Allows KinectSensor to modify
 	private:
@@ -362,7 +368,7 @@ namespace Causality
 			return *pCurrent;
 		}
 
-		const TrackedBody& operator*() const 
+		const TrackedBody& operator*() const
 		{
 			return *pCurrent;
 		}
@@ -441,7 +447,7 @@ namespace Causality
 			std::unique_ptr<Impl> pImpl;
 
 		};
-		
+
 	}
 }
 

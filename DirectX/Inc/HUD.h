@@ -3,8 +3,8 @@
 #include <string>
 #include <memory>
 #include <limits>
-#include <dwrite_3.h>
-#include <d2d1_3.h>
+#include <dwrite_2.h>
+#include <d2d1_2.h>
 #include "DirectXMathExtend.h"
 #include "Textures.h"
 

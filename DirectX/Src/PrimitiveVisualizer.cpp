@@ -144,11 +144,12 @@ namespace DirectX{
 		float alpha = XMVectorGetW(Color);
 		m_pEffect->SetVertexColorEnabled(false);
 		m_pEffect->SetWorld(XMMatrixMultiply(World,WorldMatrix));
-		m_pEffect->SetDiffuseColor(Color);
+		m_pEffect->SetDiffuseColor(XMVectorSetW(Color,1.0f));
 		m_pEffect->SetAlpha(alpha);
 		//geometry->Draw(World, ViewMatrix, ProjectionMatrix);
 		geometry->Draw(m_pEffect.get(), m_pGeometryInputLayout.Get(), alpha < 0.99f);
 		m_pEffect->SetWorld(WorldMatrix);
+		m_pEffect->SetAlpha(1.0f);
 		m_pEffect->SetDiffuseColor(Colors::White.v);
 	}
 

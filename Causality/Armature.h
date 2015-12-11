@@ -11,7 +11,7 @@ namespace Causality
 	class IArmature;
 	class ArmaturePart;
 	class ShrinkedArmature;
-	class BoneHiracheryFrame;
+	class ArmatureFrame;
 
 	// Pure pose and Dynamic data for a bone
 	// "Structure" information is not stored here
@@ -125,6 +125,64 @@ namespace Causality
 	{
 	};
 
+	typedef std::vector<DirectX::IsometricTransform, DirectX::XMAllocator> IsometricTransformFrame;
+
+	typedef array_view<Bone> ArmatureFrameView;
+	typedef array_view<const Bone> ArmatureFrameConstView;
+
+	class ArmatureFrame : public std::vector<Bone, DirectX::XMAllocator>
+	{
+	public:
+		typedef ArmatureFrame self_type;
+
+		typedef public std::vector<Bone, DirectX::XMAllocator> BaseType;
+		using BaseType::operator[];
+		//using BaseType::operator=;
+
+		ArmatureFrame() = default;
+		explicit ArmatureFrame(size_t size);
+		// copy from default frame
+		explicit ArmatureFrame(const IArmature& armature);
+		explicit ArmatureFrame(ArmatureFrameView frameView);
+		explicit ArmatureFrame(ArmatureFrameConstView frameView);
+		ArmatureFrame(const ArmatureFrame&);
+		ArmatureFrame(ArmatureFrame&& rhs);
+		ArmatureFrame& operator=(const ArmatureFrame&);
+		ArmatureFrame& operator=(ArmatureFrame&& rhs);
+		ArmatureFrame& operator=(ArmatureFrameView frameView);
+		ArmatureFrame& operator=(ArmatureFrameConstView frameView);
+
+
+		// number of float elements per bone
+		static const auto BoneWidth = sizeof(Bone) / sizeof(float);
+
+	};
+
+	void FrameRebuildGlobal(const IArmature& armature, ArmatureFrameView frame);
+	void FrameRebuildLocal(const IArmature& armature, ArmatureFrameView frame);
+
+	// Lerp the local-rotation and scaling, "interpolate in Time"
+	void FrameLerp(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float t, const IArmature& armature);
+
+	void FrameDifference(ArmatureFrameView out, ArmatureFrameConstView from, ArmatureFrameConstView to);
+	void FrameDeform(ArmatureFrameView out, ArmatureFrameConstView from, ArmatureFrameConstView deformation);
+
+	// Blend Two Animation Frame, "Blend different parts in Space"
+	void FrameBlend(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float* blend_weights, const IArmature& armature);
+	void FrameScale(ArmatureFrameView frame, ArmatureFrameConstView ref, float scale);
+
+	void FrameTransformMatrix(DirectX::XMFLOAT3X4* pOut, ArmatureFrameConstView from, ArmatureFrameConstView to, size_t numOut = 0);
+	void FrameTransformMatrix(DirectX::XMFLOAT4X4* pOut, ArmatureFrameConstView from, ArmatureFrameConstView to, size_t numOut = 0);
+
+	class BoneVelocityFrame : public std::vector<BoneVelocity, DirectX::XMAllocator>
+	{
+	public:
+		typedef std::vector<BoneVelocity, DirectX::XMAllocator> base_type;
+		using base_type::base_type;
+		using base_type::operator[];
+		using base_type::operator=;
+	};
+
 	struct RotationConstriant
 	{
 		Vector3 UpperBound;
@@ -224,7 +282,7 @@ namespace Causality
 	class IArmature
 	{
 	public:
-		typedef BoneHiracheryFrame frame_type;
+		typedef ArmatureFrame frame_type;
 
 		virtual ~IArmature() {}
 
@@ -275,7 +333,7 @@ namespace Causality
 		//std::vector<size_t> TopologyOrder;
 	};
 
-	void BuildJointMirrorRelation(Joint* root, const BoneHiracheryFrame& frame);
+	void BuildJointMirrorRelation(Joint* root, ArmatureFrameConstView frame);
 
 	enum SymetricTypeEnum
 	{

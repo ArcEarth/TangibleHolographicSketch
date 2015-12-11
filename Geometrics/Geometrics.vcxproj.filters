@@ -24,6 +24,12 @@
     <ClCompile Include="SpaceCurve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="csg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Extrusion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BezierClip.h">
@@ -45,6 +51,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="KdBVH.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="csg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Extrusion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

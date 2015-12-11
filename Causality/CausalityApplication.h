@@ -42,6 +42,7 @@ namespace Causality
 		// Inherited via IDeviceNotify
 		virtual void OnDeviceLost() override;
 		virtual void OnDeviceRestored() override;
+		virtual void OnResize(const Vector2& size);
 
 		boost::filesystem::path	GetResourcesDirectory() const;
 		void SetResourcesDirectory(const std::wstring& dir);

@@ -21,8 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C6D38A30-8097-4CA4-A1CB-1273CE21EAAF}</ProjectGuid>
     <RootNamespace>DirectXHelpers</RootNamespace>
-    <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
     <TinyXml2Dir>..\..\tinyxml2</TinyXml2Dir>
@@ -40,28 +39,28 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -88,6 +87,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     <SourcePath>$(ProjectDir)Src;$(ProjectDir)Src\Shaders;$(SourcePath)</SourcePath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -96,6 +97,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     <SourcePath>$(ProjectDir)Src;$(ProjectDir)Src\Shaders;$(SourcePath)</SourcePath>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -229,14 +232,6 @@
     <ClInclude Include="Inc\ShadowMapEffect.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(DirectXTKDir)\DirectXTK_Desktop_2015.vcxproj">
-      <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="Src\Shaders\BlurEffect.hlsl">
       <FileType>Document</FileType>
       <Command>$(CdToSrcShaders)
@@ -285,14 +280,10 @@
     <None Include="Src\Shaders\ShadowMapEffectCBuffer.hlsli" />
     <None Include="Src\Shaders\ShadowMapEffectStructures.hlsli" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DirectXTK\DirectXTK_Desktop_2015.vcxproj">
+      <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\Causality\packages\Eigen.3.2.4\build\native\Eigen.targets" Condition="Exists('..\Causality\packages\Eigen.3.2.4\build\native\Eigen.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\Causality\packages\Eigen.3.2.4\build\native\Eigen.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\Causality\packages\Eigen.3.2.4\build\native\Eigen.targets'))" />
-  </Target>
 </Project>

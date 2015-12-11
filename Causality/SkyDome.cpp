@@ -30,19 +30,19 @@ void SkyDome::Parse(const ParamArchive * store)
 	const char* bg = nullptr;
 	GetParam(store, "background", bg);
 
-	auto& assets = Scene->Assets();
-	auto pEffect = assets.GetEffect("default_environment");
+	auto& m_assets = Scene->Assets();
+	auto pEffect = m_assets.GetEffect("default_environment");
 
-	CreateDeviceResource(assets.GetRenderDevice(), dynamic_cast<DirectX::EnvironmentMapEffect*>(pEffect));
+	CreateDeviceResource(m_assets.GetRenderDevice(), dynamic_cast<DirectX::EnvironmentMapEffect*>(pEffect));
 
 	if (bg[0] == '{')
 	{
 		string key(bg + 1, strlen(bg) - 2);
-		SetTexture(*assets.GetTexture(key));
+		SetTexture(*m_assets.GetTexture(key));
 	}
 	else
 	{
-		SetTexture(*assets.LoadTexture(Name + "_background", bg));
+		SetTexture(*m_assets.LoadTexture(Name + "_background", bg));
 	}
 }
 
