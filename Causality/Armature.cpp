@@ -1,11 +1,10 @@
 #include "pch_bcl.h"
 #include "Armature.h"
 #include "Animations.h"
-#include <boost\range.hpp>
-#include <boost\range\adaptors.hpp>
-#include <boost\range\algorithm.hpp>
+#include <boost\range\adaptor\transformed.hpp>
+#include <boost\range\algorithm\copy.hpp>
 #include <regex>
-#include <boost\assign.hpp>
+//#include <boost\assign.hpp>
 #include <iostream>
 #include <Eigen\Eigen>
 
@@ -442,60 +441,60 @@ void StaticArmature::CaculateTopologyOrder()
 }
 
 // Lerp the local-rotation and scaling, "interpolate in Time"
-
-iterator_range<std::sregex_token_iterator> words_from_string(const std::string& str)
-{
-	using namespace std;
-	regex wordPattern("[_\\s]?[A-Za-z][a-z]*\\d*");
-	sregex_token_iterator wbegin(str.begin(), str.end(), wordPattern);
-	iterator_range<sregex_token_iterator> words(wbegin, sregex_token_iterator());
-	return words;
-}
-
-using namespace std;
-
-std::map<std::string, JointSemanticProperty>
-name2semantic = boost::assign::map_list_of
-(string("hand"), JointSemanticProperty(Semantic_Hand))
-(string("foreleg"), JointSemanticProperty(Semantic_Hand | Semantic_Foot))
-(string("arm"), JointSemanticProperty(Semantic_Hand))
-(string("claw"), JointSemanticProperty(Semantic_Hand))
-(string("wing"), JointSemanticProperty(Semantic_Hand | Semantic_Wing))
-(string("head"), JointSemanticProperty(Semantic_Head))
-(string("l"), JointSemanticProperty(Semantic_Left))
-(string("r"), JointSemanticProperty(Semantic_Right))
-(string("left"), JointSemanticProperty(Semantic_Left))
-(string("right"), JointSemanticProperty(Semantic_Right))
-(string("leg"), JointSemanticProperty(Semantic_Foot))
-(string("foot"), JointSemanticProperty(Semantic_Foot))
-(string("tail"), JointSemanticProperty(Semantic_Tail))
-(string("ear"), JointSemanticProperty(Semantic_Ear))
-(string("eye"), JointSemanticProperty(Semantic_Eye))
-(string("noise"), JointSemanticProperty(Semantic_Nouse));
-
-const JointSemanticProperty & Joint::AssignSemanticsBasedOnName()
-{
-	using namespace std;
-	using namespace boost::adaptors;
-
-	auto words = words_from_string(Name);
-	for (auto& word : words)
-	{
-		string word_str;
-		if (*word.first == '_' || *word.first == ' ')
-			word_str = std::string(word.first + 1, word.second);
-		else
-			word_str = std::string(word.first, word.second);
-
-		for (auto& c : word_str)
-		{
-			c = std::tolower(c);
-		}
-
-		this->Semantic |= name2semantic[word_str];
-	}
-	return this->Semantic;
-}
+//
+//iterator_range<std::sregex_token_iterator> words_from_string(const std::string& str)
+//{
+//	using namespace std;
+//	regex wordPattern("[_\\s]?[A-Za-z][a-z]*\\d*");
+//	sregex_token_iterator wbegin(str.begin(), str.end(), wordPattern);
+//	iterator_range<sregex_token_iterator> words(wbegin, sregex_token_iterator());
+//	return words;
+//}
+//
+//using namespace std;
+//
+//std::map<std::string, JointSemanticProperty>
+//name2semantic = boost::assign::map_list_of
+//(string("hand"), JointSemanticProperty(Semantic_Hand))
+//(string("foreleg"), JointSemanticProperty(Semantic_Hand | Semantic_Foot))
+//(string("arm"), JointSemanticProperty(Semantic_Hand))
+//(string("claw"), JointSemanticProperty(Semantic_Hand))
+//(string("wing"), JointSemanticProperty(Semantic_Hand | Semantic_Wing))
+//(string("head"), JointSemanticProperty(Semantic_Head))
+//(string("l"), JointSemanticProperty(Semantic_Left))
+//(string("r"), JointSemanticProperty(Semantic_Right))
+//(string("left"), JointSemanticProperty(Semantic_Left))
+//(string("right"), JointSemanticProperty(Semantic_Right))
+//(string("leg"), JointSemanticProperty(Semantic_Foot))
+//(string("foot"), JointSemanticProperty(Semantic_Foot))
+//(string("tail"), JointSemanticProperty(Semantic_Tail))
+//(string("ear"), JointSemanticProperty(Semantic_Ear))
+//(string("eye"), JointSemanticProperty(Semantic_Eye))
+//(string("noise"), JointSemanticProperty(Semantic_Nouse));
+//
+//const JointSemanticProperty & Joint::AssignSemanticsBasedOnName()
+//{
+//	using namespace std;
+//	using namespace boost::adaptors;
+//
+//	auto words = words_from_string(Name);
+//	for (auto& word : words)
+//	{
+//		string word_str;
+//		if (*word.first == '_' || *word.first == ' ')
+//			word_str = std::string(word.first + 1, word.second);
+//		else
+//			word_str = std::string(word.first, word.second);
+//
+//		for (auto& c : word_str)
+//		{
+//			c = std::tolower(c);
+//		}
+//
+//		this->Semantic |= name2semantic[word_str];
+//	}
+//	return this->Semantic;
+//}
 
 const Bone & Causality::IArmature::default_bone(int index) const
 {

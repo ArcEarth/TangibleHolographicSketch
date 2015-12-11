@@ -4,14 +4,15 @@
 #include <DDSTextureLoader.h>
 #include "Material.h"
 #include "tiny_obj_loader.h"
-#include <boost\filesystem.hpp>
 #include <ShaderEffect.h>
 #include <ShadowMapGenerationEffect.h>
+#include <filesystem>
 
+using namespace std;
+using namespace std::tr2::sys;
 using namespace DirectX::Scene;
 using namespace DirectX;
 using namespace tinyobj;
-using namespace std;
 using namespace Microsoft::WRL;
 
 PhongMaterial::PhongMaterial()
@@ -22,7 +23,7 @@ PhongMaterial::PhongMaterial()
 PhongMaterial::PhongMaterial(const PhongMaterialData & data, const std::wstring & lookupDirectory, ID3D11Device * pDevice)
 	: PhongMaterialData(data)
 {
-	boost::filesystem::path lookup(lookupDirectory);
+	path lookup(lookupDirectory);
 	if (!AmbientMapName.empty())
 		AmbientMapName = (lookup / AmbientMapName).string();
 	if (!DiffuseMapName.empty())
@@ -49,7 +50,7 @@ std::vector<std::shared_ptr<PhongMaterial>> PhongMaterial::CreateFromMtlFile(ID3
 	std::vector<material_t> materis;
 	std::ifstream fin(file);
 	tinyobj::LoadMtl(map, materis, fin);
-	boost::filesystem::path lookup(lookupDirectory);
+	path lookup(lookupDirectory);
 
 	Materials.reserve(materis.size());
 
@@ -106,7 +107,7 @@ void tolower(std::string& str)
 }
 
 HRESULT CreateTextureFromFile(ID3D11Device* d3dDevice,
-	const boost::filesystem::path& fileName,
+	const path& fileName,
 	ID3D11Resource** texture,
 	ID3D11ShaderResourceView** textureView,
 	size_t maxsize = 0)
@@ -135,7 +136,7 @@ void PhongMaterial::CreateDeviceResources(ID3D11Device * pDevice, bool forceUpda
 	ComPtr<ID3D11DeviceContext> pContext;
 	ComPtr<ID3D11Resource> pResource;
 	pDevice->GetImmediateContext(&pContext);
-	boost::filesystem::path fileName;
+	path fileName;
 
 	if (!DiffuseMapName.empty())
 	{

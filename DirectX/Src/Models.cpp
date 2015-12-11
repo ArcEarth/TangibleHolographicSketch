@@ -6,9 +6,9 @@
 #include <sstream>
 #include <WICTextureLoader.h>
 #include <DDSTextureLoader.h>
-#include <boost\filesystem.hpp>
+//#include <boost\filesystem.hpp>
 #include "tiny_obj_loader.h"
-#include <boost\filesystem.hpp>
+//#include <boost\filesystem.hpp>
 #include <CommonStates.h>
 #include "MeshData.h"
 #include <algorithm>
@@ -20,8 +20,8 @@
 using namespace DirectX;
 using namespace DirectX::Scene;
 using namespace std;
+using namespace std::tr2::sys;
 using namespace stdx;
-using namespace boost::filesystem;
 
 using Microsoft::WRL::ComPtr;
 unordered_map<const D3D11_INPUT_ELEMENT_DESC*, unordered_map<void const*, ComPtr<ID3D11InputLayout>>>
@@ -128,7 +128,7 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 	std::vector<std::shared_ptr<MeshBuffer>> Meshs;
 	std::vector<std::shared_ptr<PhongMaterial>> Materials;
 
-	boost::filesystem::path lookup(textureDir);
+	path lookup(textureDir);
 
 	auto& Vertices = pResult->Vertices;
 	auto& Facets = pResult->Facets;

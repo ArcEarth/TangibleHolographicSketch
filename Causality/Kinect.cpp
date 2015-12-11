@@ -1,8 +1,7 @@
 #include "pch_bcl.h"
 #include <Kinect.h>
 #include "Kinect.h"
-#include <boost\range.hpp>
-#include <boost\range\adaptors.hpp>
+//#include <boost\range.hpp>
 #include <iostream>
 #include <chrono>
 #include <wrl\event.h>

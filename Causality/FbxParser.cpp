@@ -6,6 +6,7 @@
 
 #pragma comment(lib,"libfbxsdk.lib")
 
+namespace adaptors = boost::adaptors;
 namespace fbx = fbxsdk;
 
 //using namespace fbx;

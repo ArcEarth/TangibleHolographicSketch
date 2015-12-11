@@ -19,7 +19,8 @@
 //// boost and std extension
 //#include <boost\signals2.hpp>
 //#include <boost\any.hpp>
-#include <boost\range.hpp>
+#include <boost\range\iterator_range_core.hpp>
+#include <boost\range\adaptor\transformed.hpp>
 //#include <boost\operators.hpp>
 //#include <boost\format.hpp>
 //#include <boost\filesystem.hpp>
@@ -47,9 +48,9 @@ namespace Causality
 
 	using std::string;
 	using boost::iterator_range;
-	using boost::sub_range;
+	//using boost::sub_range;
 
-	namespace adaptors = boost::adaptors;
+	//namespace adaptors = boost::adaptors;
 
 	using gsl::owner;
 	using gsl::byte;

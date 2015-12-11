@@ -2,16 +2,17 @@
 #include "BCL.h"
 #include <filesystem>
 #include "RenderSystemDecl.h"
+#include <boost\range\adaptor\map.hpp>
 
 //#include <ppltasks.h>
-#include <typeinfo>
+#include <typeindex>
 #include <unordered_map>
 #include <boost\any.hpp>
 #include "Serialization.h"
 
 
 //#include "Textures.h"
-//#include "Models.h"
+//#include "Models.h"  
 //#include "Armature.h"
 //#include "CharacterBehavier.h"
 //#include <Effects.h>
@@ -19,7 +20,7 @@
 namespace Causality
 {
 	class AssetDictionary;
-
+	namespace adaptors = boost::adaptors;
 	//using concurrency::task;
 
 	class ArmatureFrameAnimation;

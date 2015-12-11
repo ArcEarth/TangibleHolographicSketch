@@ -29,11 +29,13 @@ if you encounter a problem, email Arc.
 * $(KINECTSDK20_DIR) C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\
 * $(FBX_SDK_ROOT) C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2
 
-##Compile Boost
-### Request Lib
+##Compiled Boost Binary [Download](http://1drv.ms/1Qj7Mkt) 
+### Unzip the binary into BOOST_ROOT folder, so that the boost root folder look like this:
+* $(BOOST_ROOT)\stage\v140\x64
+* $(BOOST_ROOT)\stage\v140\x86
+
+### Dependent Lib
 * Boost::Signal2 (this is evil)
 * Boost::Any (header only)
 * Boost::Range (header only)
-### Compile boost with vc14 x86 and x64 into libraray at
-* $(BOOST_ROOT)\stage\v140\x64
-* $(BOOST_ROOT)\stage\v140\x86
+* Boost::Regex (secondary dependency, even more evil)

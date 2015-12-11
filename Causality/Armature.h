@@ -1,10 +1,10 @@
 #pragma once
 #include <unordered_map>
-//#include <memory>
 #include "Math3D.h"
 #include "Common\tree.h"
 #include "String.h"
 #include <istream>
+#include <boost\range\adaptor\transformed.hpp>
 
 namespace Causality
 {
