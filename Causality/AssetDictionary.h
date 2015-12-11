@@ -1,6 +1,6 @@
 #pragma once
 #include "BCL.h"
-#include <boost\filesystem\path.hpp>
+#include <filesystem>
 #include "RenderSystemDecl.h"
 
 //#include <ppltasks.h>
@@ -30,7 +30,7 @@ namespace Causality
 	class AssetDictionary
 	{
 	public:
-		using path = boost::filesystem::path;
+		using path = std::tr2::sys::path;
 		using any = boost::any;
 
 		using mesh_type = IModelNode;

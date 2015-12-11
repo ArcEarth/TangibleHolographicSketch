@@ -3,7 +3,6 @@
 #include <DirectXHelper.h>
 #include "FbxParser.h"
 #include <ShadowMapEffect.h>
-#include <boost\filesystem.hpp>
 
 #include "Textures.h"
 #include "Models.h"
@@ -13,7 +12,7 @@
 
 
 using namespace Causality;
-using namespace boost::filesystem;
+using namespace std::tr2::sys;
 using namespace DirectX;
 using namespace DirectX::Scene;
 using boost::any;
@@ -100,7 +99,7 @@ AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * sto
 	{
 		if (src != nullptr && strlen(src) != 0)
 		{
-			boost::filesystem::path ref(src);
+			path ref(src);
 			if (ref.extension().string() == ".obj")
 			{
 				auto mesh = LoadObjMesh(name, src, flipNormal);

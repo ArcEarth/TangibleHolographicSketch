@@ -197,3 +197,5 @@ FakesAssemblies/
 
 DirectXTK/Src/Shaders/Compiled/*.inc
 DirectX/Src/Shaders/windows/*.inc
+*.VC.db
+*.Vc.opendb

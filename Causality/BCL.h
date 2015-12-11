@@ -21,7 +21,7 @@
 //#include <boost\any.hpp>
 #include <boost\range.hpp>
 //#include <boost\operators.hpp>
-#include <boost\format.hpp>
+//#include <boost\format.hpp>
 //#include <boost\filesystem.hpp>
 
 #include "Common\stride_range.h"

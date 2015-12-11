@@ -3,11 +3,10 @@
 #include "FbxParser.h"
 #include "EigenExtension.h"
 #include <iostream>
-#include <DirectXMathSSE4.h>
 
 #pragma comment(lib,"libfbxsdk.lib")
 
-namespace fbx = fbxsdk_2015_1;
+namespace fbx = fbxsdk;
 
 //using namespace fbx;
 namespace Causality
@@ -719,7 +718,7 @@ namespace Causality
 			return true;
 		}
 
-		void ImportAnimtionsToBehavierProfile(fbxsdk_2015_1::FbxScene * lScene, const char* anim_name = nullptr)
+		void ImportAnimtionsToBehavierProfile(fbx::FbxScene * lScene, const char* anim_name = nullptr)
 		{
 
 			//1.Extract the animation stacks using a pointer to an instance of the FbxScene (pScene).

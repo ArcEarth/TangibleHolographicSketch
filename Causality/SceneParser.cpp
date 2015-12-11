@@ -2,15 +2,16 @@
 #include "Scene.h"
 #include "SceneParser.h"
 #include <Model.h>
-#include <boost\filesystem.hpp>
 #include <tinyxml2.h>
 #include "Settings.h"
 #include "AssetDictionary.h"
+#include <filesystem>
 
 using namespace tinyxml2;
 using namespace Causality;
 using namespace DirectX::Scene;
 using namespace std;
+using namespace std::tr2::sys;
 
 void ParseSceneSettings(tinyxml2::XMLElement * nScene);
 
@@ -170,7 +171,7 @@ void Scene::LoadFromFile(const string & xml_file)
 	auto& sceneDoc = *m_sourceDoc;
 	auto error = sceneDoc.LoadFile(xml_file.c_str());
 	
-	boost::filesystem::path assetDir(xml_file);
+	path assetDir(xml_file);
 	assetDir = assetDir.remove_filename();
 	m_assets->SetAssetDirectory(assetDir);
 

@@ -2,9 +2,9 @@
 #include "NativeWindow.h"
 #include "Renderable.h"
 #include "Scene.h"
-#include <boost\filesystem\path.hpp>
 #include "Events.h"
 #include "SmartPointers.h"
+#include <filesystem>
 #include <StepTimer.h>
 #include <DeviceResources.h>
 
@@ -17,6 +17,8 @@ namespace DirectX
 
 namespace Causality
 {
+	using std::tr2::sys::path;
+
 	namespace Devices
 	{
 		class OculusRift;
@@ -44,7 +46,7 @@ namespace Causality
 		virtual void OnDeviceRestored() override;
 		virtual void OnResize(const Vector2& size);
 
-		boost::filesystem::path	GetResourcesDirectory() const;
+		path GetResourcesDirectory() const;
 		void SetResourcesDirectory(const std::wstring& dir);
 
 		void RegisterComponent(ICursorInteractive *pComponent);
@@ -57,7 +59,7 @@ namespace Causality
 		//void NotifyChildrenCursorButtonDown(const CursorButtonEvent&e);
 	protected:
 		// Devices & Resources
-		boost::filesystem::path							ResourceDirectory;
+		path											ResourceDirectory;
 
 		// System resources
 		sptr<DebugConsole>								pConsole;

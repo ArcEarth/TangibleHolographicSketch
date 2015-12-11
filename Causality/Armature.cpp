@@ -77,7 +77,7 @@ void Bone::UpdateLocalDataByPositionOnly(const Bone & reference)
 	XMVECTOR v0 = XMLoadA(this->GblTranslation) - XMLoadA(reference.GblTranslation);
 	v0 = XMVector3InverseRotate(v0, reference.GblRotation);
 
-	LclScaling = { 1.0f, XMVectorGetX(XMVector3Length(v0)), 1.0f };
+	LclScaling = Vector3{ 1.0f, XMVectorGetX(XMVector3Length(v0)), 1.0f };
 
 	// with Constraint No-X
 	v0 = XMVector3Normalize(v0);

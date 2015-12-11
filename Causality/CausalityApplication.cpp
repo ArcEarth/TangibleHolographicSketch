@@ -4,7 +4,6 @@
 //#include "Content\SampleFpsTextRenderer.h"
 #include <CommonStates.h>
 #include <PrimitiveVisualizer.h>
-#include <boost\filesystem.hpp>
 #include <ppltasks.h>
 
 #include "Kinect.h"
@@ -15,7 +14,6 @@ using namespace Causality;
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::Scene;
-using namespace boost;
 
 wstring g_SceneFile = L"ArSketch.xml";
 wstring g_ResourcesDirectory(L"D:\\User\\Yupeng\\Documents\\GitHub\\PPARM\\Assets");
@@ -267,7 +265,7 @@ void App::OnResize(const Vector2 & size)
 	//}
 }
 
-boost::filesystem::path App::GetResourcesDirectory() const
+path App::GetResourcesDirectory() const
 {
 	return ResourceDirectory.wstring();
 }
