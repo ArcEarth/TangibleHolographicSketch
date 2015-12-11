@@ -81,8 +81,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(BOOST_ROOT);$(DirectXTKDir)\Inc;$(ProjectDir)Inc;$(IncludePath)</IncludePath>
-    <LibraryPath>$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(DirectXTKDir)\Inc;$(ProjectDir)Inc;$(BOOST_ROOT)\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>

@@ -454,23 +454,6 @@ iterator_range<std::sregex_token_iterator> words_from_string(const std::string& 
 
 using namespace std;
 
-/*
-namespace std
-{
-	//inline
-	namespace literals {
-		//inline
-		namespace string_literals
-		{
-			std::string operator""s(const char* str, std::size_t len)
-			{
-				return std::string(str, len);
-			}
-		}
-	}
-}
-*/
-
 std::map<std::string, JointSemanticProperty>
 name2semantic = boost::assign::map_list_of
 (string("hand"), JointSemanticProperty(Semantic_Hand))
