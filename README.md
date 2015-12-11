@@ -28,3 +28,12 @@ if you encounter a problem, email Arc.
 * $(BOOST_ROOT) D:\SDKs\boost_1_59_0
 * $(KINECTSDK20_DIR) C:\Program Files\Microsoft SDKs\Kinect\v2.0_1409\
 * $(FBX_SDK_ROOT) C:\Program Files\Autodesk\FBX\FBX SDK\2016.1.2
+
+##Compile Boost
+### Request Lib
+* Boost::Signal2 (this is evil)
+* Boost::Any (header only)
+* Boost::Range (header only)
+### Compile boost with vc14 x86 and x64 into libraray at
+* $(BOOST_ROOT)\stage\v140\x64
+* $(BOOST_ROOT)\stage\v140\x86
