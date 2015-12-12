@@ -176,13 +176,12 @@ namespace DirectX
 			template<typename VertexType>
 			inline std::enable_if_t<!std::is_void<VertexType>::value> UpdateVertexBuffer(ID3D11DeviceContext* pContext, VertexType * pVertics, size_t verticesCount)
 			{
-				assert(TVertex::InputElementCount == this->InputElementCount && TVertex::InputElements == this->pInputElements);
-				ExtractDXGIFormat<_TIndex>::value;
+				assert(VertexType::InputElementCount == this->InputElementCount && VertexType::InputElements == this->pInputElements);
 				UpdateVertexBuffer(pContext, pVertics, verticesCount, sizeof(VertexType));
 			}
 
 			template<typename IndexType>
-			inline std::enable_if_t<!std::is_void<IndexType>::value> UpdateIndexBuffer(ID3D11DeviceContext* pContext, void * pIndices, size_t indicesCount)
+			inline std::enable_if_t<!std::is_void<IndexType>::value> UpdateIndexBuffer(ID3D11DeviceContext* pContext, IndexType * pIndices, size_t indicesCount)
 			{
 				assert(ExtractDXGIFormat<IndexType>::value == IndexFormat);
 				UpdateIndexBuffer(pContext, pIndices, indicesCount, sizeof(IndexType));

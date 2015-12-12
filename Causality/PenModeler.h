@@ -26,6 +26,8 @@ namespace Causality
 		PenModeler(int objectIdx = 0);
 		~PenModeler();
 
+		virtual void Parse(const ParamArchive* store) override;
+
 		void SurfaceSketchBegin(MeshType* surface);
 		void SrufaceSketchUpdate(FXMVECTOR pos);
 		void SurfaceSketchEnd();
@@ -33,6 +35,8 @@ namespace Causality
 		void OnAirDragBegin();
 		void OnAirDragUpdate(FXMVECTOR pos);
 		void OnAirDragEnd();
+
+		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
 
 		void Update(time_seconds const& time_delta) override;
 
@@ -50,7 +54,7 @@ namespace Causality
 		vector<Patch>				m_patches;
 		vector<Extrusion>			m_extrusions;
 
-		uptr<DynamicMeshBuffer>		m_meshBuffer;
+		uptr<DynamicMeshBuffer>		m_pMeshBuffer;
 
 		class TrackedPen;
 		uptr<TrackedPen>			m_pTracker;

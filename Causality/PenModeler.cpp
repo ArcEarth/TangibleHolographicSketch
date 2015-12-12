@@ -5,6 +5,8 @@
 #include <PrimitiveVisualizer.h>
 #include <Models.h>
 #include "Vicon.h"
+#include "Scene.h"
+
 
 using namespace Causality;
 using namespace Devices;
@@ -12,6 +14,12 @@ using namespace Math;
 using namespace DirectX::Visualizers;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
+
+
+typedef VertexPositionNormal VertexType;
+static const size_t	g_MeshBufferVertexCap = 2048;
+static const size_t	g_MeshBufferIndexCap = 2048;
+
 
 class PenModeler::TrackedPen
 {
@@ -37,6 +45,7 @@ public:
 			return SetObjectCoordinateFromVicon(object, dt);
 		else if (m_pLeap)
 			return SetObjectCoordinateFromLeap(object, dt);
+		return false;
 	}
 
 	bool SetObjectCoordinateFromVicon(SceneObject* object, double dt)
@@ -51,6 +60,7 @@ public:
 			return true;
 
 		}
+		return false;
 	}
 
 
@@ -123,10 +133,19 @@ private:
 PenModeler::PenModeler(int objectIdx)
 	: m_pTracker(new TrackedPen(objectIdx)), m_state(None), m_target(new MeshType)
 {
+	m_pMeshBuffer.reset(new DynamicMeshBuffer());
 }
 
 PenModeler::~PenModeler()
 {
+}
+
+void PenModeler::Parse(const ParamArchive * store)
+{
+	auto device = this->Scene->GetRenderDevice();
+	m_pMeshBuffer->CreateDeviceResources<VertexType,int>(device,
+		g_MeshBufferVertexCap,
+		g_MeshBufferIndexCap);
 }
 
 void PenModeler::SurfaceSketchBegin(MeshType* surface)
@@ -179,7 +198,22 @@ void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 {
 	auto& extruder = m_extrusions.back();
 	extruder.axis().push_back(pos);
-	//extruder.triangulate(10,10);
+	extruder.triangulate(10,10);
+
+	UpdateMeshBuffer(extruder);
+}
+
+void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
+{
+	auto context = this->Scene->GetRenderContext();
+	auto& vertices = extruder.mesh().vertices;
+	auto& indices = extruder.mesh().indices;
+	m_pMeshBuffer->UpdateVertexBuffer(context,
+		reinterpret_cast<VertexType*>(vertices.data()),
+		vertices.size());
+
+	m_pMeshBuffer->UpdateIndexBuffer(context, indices.data(), indices.size());
+
 }
 
 void PenModeler::OnAirDragEnd()
@@ -287,6 +321,9 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	}
 
 	g_PrimitiveDrawer.End();
+
+	m_pMeshBuffer->Draw(context, pEffect);
+
 	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);
 }
 

@@ -307,29 +307,25 @@ namespace DirectX
 	inline ComPtr<ID3D11Buffer> CreateVertexBuffer(ID3D11Device *pDevice, int Capablity, const VertexType* pInitialData, UINT CPUAccessFlag = 0)
 	{
 		ComPtr<ID3D11Buffer> pBuffer(nullptr);
-		CD3D11_BUFFER_DESC VertexBufferDesc(sizeof(VertexType)*Capablity, D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DEFAULT, CPUAccessFlag);
+		CD3D11_BUFFER_DESC VertexBufferDesc(sizeof(VertexType)*Capablity, D3D11_BIND_VERTEX_BUFFER, CPUAccessFlag? D3D11_USAGE_DYNAMIC:D3D11_USAGE_DEFAULT , CPUAccessFlag);
+		D3D11_SUBRESOURCE_DATA InitialSubresource;
+		D3D11_SUBRESOURCE_DATA* pInitialSubresource = nullptr;
+
 		if (pInitialData) {
-			D3D11_SUBRESOURCE_DATA InitialSubresource;
 			InitialSubresource.pSysMem = pInitialData;
 			InitialSubresource.SysMemPitch = 0;
 			InitialSubresource.SysMemSlicePitch = 0;
-			ThrowIfFailed(
-				pDevice->CreateBuffer(
+			pInitialSubresource = &InitialSubresource;
+		}
+
+		ThrowIfFailed(
+			pDevice->CreateBuffer(
 				&VertexBufferDesc,
-				&InitialSubresource,
+				pInitialSubresource,
 				&pBuffer
 				)
-				);
-		}
-		else {
-			ThrowIfFailed(
-				pDevice->CreateBuffer(
-				&VertexBufferDesc,
-				nullptr,
-				&pBuffer
-				)
-				);
-		}
+			);
+
 		return pBuffer;
 	}
 
@@ -368,18 +364,19 @@ namespace DirectX
 	inline ComPtr<ID3D11Buffer> CreateIndexBuffer(ID3D11Device *pDevice, int Capablity, const IndexType* pInitialData, UINT CPUAccessFlag = 0)
 	{
 		ComPtr<ID3D11Buffer> pBuffer(nullptr);
-		CD3D11_BUFFER_DESC IndexBufferDesc(sizeof(IndexType)*Capablity, D3D11_BIND_INDEX_BUFFER);
-		std::unique_ptr<D3D11_SUBRESOURCE_DATA> pInitialSubresource;
+		CD3D11_BUFFER_DESC IndexBufferDesc(sizeof(IndexType)*Capablity, D3D11_BIND_INDEX_BUFFER, CPUAccessFlag ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT, CPUAccessFlag);
+		D3D11_SUBRESOURCE_DATA initialSubresource;
+		D3D11_SUBRESOURCE_DATA* pInitialSubresource = nullptr;
 		if (pInitialData) {
-			pInitialSubresource.reset(new D3D11_SUBRESOURCE_DATA);
-			pInitialSubresource->pSysMem = pInitialData;
-			pInitialSubresource->SysMemPitch = 0;
-			pInitialSubresource->SysMemSlicePitch = 0;
+			initialSubresource.pSysMem = pInitialData;
+			initialSubresource.SysMemPitch = 0;
+			initialSubresource.SysMemSlicePitch = 0;
+			pInitialSubresource = &initialSubresource;
 		}
 		ThrowIfFailed(
 			pDevice->CreateBuffer(
 			&IndexBufferDesc,
-			pInitialSubresource.get(),
+			pInitialSubresource,
 			&pBuffer
 			)
 			);

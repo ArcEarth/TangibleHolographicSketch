@@ -124,7 +124,7 @@ std::enable_if_t<std::is_integral<IndexType>::value> pushTriangle(vector<IndexTy
 	indices.push_back(c);
 }
 // triangulate top and bottom with path into m_mesh
-inline MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
+MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 {
 	using namespace DirectX;
 	XMVECTOR stdAxis = g_XMIdentityR1.v;

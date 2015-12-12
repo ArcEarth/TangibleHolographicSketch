@@ -11,15 +11,16 @@
 #include "LeapMotion.h"
 #include "Vicon.h"
 
+#include <tinyxml2.h>
+
 using namespace Causality;
 using namespace std;
 namespace sys = std::tr2::sys;
 using namespace DirectX;
 using namespace DirectX::Scene;
 
-wstring g_SceneFile = L"ArSketch.xml";
-wstring g_ResourcesDirectory(L"..\\Assets");
-string	g_ViconSeverIP = "172.21.12.10";
+string  g_AppManifest = "App.xml";
+
 //std::wstring sceneFile = L"SelectorScene.xml";
 
 
@@ -61,20 +62,25 @@ Application::~Application()
 
 int Application::Run(const std::vector<std::string>& args)
 {
-	OnStartup(args);
-	while (!exitProposal)
+	if (OnStartup(args))
 	{
-		MSG msg;
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		while (!exitProposal)
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			OnIdle();
+			MSG msg;
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			else
+			{
+				bool succ = OnIdle();
+				if (!succ)
+					exitProposal = true;
+			}
 		}
 	}
+
 	OnExit();
 	return S_OK;
 }
@@ -90,27 +96,83 @@ void Application::Exit()
 	PostQuitMessage(0);
 }
 
-void App::OnStartup(const std::vector<std::string>& args)
+bool App::OnStartup(const std::vector<std::string>& args)
 {
-	ResourceDirectory = g_ResourcesDirectory;
-	if (ResourceDirectory.is_relative())
-		ResourceDirectory = sys::current_path() / ResourceDirectory;
-	
-	// Initialize Windows
-	pConsole = make_shared<DebugConsole>();
-	pConsole->Initialize(std::string("Ghost Trick Consle"), 1200, 800, false);
-	MoveWindow(pConsole->Handle(), 2000, 100, 1200, 800, false);
+	using namespace tinyxml2;
+	tinyxml2::XMLDocument appDoc(true, Whitespace::COLLAPSE_WHITESPACE);
+	auto error = appDoc.LoadFile(g_AppManifest.c_str());
+	if (error != XML_SUCCESS)
+	{
+		string message = "Failed to load or parse file : " + g_AppManifest;
+		MessageBoxA(NULL, message.c_str(), "Startup failed", MB_OK);
+		return false;
+	}
 
-	//pRift = Devices::OculusRift::GetForCurrentView();
+	auto appSettings = appDoc.FirstChildElement("application");
+	if (!appSettings)
+	{
+		MessageBoxA(NULL, "App.xml is not formated correct", "Startup failed", MB_OK);
+		return false;
+	}
+
+	auto windowSettings = appSettings->FirstChildElement("window");
+	auto consoleSettings = appSettings->FirstChildElement("console");
+
+	string assetDir;
+	GetParam(appSettings->FirstChildElement("assets"), "path", assetDir);
+	string scenestr;
+	GetParam(appSettings->FirstChildElement("scenes"), "path", scenestr);
+
+	m_assetsDir = assetDir;
+	path sceneFile = scenestr;
+
+	if (m_assetsDir.empty())
+		m_assetsDir = sys::current_path();
+	else if (m_assetsDir.is_relative())
+		m_assetsDir = sys::current_path() / m_assetsDir;
+
+	if (sceneFile.is_relative())
+		sceneFile = m_assetsDir / sceneFile;
+	if (!sys::exists(sceneFile))
+	{
+		string message = "Secen file doest exist : " + sceneFile.string();
+		MessageBoxA(NULL, message.c_str(), "Startup failed", MB_OK);
+		return false;
+	}
+
+
+	string title = "No title";
+	GetParam(appSettings, "title", title);
+
+	unsigned width = 1280, height = 720;
+	bool fullscreen = false;
+
+	// Initialize Windows
+	if (consoleSettings)
+	{
+		GetParam(consoleSettings, "width", width);
+		GetParam(consoleSettings, "height", height);
+		GetParam(consoleSettings, "fullscreen", fullscreen);
+
+		pConsole = make_shared<DebugConsole>();
+		pConsole->Initialize(title, width, height, fullscreen);
+	}
+
+	if (windowSettings)
+	{
+		GetParam(windowSettings, "width", width);
+		GetParam(windowSettings, "height", height);
+		GetParam(windowSettings, "fullscreen", fullscreen);
+	}
 
 	pWindow = make_shared<NativeWindow>();
 	if (!pRift)
-		pWindow->Initialize(std::string("Ghost Trick"), 1800, 1080, false);
+		pWindow->Initialize(title, width, height, fullscreen);
 	else
 	{
 		//auto res = pRift->Resoulution();
 		Vector2 res = { 1920, 1080 };
-		pWindow->Initialize(std::string("Ghost Trick"),(unsigned) res.x, (unsigned) res.y, false);
+		pWindow->Initialize(std::string(title), (unsigned)res.x, (unsigned)res.y, false);
 	}
 	//bool useOvr = Devices::OculusRift::Initialize();
 
@@ -137,46 +199,65 @@ void App::OnStartup(const std::vector<std::string>& args)
 	//		pRift = nullptr;
 	//}
 
-	SetupDevices();
+	SetupDevices(appSettings);
 	//auto loadingScene = new Scene;
 	//Scenes.emplace_back(loadingScene);
 	//loadingScene->SetRenderDeviceAndContext(pDevice, pContext);
 	//loadingScene->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
 
-	
 	Scenes.emplace_back(new Scene);
 	auto& selector = Scenes.back();
 	selector->SetRenderDeviceAndContext(pDevice.Get(), pContext.Get());
 	selector->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
-	concurrency::task<void> loadScene([&]() {
+
+	concurrency::task<void> loadScene([sceneFile,&selector]() {
 		cout << "Current Directory :" << sys::current_path() << endl;
-		auto sceneFile = ResourceDirectory / g_SceneFile;
 		cout << "Loading [Scene](" << sceneFile << ") ..." << endl;
 		CoInitializeEx(NULL, COINIT::COINIT_APARTMENTTHREADED);
 		selector->LoadFromFile(sceneFile.string());
 		CoUninitialize();
 		cout << "[Scene] Loading Finished!";
 	});
+
+	return true;
 }
 
-void Causality::App::SetupDevices()
+void App::SetupDevices(const ParamArchive* arch)
 {
-	pVicon = Devices::IViconClient::Create(g_ViconSeverIP);
-	if (pVicon)
-		pVicon->Start();
-
-	pLeap = Devices::LeapMotion::GetForCurrentView();
-
-	pKinect = Devices::KinectSensor::GetForCurrentView();
-
-	if (pKinect)
+	bool enable = false;
+	auto setting = arch->FirstChildElement("vicon");
+	GetParam(setting, "enable", enable);
+	if (setting && enable)
 	{
-		XMMATRIX kinectCoord = XMMatrixRigidTransform(
-			XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
-			XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
-
-		pKinect->SetDeviceCoordinate(kinectCoord);
+		pVicon = Devices::IViconClient::Create();
+		if (pVicon)
+		{
+			pVicon->Initialize(setting);
+			pVicon->Start();
+		}
 	}
+
+	setting = arch->FirstChildElement("leap");
+	GetParam(setting, "enable", enable);
+	if (setting && enable)
+	{
+		pLeap = Devices::LeapMotion::GetForCurrentView();
+	}
+
+	setting = arch->FirstChildElement("kinect");
+	GetParam(setting, "enable", enable);
+	if (setting && enable)
+	{
+		pKinect = Devices::KinectSensor::GetForCurrentView();
+		if (pKinect)
+		{
+			XMMATRIX kinectCoord = XMMatrixRigidTransform(
+				XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
+				XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
+			pKinect->SetDeviceCoordinate(kinectCoord);
+		}
+	}
+
 }
 
 void App::RegisterComponent(IAppComponent *pComponent)
@@ -221,7 +302,7 @@ void App::OnExit()
 {
 }
 
-void App::OnIdle()
+bool App::OnIdle()
 {
 	if (pLeap)
 		pLeap->PullFrame();
@@ -244,6 +325,8 @@ void App::OnIdle()
 	}
 
 	pDeviceResources->Present();
+
+	return true;
 }
 
 void App::OnDeviceLost()
@@ -266,12 +349,12 @@ void App::OnResize(const Vector2 & size)
 
 path App::GetResourcesDirectory() const
 {
-	return ResourceDirectory.wstring();
+	return m_assetsDir.wstring();
 }
 
 void App::SetResourcesDirectory(const std::wstring & dir)
 {
-	ResourceDirectory = dir;
+	m_assetsDir = dir;
 }
 
 void XM_CALLCONV App::RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection)

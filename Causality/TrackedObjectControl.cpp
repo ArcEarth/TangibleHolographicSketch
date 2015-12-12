@@ -37,6 +37,7 @@ public:
 			object->SetOrientation(rigid.Rotation);
 			return true;
 		}
+		return false;
 	}
 
 	bool SetObjectCoordinateFromLeap(SceneObject* object, double dt)

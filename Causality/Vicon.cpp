@@ -77,14 +77,14 @@ public:
 	// Inherited via IViconClient
 	virtual bool Initialize(const ParamArchive * archive) override
 	{
-		string severIP;
-		GetParam(archive, "vicon", severIP);
+		string sever_ip = "localhost";
+		GetParam(archive, "sever_ip", sever_ip);
 		GetParam(archive, "translation", m_world.Translation);
 		GetParam(archive, "scale", m_world.Scale);
 		Vector3 eular;
 		GetParam(archive, "rotation", eular);
 		m_world.Rotation = Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z);
-		this->init(severIP);
+		this->init(sever_ip);
 		return true;
 	}
 	virtual bool IsStreaming() override
@@ -119,7 +119,10 @@ sptr<IViconClient> IViconClient::Create(const std::string &serverIP)
 		auto pClient = g_wpVicon.lock();
 		pClient->stop();
 	}
-	pClient->init(serverIP, "ARSketch");
+
+	if (!serverIP.empty())
+		pClient->init(serverIP);
+
 	return pClient;
 }
 

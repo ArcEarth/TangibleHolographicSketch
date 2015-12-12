@@ -156,6 +156,7 @@ namespace Causality
 			{
 				return ParseVector4(attrval, reinterpret_cast<Vector4&>(param));
 			}
+			return false;
 		}
 
 		bool GetVector2(const ParamArchive * store, const char * name, Vector2 & param)

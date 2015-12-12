@@ -38,10 +38,10 @@ namespace Causality
 		~App();
 
 		// Inherited via Application
-		virtual void OnStartup(const std::vector<std::string>& args) override;
-		void SetupDevices();
+		virtual bool OnStartup(const std::vector<std::string>& args) override;
+		void SetupDevices(const ParamArchive* arch);
 		virtual void OnExit() override;
-		virtual void OnIdle() override;
+		virtual bool OnIdle() override;
 
 		// Inherited via IDeviceNotify
 		virtual void OnDeviceLost() override;
@@ -61,7 +61,7 @@ namespace Causality
 		//void NotifyChildrenCursorButtonDown(const CursorButtonEvent&e);
 	protected:
 		// Devices & Resources
-		path											ResourceDirectory;
+		path											m_assetsDir;
 
 		// System resources
 		sptr<DebugConsole>								pConsole;
