@@ -13,11 +13,12 @@
 
 using namespace Causality;
 using namespace std;
+namespace sys = std::tr2::sys;
 using namespace DirectX;
 using namespace DirectX::Scene;
 
 wstring g_SceneFile = L"ArSketch.xml";
-wstring g_ResourcesDirectory(L"D:\\User\\Yupeng\\Documents\\GitHub\\PPARM\\Assets");
+wstring g_ResourcesDirectory(L"..\\Assets");
 string	g_ViconSeverIP = "172.21.12.10";
 //std::wstring sceneFile = L"SelectorScene.xml";
 
@@ -92,6 +93,8 @@ void Application::Exit()
 void App::OnStartup(const std::vector<std::string>& args)
 {
 	ResourceDirectory = g_ResourcesDirectory;
+	if (ResourceDirectory.is_relative())
+		ResourceDirectory = sys::current_path() / ResourceDirectory;
 	
 	// Initialize Windows
 	pConsole = make_shared<DebugConsole>();
@@ -146,9 +149,11 @@ void App::OnStartup(const std::vector<std::string>& args)
 	selector->SetRenderDeviceAndContext(pDevice.Get(), pContext.Get());
 	selector->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
 	concurrency::task<void> loadScene([&]() {
-		cout << "[Scene] Loading ...";
+		cout << "Current Directory :" << sys::current_path() << endl;
+		auto sceneFile = ResourceDirectory / g_SceneFile;
+		cout << "Loading [Scene](" << sceneFile << ") ..." << endl;
 		CoInitializeEx(NULL, COINIT::COINIT_APARTMENTTHREADED);
-		selector->LoadFromFile((ResourceDirectory / g_SceneFile).string());
+		selector->LoadFromFile(sceneFile.string());
 		CoUninitialize();
 		cout << "[Scene] Loading Finished!";
 	});
