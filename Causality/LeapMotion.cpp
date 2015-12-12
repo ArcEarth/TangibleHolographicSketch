@@ -2,11 +2,11 @@
 #include "LeapMotion.h"
 #include <iostream>
 
-#ifdef _DEBUG
-#pragma comment(lib,"Leapd.lib")
-#else
+//#ifdef _DEBUG
+//#pragma comment(lib,"Leapd.lib")
+//#else
 #pragma comment(lib,"Leap.lib")
-#endif
+//#endif
 
 using namespace Causality::Devices;
 

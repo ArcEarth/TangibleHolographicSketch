@@ -128,7 +128,7 @@
     </Link>
     <PostBuildEvent>
       <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
+copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
     <Manifest />
@@ -158,7 +158,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leapd.dll "$(OutDir)"</Command>
+copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</Command>
     </PostBuildEvent>
     <Manifest />
     <Manifest />

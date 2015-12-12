@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <DirectXMathExtend.h>
+#include <cstdint>
 #include "TriangleMesh.h"
 
 namespace Geometrics
@@ -33,7 +34,7 @@ namespace Geometrics
 	};
 
 
-	using MeshType = TriangleMesh<Vertex, int>;
+	using MeshType = TriangleMesh<Vertex, uint32_t>;
 
 	// public interface - not super efficient, if you use multiple CSG operations you should
 	// use BSP trees and convert them into model only once. Another optimization trick is

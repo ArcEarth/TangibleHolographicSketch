@@ -1,8 +1,11 @@
+#define NOMINMAX
 #include "Extrusion.h"
 
 using namespace Geometrics;
 using namespace DirectX;
 using namespace std;
+
+typedef uint32_t IndexType;
 
 Extrusion::Extrusion()
 	: m_top(nullptr), m_bottom(nullptr), m_path(nullptr), m_dirty(1)
@@ -24,9 +27,9 @@ int Extrusion::intersect(const Ray & ray, std::vector<Vector3>& intersections)
 	return RayIntersection(m_mesh, ray.position, ray.direction, reinterpret_cast<std::vector<DirectX::XMFLOAT3>*>(&intersections));
 }
 
-MeshType & Extrusion::mesh() { assert(!m_dirty, "triangluate the mesh first"); return m_mesh; }
+MeshType & Extrusion::mesh() { assert(!m_dirty); return m_mesh; }
 
-const MeshType & Extrusion::mesh() const { assert(!m_dirty, "triangluate the mesh first"); return m_mesh; }
+const MeshType & Extrusion::mesh() const { assert(!m_dirty); return m_mesh; }
 
 void XM_CALLCONV centralize(_Inout_ Curve & curve, FXMVECTOR center, FXMVECTOR rotation, bool rotateRespectPolarAngle)
 {
@@ -224,11 +227,11 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	{
 		for (int i = 0; i < polarSubdiv; ++i)
 		{
-			int idx = axisIdx * polarSubdiv + i;
-			int upIdx = idx + polarSubdiv;
+			IndexType idx = axisIdx * polarSubdiv + i;
+			IndexType upIdx = idx + polarSubdiv;
 
-			int idx_1 = axisIdx * polarSubdiv + (i + 1) % polarSubdiv;
-			int upIdx_1 = idx_1 + polarSubdiv;
+			IndexType idx_1 = axisIdx * polarSubdiv + (i + 1) % polarSubdiv;
+			IndexType upIdx_1 = idx_1 + polarSubdiv;
 
 			pushTriangle(indices, idx, idx_1, upIdx);
 			pushTriangle(indices, upIdx_1, idx_1, idx);
