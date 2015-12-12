@@ -554,12 +554,19 @@ namespace DirectX
 		assert(!XMVector3Equal(v2, XMVectorZero()));
 		XMVECTOR n1 = XMVector3Normalize(v1);
 		XMVECTOR n2 = XMVector3Normalize(v2);
+		XMVECTOR epsilon = g_XMEpsilon.v;
+
+		if (XMVector4NearEqual(n1, n2, epsilon))
+		{
+			return XMQuaternionIdentity();
+		}
+
 		XMVECTOR axias = XMVector3Cross(n1, n2);
-		if (XMVector4NearEqual(axias, g_XMZero.v, g_XMEpsilon.v))
+		if (XMVector4NearEqual(axias, XMVectorZero(), epsilon))
 		{
 			n2 = g_XMIdentityR0.v;
 			axias = XMVector3Cross(n1, n2);
-			if (XMVector4NearEqual(axias, g_XMZero.v, g_XMEpsilon.v))
+			if (XMVector4NearEqual(axias, XMVectorZero(), epsilon))
 			{
 				n2 = g_XMIdentityR1.v;
 				axias = XMVector3Cross(n1, n2);

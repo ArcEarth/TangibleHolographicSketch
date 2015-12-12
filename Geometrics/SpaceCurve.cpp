@@ -141,10 +141,19 @@ XMVECTOR SpaceCurve::tangent(int idx) const
 	XMVECTOR v1 = XMLoadFloat4A(&m_anchors[rid]);
 	v1 = XMVectorSubtract(v1, v0);
 	v0 = XMVectorSplatW(v1);
-	v1 = XMVectorDivide(v1, v0);
+	if (XMVector4Less(v0, g_XMEpsilon.v))
+	{
+		v1 = XMVectorZero();
+	}
+	else
+	{
+		v1 = XMVectorDivide(v1, v0);
 
-	// set w = 0 as tangent are pure direction
-	v1 = XMVectorSelect(v1, XMVectorZero(), g_XMIdentityR3.v);
+		// set w = 0 as tangent are pure direction
+		v1 = XMVectorSelect(v1, XMVectorZero(), g_XMIdentityR3.v);
+
+	}
+
 	return v1;
 }
 

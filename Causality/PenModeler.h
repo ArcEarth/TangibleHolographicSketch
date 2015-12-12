@@ -23,7 +23,7 @@ namespace Causality
 		};
 
 	public:
-		PenModeler(int objectIdx = 0);
+		PenModeler(int objectIdx = 1);
 		~PenModeler();
 
 		virtual void Parse(const ParamArchive* store) override;

@@ -198,9 +198,12 @@ void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 {
 	auto& extruder = m_extrusions.back();
 	extruder.axis().push_back(pos);
-	extruder.triangulate(10,10);
 
-	UpdateMeshBuffer(extruder);
+	if (extruder.axis().size() > 20)
+	{
+		extruder.triangulate(10, 10);
+		UpdateMeshBuffer(extruder);
+	}
 }
 
 void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
@@ -208,6 +211,7 @@ void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
 	auto context = this->Scene->GetRenderContext();
 	auto& vertices = extruder.mesh().vertices;
 	auto& indices = extruder.mesh().indices;
+
 	m_pMeshBuffer->UpdateVertexBuffer(context,
 		reinterpret_cast<VertexType*>(vertices.data()),
 		vertices.size());
@@ -228,7 +232,7 @@ void PenModeler::Update(time_seconds const & time_delta)
 	m_isVisable = visible;
 	if (m_isVisable)
 	{
-		XMVECTOR pos = m_Transform.LclTranslation;//GetPosition();
+		XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
 
 		if (m_state == None && m_pTracker->IsInking())
 		{
@@ -277,6 +281,8 @@ bool PenModeler::IsVisible(const BoundingGeometry & viewFrustum) const
 
 void DrawCurve(const Curve& curve, FXMVECTOR color)
 {
+	if (curve.size() < 2) return;
+
 	for (int i = 1; i < curve.size(); i++)
 	{
 		XMVECTOR p0 = curve[i - 1];

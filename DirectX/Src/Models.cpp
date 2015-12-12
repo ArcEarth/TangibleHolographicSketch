@@ -1190,7 +1190,7 @@ namespace DirectX {
 			auto hr = pContext->Map(pVertexBuffer.Get(), 0, D3D11_MAP::D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			ThrowIfFailed(hr);
 
-			memcpy_s(mappedResource.pData, VertexBufferCapacity, pVertics, verticesCount * vertexSize);
+			memcpy_s(mappedResource.pData, VertexBufferCapacity * vertexSize, pVertics, verticesCount * vertexSize);
 
 			pContext->Unmap(pVertexBuffer.Get(), 0);
 			VertexCount = verticesCount;
@@ -1206,7 +1206,7 @@ namespace DirectX {
 			auto hr = pContext->Map(pIndexBuffer.Get(), 0, D3D11_MAP::D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			ThrowIfFailed(hr);
 
-			memcpy_s(mappedResource.pData, IndexBufferCapacity, pIndices, indicesCount * indexSize);
+			memcpy_s(mappedResource.pData, IndexBufferCapacity * indexSize, pIndices, indicesCount * indexSize);
 
 			pContext->Unmap(pIndexBuffer.Get(), 0);
 			IndexCount = indicesCount;

@@ -28,7 +28,7 @@ MeshType & Extrusion::mesh() { assert(!m_dirty, "triangluate the mesh first"); r
 
 const MeshType & Extrusion::mesh() const { assert(!m_dirty, "triangluate the mesh first"); return m_mesh; }
 
-void centralize(_Inout_ Curve & curve, FXMVECTOR center, FXMVECTOR rotation, bool rotateRespectPolarAngle)
+void XM_CALLCONV centralize(_Inout_ Curve & curve, FXMVECTOR center, FXMVECTOR rotation, bool rotateRespectPolarAngle)
 {
 	using namespace DirectX;
 
@@ -72,7 +72,7 @@ void centralize(_Inout_ Curve & curve, FXMVECTOR center, FXMVECTOR rotation, boo
 
 }
 
-RigidTransform centralize(Curve& curve, FXMVECTOR identityAxis = DirectX::g_XMIdentityR1.v, bool rotateRespectPolarAngle = true);
+RigidTransform XM_CALLCONV centralize(Curve& curve, FXMVECTOR identityAxis = DirectX::g_XMIdentityR1.v, bool rotateRespectPolarAngle = true);
 
 /// <summary>
 ///	return the transform from centralized curve to original curve
@@ -81,7 +81,7 @@ RigidTransform centralize(Curve& curve, FXMVECTOR identityAxis = DirectX::g_XMId
 /// <param name="identityAxis">the axis that rotate the patch normal into</param>
 /// <param name="rotateRespectPolarAngle">should the function zerolize the polar angle</param>
 /// <returns>return the transform from centralized curve to original curve r[0] = translation, r[1] = rotation quaternion</returns>
-RigidTransform centralize(_Inout_ Curve & curve, FXMVECTOR identityAxis, bool rotateRespectPolarAngle)
+RigidTransform XM_CALLCONV centralize(_Inout_ Curve & curve, FXMVECTOR identityAxis, bool rotateRespectPolarAngle)
 {
 	using namespace DirectX;
 
@@ -129,31 +129,43 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	using namespace DirectX;
 	XMVECTOR stdAxis = g_XMIdentityR1.v;
 
+	bool useTop = m_top != nullptr;
+
 	m_mesh.clear();
 	assert(m_bottom != nullptr);
-	auto top = m_top->boundry();
-	auto bottom = m_bottom->boundry();
-	auto& path = *m_path;
 
-	top.resample(polarSubdiv);
-	bottom.resample(polarSubdiv);
+	auto path = *m_path;
+
+	path.resample(axisSubdiv + 1);
 
 	XMVECTOR p0 = path.position(0);;
-	XMVECTOR p1 = path.tangent((int)(path.size() - 1));
 	XMVECTOR t0 = path.tangent(0);
-	XMVECTOR t1 = path.tangent((int)(path.size() - 1));
+	if (XMVector4Less(t0, g_XMEpsilon.v))
+		t0 = stdAxis;
 
-	XMVECTOR r0 = XMQuaternionRotationVectorToVector(stdAxis, path.tangent(0));
-	XMVECTOR r1 = XMQuaternionRotationVectorToVector(t0, t1);
-	r1 = XMQuaternionMultiply(r0, r1);
+	XMVECTOR r0 = XMQuaternionRotationVectorToVector(stdAxis, t0);
 
-	// inverse r0,r1
+	// inverse r0
 	r0 = XMQuaternionConjugate(r0);
-	r1 = XMQuaternionConjugate(r1);
 
+	Curve top, bottom = m_bottom->boundry();
+
+	bottom.resample(polarSubdiv);
 	centralize(bottom, p0, r0, true);
-	centralize(top, p1, r1, true);
-	// put r0 back
+
+	if (useTop)
+	{
+		XMVECTOR p1 = path.tangent((int)(path.size() - 1));
+		XMVECTOR t1 = path.tangent((int)(path.size() - 1));
+		XMVECTOR r1 = XMQuaternionRotationVectorToVector(t0, t1);
+		r1 = XMQuaternionMultiply(r0, r1);
+		r1 = XMQuaternionConjugate(r1);
+
+		top.resample(polarSubdiv);
+		centralize(top, p1, r1, true);
+	}
+
+	// put r0 back , r1 are useless after
 	r0 = XMQuaternionConjugate(r0);
 
 	auto  length = path.length();
@@ -165,25 +177,36 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 
 	int idxBase = vertices.size();
 
-	XMDUALVECTOR disp;
+	XMVECTOR r0t = XMQuaternionIdentity();
 	for (int axisIdx = 0; axisIdx <= axisSubdiv; axisIdx++)
 	{
 		float t = axisIdx * interval;
 		XMVECTOR tv = XMVectorReplicate(t);
 
 		// axis posion
-		XMVECTOR pt = path.position(t);
+		XMVECTOR pt = path.position(axisIdx);
 		// axis tanget
-		auto tt = path.tangent(t);
+		XMVECTOR tt = path.tangent(axisIdx);
 
-		auto r0t = XMQuaternionRotationVectorToVector(t0, tt);
+		// update rotation only if the tangent are not zero
+		if (XMVector4Greater(tt, g_XMEpsilon.v))
+			r0t = XMQuaternionRotationVectorToVector(t0, tt);
+
 		// axis rotation
 		XMVECTOR rt = XMQuaternionMultiply(r0, r0t);
 
 		for (int i = 0; i < polarSubdiv; ++i)
 		{
-			auto v = XMVectorLerpV(bottom.position(i), top.position(i), tv);
-			auto vt = XMVectorLerpV(bottom.tangent(i), top.tangent(i), tv);
+			XMVECTOR v, vt;
+
+			v = bottom.position(i);
+			vt = bottom.tangent(i);
+			if (useTop)
+			{
+				// Lerp between bottom curve and top curve
+				v = XMVectorLerpV(v, top.position(i), tv);
+				vt = XMVectorLerpV(vt, top.tangent(i), tv);
+			}
 
 			v = XMVector3Rotate(v, rt);
 			v += pt;
