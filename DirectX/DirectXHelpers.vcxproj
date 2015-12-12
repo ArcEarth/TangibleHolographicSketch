@@ -24,8 +24,8 @@
     <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
-    <TinyXml2Dir>..\..\tinyxml2</TinyXml2Dir>
-    <DirectXTKDir>D:\SDKs\DirectXTK</DirectXTKDir>
+    <TinyXml2Dir>..\tinyxml2</TinyXml2Dir>
+    <DirectXTKDir>..\DirectXTK</DirectXTKDir>
     <SrcDir>.\Src</SrcDir>
     <ShaderBtyeCodeDir>$(SrcDir)\Shaders\Windows</ShaderBtyeCodeDir>
     <CdToSrcShaders>cd Src\Shaders\</CdToSrcShaders>

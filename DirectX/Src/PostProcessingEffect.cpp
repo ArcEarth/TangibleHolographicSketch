@@ -181,8 +181,8 @@ public:
 
 	void SetInputViewport(const D3D11_VIEWPORT &viewport,const XMUINT2& textureSize)
 	{
-		inputViewport.uv_base = { viewport.TopLeftX / (float)textureSize.x,viewport.TopLeftY / (float)textureSize.y };
-		inputViewport.uv_range = { viewport.Width / (float)textureSize.x,viewport.Height / (float)textureSize.y };
+		inputViewport.uv_base = float2{ viewport.TopLeftX / (float)textureSize.x,viewport.TopLeftY / (float)textureSize.y };
+		inputViewport.uv_range = float2{ viewport.Width / (float)textureSize.x,viewport.Height / (float)textureSize.y };
 		dirtyFlags |= EffectDirtyFlags::VSConstantBuffer;
 	}
 

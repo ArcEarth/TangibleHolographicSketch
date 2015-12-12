@@ -1,15 +1,15 @@
 #pragma once
-//#ifndef _DEBUG
-//#define PARALLEL_UPDATE
-//#endif
 
+// Prevent Windows header's macro pollution
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 
 #include <DirectXMathExtend.h>
 #include "Polygonizer.h"
 #include <DirectXCollision.h>
 #include <vector>
 #include <array>
-#include <SimpleMath.h>
 #include "BezierClip.h"
 #include "KdBVH.h"
 
@@ -17,10 +17,6 @@
 #include <Eigen\Dense>
 #include <Eigen\Sparse>
 #include <boost\graph\adjacency_list.hpp>
-#endif
-
-#ifdef PARALLEL_UPDATE
-#include <ppl.h>
 #endif
 
 namespace Geometrics{
@@ -261,7 +257,7 @@ namespace Geometrics{
 		//Output the data
 		Vertices.resize(polygonizer.no_vertices());
 		Indices.resize(polygonizer.no_triangles()*3);
-	#ifndef PARALLEL_UPDATE
+
 		for (int i = 0; i < polygonizer.no_vertices(); i++)
 		{
 			Vertices[i].position = polygonizer.get_vertex(i);
@@ -273,20 +269,7 @@ namespace Geometrics{
 			Indices[i*3 + 1] = polygonizer.get_triangle(i).v1;
 			Indices[i*3 + 2] = polygonizer.get_triangle(i).v0;
 		}
-	#else
-		Concurrency::parallel_for<int>(0 , polygonizer.no_vertices() , 1 , [&](int i)
-		{
-			Vertices[i].position = polygonizer.get_vertex(i);
-			Vertices[i].normal = polygonizer.get_normal(i);
-		});
-		Concurrency::parallel_for<int>(0 , polygonizer.no_triangles() , 1 , [&](int i)
-		{
-			// Reverse the triangle order since Dx is LH
-			Indices[i*3 + 0] = polygonizer.get_triangle(i).v2;
-			Indices[i*3 + 1] = polygonizer.get_triangle(i).v1;
-			Indices[i*3 + 2] = polygonizer.get_triangle(i).v0;
-		});
-	#endif
+
 		//const DirectX::XMFLOAT3* points = &polygonizer.get_VerticesList()[0];
 		//DirectX::BoundingBox::CreateFromPoints(BoundingBox,Vertices.size(),points,sizeof(DirectX::XMFLOAT3));
 		//DirectX::BoundingSphere::CreateFromPoints(BoundingSphere,Vertices.size(),points,sizeof(DirectX::XMFLOAT3));

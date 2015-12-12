@@ -68,11 +68,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
-    <CGALDIR>D:\SDKs\CGAL-4.6.2</CGALDIR>
-    <DirectXTKDir>D:\SDKs\DirectXTK</DirectXTKDir>
+    <CGALDIR>..\cgal</CGALDIR>
+    <DirectXTKDir>..\DirectXTK</DirectXTKDir>
+    <EigenDir>..\Eigen</EigenDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(BOOST_ROOT);$(DirectXTKDir)\Inc;$(CGALDIR)\include;..\DirectX\Inc;..\GSL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(BOOST_ROOT);$(DirectXTKDir)\Inc;$(CGALDIR)\include;..\DirectX\Inc;..\GSL\include;$(EigenDir)\;$(IncludePath)</IncludePath>
     <LibraryPath>$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,23 +145,17 @@
     <ClInclude Include="TriangleMesh.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="csg.cpp" />
     <ClCompile Include="Extrusion.cpp" />
     <ClCompile Include="MetaBallModel.cpp" />
     <ClCompile Include="Polygonizer.cpp" />
     <ClCompile Include="SpaceCurve.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DirectX\DirectXHelpers.vcxproj">
+      <Project>{c6d38a30-8097-4ca4-a1cb-1273ce21eaaf}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Eigen.3.2.4\build\native\Eigen.targets" Condition="Exists('..\packages\Eigen.3.2.4\build\native\Eigen.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Eigen.3.2.4\build\native\Eigen.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Eigen.3.2.4\build\native\Eigen.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

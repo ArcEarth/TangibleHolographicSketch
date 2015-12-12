@@ -26,12 +26,12 @@
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
     <TinyXml2Dir>..\tinyxml2</TinyXml2Dir>
-    <DirectXTKDir>D:\SDKs\DirectXTK</DirectXTKDir>
+    <DirectXTKDir>..\DirectXTK</DirectXTKDir>
     <Bullet3Dir>..\bullet3</Bullet3Dir>
     <DirectXHelperDir>..\DirectX</DirectXHelperDir>
-    <DLibDir>D:\SDKs\dlib-18.17\</DLibDir>
+    <DLibDir>..\dlib-18.17\</DLibDir>
     <EigenDir>..\Eigen\</EigenDir>
-    <FftwDir>D:\SDKs\fftw-dll64-3.3.4</FftwDir>
+    <FftwDir>..\fftw-dll64-3.3.4</FftwDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -81,7 +81,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;..\DirectXTK\Inc;..\ThinyXML2\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
     <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
@@ -89,20 +89,20 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;..\DirectXTK\Inc;..\ThinyXML2\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
     <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(FftwDir);$(LibraryPath)</LibraryPath>
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(FftwDir);$(PATH);</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;..\DirectXTK\Inc;..\ThinyXML2\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
     <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;..\DirectXTK\Inc;..\ThinyXML2\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
     <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath);$(FftwDir);</LibraryPath>
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(PATH);$(FftwDir);</ExecutablePath>
@@ -352,16 +352,16 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <Xml Include="manifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\SDKs\DirectXTK\DirectXTK_Desktop_2015.vcxproj">
-      <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
-    </ProjectReference>
     <ProjectReference Include="$(DirectXHelperDir)\DirectXHelpers.vcxproj">
       <Project>{c6d38a30-8097-4ca4-a1cb-1273ce21eaaf}</Project>
+    </ProjectReference>
+    <ProjectReference Include="$(DirectXTKDir)\DirectXTK_Desktop_2015.vcxproj">
+      <Project>{e0b52ae7-e160-4d32-bf3f-910b785e5a8e}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Geometrics\Geometrics.vcxproj">
       <Project>{cdf563c5-5714-413c-b987-cf0cdcef24b2}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\ThinyXML2\tinyxml2\tinyxml2.vcxproj">
+    <ProjectReference Include="..\tinyxml2\tinyxml2\tinyxml2.vcxproj">
       <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\ViconReader\ViconReader.vcxproj">
