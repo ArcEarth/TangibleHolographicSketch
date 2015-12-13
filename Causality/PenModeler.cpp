@@ -199,7 +199,7 @@ void PenModeler::Update(time_seconds const & time_delta)
 
 		if (m_state == None && m_pTracker->IsInking())
 		{
-			SurfaceSketchBegin(m_target);
+			SurfaceSketchBegin();
 		}
 		else if (m_state == Inking && !m_pTracker->IsInking())
 		{
