@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include <iostream>
 
+
 using namespace Causality;
 using namespace Devices;
 using namespace Math;
@@ -20,7 +21,7 @@ static const size_t	g_MeshBufferVertexCap = 2048;
 static const size_t	g_MeshBufferIndexCap = 2048;
 
 PenModeler::PenModeler(int objectIdx)
-	: m_state(None), m_target(new MeshType)
+	: m_state(None), m_target(new MeshType), m_pTargetMesh(nullptr)
 {
 	m_pMeshBuffer.reset(new DynamicMeshBuffer());
 	m_pTracker = nullptr;
@@ -44,13 +45,58 @@ void PenModeler::Parse(const ParamArchive * store)
 {
 	SceneObject::Parse(store);
 	auto device = this->Scene->GetRenderDevice();
-	m_pMeshBuffer->CreateDeviceResources<VertexType,IndexType>(device,
+	m_pMeshBuffer->CreateDeviceResources<VertexType, IndexType>(device,
 		g_MeshBufferVertexCap,
 		g_MeshBufferIndexCap);
 }
 
 void PenModeler::OnParentChanged(SceneObject * oldParent)
 {
+	if (oldParent != parent())
+	{
+		auto pVisual = dynamic_cast<VisualObject*>(parent());
+		if (pVisual)
+		{
+			ExtractMeshFromVisual(pVisual);
+		}
+	}
+
+}
+
+void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
+{
+	using DirectX::Scene::DefaultStaticModel;
+	using DirectX::Scene::DefaultSkinningModel;
+
+	if (m_pTargetMesh)
+	{
+		delete m_pTargetMesh;
+		m_pTargetMesh = nullptr;
+	}
+
+	{
+		auto pModel = dynamic_cast<DefaultStaticModel*>(pVisual->RenderModel());
+		if (pModel)
+		{
+			m_pTargetMesh = new MeshType;
+			auto& vertics = m_pTargetMesh->vertices;
+			auto& indices = m_pTargetMesh->indices;
+
+			MeshType::VertexType vt;
+			for (auto& v : pModel->Vertices)
+			{
+				vt.position = v.position;
+				vt.normal = v.normal;
+				vertics.push_back(vt);
+			}
+			for (auto& f : pModel->Facets)
+			{
+				for (int i = 0; i < 3; ++i)
+					indices.push_back(f[i]);
+			}
+			return;
+		}
+	}
 }
 
 void PenModeler::SurfaceSketchBegin(MeshType* surface)

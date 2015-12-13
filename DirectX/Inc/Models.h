@@ -461,7 +461,7 @@ namespace DirectX
 			~DefaultStaticModel();
 		public:
 			std::vector<VertexType>								Vertices;
-			std::vector<FacetPrimitives::Triangle<IndexType>>	Facets;
+			std::vector<TriangleType>							Facets;
 			stdx::stride_range<Vector3>							Positions;
 			stdx::stride_range<Vector3>							Normals;
 			stdx::stride_range<Vector2>							TexCoords;

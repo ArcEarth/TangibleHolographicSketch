@@ -29,6 +29,8 @@ namespace Causality
 		PenModeler(int objectIdx = 1);
 		~PenModeler();
 
+		void OnParentChanged(SceneObject* oldParent) override;
+		void ExtractMeshFromVisual(Causality::VisualObject * pVisual);
 		void AddChild(SceneObject* child) override;
 		virtual void Parse(const ParamArchive* store) override;
 
@@ -41,8 +43,6 @@ namespace Causality
 		void OnAirDragEnd();
 
 		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
-
-		void OnParentChanged(SceneObject* oldParent) override;
 		void Update(time_seconds const& time_delta) override;
 
 		// Camera culling
@@ -62,5 +62,6 @@ namespace Causality
 		uptr<DynamicMeshBuffer>		m_pMeshBuffer;
 
 		TrackedPen*					m_pTracker;
+		MeshType*					m_pTargetMesh;
 	};
 }
