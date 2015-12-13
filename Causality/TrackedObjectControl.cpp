@@ -22,18 +22,12 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 		auto id = m_pVicon->GetRigidID(viconName);
 		if (id == -1) return false;
 
-		//auto vicon = m_pVicon->GetWorldTransform();
-		//auto world = vicon;
-		//world *= m_intrinsic;
-		//m_pVicon->SetWorldTransform(world);
-
 		auto rigid = m_pVicon->GetRigid(id);
 
-		//m_pVicon->SetWorldTransform(vicon);
+		auto calabrate = rigid.Inversed();
 
 		RigidTransform fin = m_intrinsic;
 		fin *= rigid;
-		//rigid.Rotation = m_intrinsic.Rotation * rigid.Rotation;
 
 		object->SetPosition(fin.Translation);
 		object->SetOrientation(fin.Rotation);
@@ -104,18 +98,34 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 	string rotstr;
 	if (GetParam(archive, "rotation", rotstr))
 	{
-		assert(rotstr[0] == '[');
-		Matrix4x4 mat = Matrix4x4::Identity;
-		sscanf_s(rotstr.c_str(),"[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
-			&mat(0, 0), &mat(0, 1), &mat(0, 2),
-			&mat(1, 0), &mat(1, 1), &mat(1, 2),
-			&mat(2, 0), &mat(2, 1), &mat(2, 2)
-			);
-		auto m = XMLoad(mat);
-		//XMMATRIX v = XMMatrixIdentity();
-		//v *= m;
-		auto q = XMQuaternionRotationMatrix(m);
-		m_intrinsic.Rotation = q;
+		if (rotstr[0] == '[')
+		{
+			Matrix4x4 mat = Matrix4x4::Identity;
+			sscanf_s(rotstr.c_str(), "[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
+				&mat(0, 0), &mat(0, 1), &mat(0, 2),
+				&mat(1, 0), &mat(1, 1), &mat(1, 2),
+				&mat(2, 0), &mat(2, 1), &mat(2, 2)
+				);
+			auto m = XMLoad(mat);
+			m = XMMatrixRotationRollPitchYaw(0, XMConvertToRadians(141), 0) * m;
+
+			//XMMATRIX v = XMMatrixIdentity();
+			//v *= m;
+			auto q = XMQuaternionRotationMatrix(m);
+			m_intrinsic.Rotation = q;
+		}
+		else if (rotstr[0] == '{') // Quaternion
+		{
+			Quaternion q;
+			sscanf_s(rotstr.c_str(), "{%f,%f,%f,%f}",&q.x, &q.y, &q.z, &q.w);
+			m_intrinsic.Rotation = q;
+		}
+		else if (rotstr[0] == '<')
+		{
+			Vector3 e;
+			sscanf_s(rotstr.c_str(), "<%f,%f,%f>", &e.x, &e.y, &e.z);
+			//m_intrinsic.Rotation = q;
+		}
 	}
 
 }

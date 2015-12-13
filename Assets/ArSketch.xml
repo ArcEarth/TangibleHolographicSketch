@@ -17,13 +17,11 @@
 
       <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="75">
         <first_person_keyboard_mouse_control />
-        <tracked_object name="camera_tracker" index="0"
-                        rotation="[0,-1,0;0,0,1;-1,0,0]"/>
+        <tracked_object name="camera_tracker" index="0" translation="0.0394087061,-0.0110831345,-0.0571103394" rotation="{-0.439892471,0.526546955,0.534501433,-0.493508875}"/>
       </shadow_camera>
       <!--<dummy name="camera">
         <coordinate_axis max="0.1"/>
-        <tracked_object name="camera_tracker" index="0" 
-                        rotation="[0,-1,0;0,0,1;-1,0,0]"/>
+        <tracked_object name="camera_tracker" index="0" translation="0.0394087061,-0.0110831345,-0.0571103394" rotation="{-0.439892471,0.526546955,0.534501433,-0.493508875}"/>
       </dummy>-->
 
       <!--<skydome name="sky" background="Sunny_01B.dds"/>-->
@@ -31,13 +29,13 @@
       <coordinate_axis max="3" zx="true"/>
 
       <object name="ground" position="0,-1.0,0" scale="5.0,0.005,5.0" mesh="{cube_mesh}"/>
-      <object name="table" position="0,-0.1,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
+      <object name="table" position="0,0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
       <object name="mug2" position="0,0.5,0" scale="0.05,0.05,0.05" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
         
-        <tracked_object name="mug_tracker" index="0"></tracked_object>
+        <tracked_object name="mug_tracker" index="0" translation="0.00548750907,0.00485016312,-0.0493366420" rotation="{-0.624368191,-0.311971784,-0.329536378,-0.635801673}"/>
         <pen_modeler name="pen">
-          <tracked_pen name="pen_tracker" index="1"></tracked_pen>
+          <tracked_pen name="pen_tracker" index="1" translation="0.0416661724,-0.0723769590,-0.0201216675" rotation="{0.352311999,0.605550349,0.619474351,0.354170293}"></tracked_pen>
           <coordinate_axis max="2"/>
         </pen_modeler>
       </object>

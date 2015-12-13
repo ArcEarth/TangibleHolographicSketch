@@ -1,14 +1,8 @@
 #Backlog
-## Move PC to Vicon system
-## Hardware button in pen
-+ We need one button for signal extrusion on air
-+ Pressure sensing
-+ We need eraser button (virtual)
+## Surface Sketch
+### Cast ray to the surface
+### Get Geometry from SceneObject
 
-## Switch to Vicon system
-+ Synchronize coordinate system with Meta glass
-
-## Surface Sketch based on ray casting
 # Operations
 ## Operation 'Extrusion'
 ## Operation 'Hole'

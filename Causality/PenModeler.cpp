@@ -181,6 +181,11 @@ void PenModeler::Update(time_seconds const & time_delta)
 	}
 }
 
+//XMVECTOR Causality::PenModeler::GetDirection()
+//{
+//
+//}
+
 RenderFlags PenModeler::GetRenderFlags() const
 {
 	return RenderFlags::SpecialEffects;
@@ -206,11 +211,11 @@ void DrawCurve(const Curve& curve, FXMVECTOR color)
 
 void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 {
-	if (m_isVisable)
+	if (m_isVisable && m_pTracker)
 	{
 		g_PrimitiveDrawer.SetWorld(XMMatrixIdentity());
 		XMVECTOR rot = GetOrientation();
-		XMVECTOR yDir = XMVector3Rotate(g_XMIdentityR1.v, rot);
+		XMVECTOR yDir = XMVector3Rotate(-g_XMIdentityR0.v, rot);
 		XMVECTOR pos = GetPosition();
 		XMVECTOR color = Colors::Yellow.v;
 

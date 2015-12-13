@@ -113,28 +113,46 @@ void KeyboardMouseFirstPersonControl::OnKeyUp(const KeyboardEventArgs & e)
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent & e)
 {
-	if (e.Button == CursorButtonEnum::RButton)
+	switch (e.Button)
 	{
+	case CursorButtonEnum::LButton:
+		leftButtonDown = true;
+		break;
+	case CursorButtonEnum::RButton:
+		rightButtonDown = true;
+		break;
+	case CursorButtonEnum::MButton:
 		IsTrackingCursor = true;
 		//CursorMoveEventConnection = pWindow->CursorMove += MakeEventHandler(&App::OnCursorMove_RotateCamera, this);
-		rightButtonDown = true;
+		break;
+	default:
+		break;
 	}
-	else {
-		leftButtonDown = true;
-	}
+	//if (e.Button == CursorButtonEnum::MButton)
+	//{
+	//	IsTrackingCursor = true;
+	//	rightButtonDown = true;
+	//}
+	//else {
+	//	leftButtonDown = true;
+	//}
 }
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonUp(const CursorButtonEvent & e)
 {
-	if (e.Button == CursorButtonEnum::RButton)
+	switch (e.Button)
 	{
-		IsTrackingCursor = false;
-		//CursorMoveEventConnection.disconnect();
-		//pWindow->CursorMove -= CursorMoveEventConnection;
-		rightButtonDown = false;
-	}
-	else {
+	case CursorButtonEnum::LButton:
 		leftButtonDown = false;
+		break;
+	case CursorButtonEnum::RButton:
+		rightButtonDown = false;
+		break;
+	case CursorButtonEnum::MButton:
+		IsTrackingCursor = false;
+		break;
+	default:
+		break;
 	}
 }
 
