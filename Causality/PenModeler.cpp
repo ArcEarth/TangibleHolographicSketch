@@ -250,7 +250,8 @@ void PenModeler::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
 	bool visible = m_pTracker->SetObjectCoordinate(this, time_delta.count());
-	m_isVisable = visible;
+	//m_isVisable = visible;
+	m_isVisable = true;
 	if (m_isVisable)
 	{
 		XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
@@ -271,20 +272,16 @@ void PenModeler::Update(time_seconds const & time_delta)
 		{
 			OnAirDragEnd();
 		}
-		cout << "Pen state = ";
 
 		switch (m_state)
 		{
 		case PenModeler::Inking:
 			SrufaceSketchUpdate(pos);
-			cout << "Inking\n";
 			break;
 		case PenModeler::Dragging:
 			OnAirDragUpdate(pos);
-			cout << "Dragging\n";
 			break;
 		case PenModeler::None:
-			cout << "None\n";
 			break;
 		case PenModeler::Erasing:
 		default:
