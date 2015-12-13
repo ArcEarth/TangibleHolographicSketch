@@ -1620,6 +1620,7 @@ namespace DirectX
 			V = XMVectorAdd(V, XMLoadA(global.Translation));
 
 			XMStoreA(this->Translation, V);
+			return *this;
 		}
 
 		template <>
@@ -1634,12 +1635,14 @@ namespace DirectX
 			V = XMVector3Rotate(V, ParQ);
 
 			XMStoreA(this->Translation, V);
+			return *this;
 		}
 
 		template <>
 		inline RigidTransform& operator *=(const Vector3& trans)
 		{
 			this->Translation += trans;
+			return *this;
 		}
 
 		// Extract the Dual-Quaternion Representation of this rigid transform
