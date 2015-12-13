@@ -34,8 +34,8 @@ namespace Causality
 		void AddChild(SceneObject* child) override;
 		virtual void Parse(const ParamArchive* store) override;
 
-		void SurfaceSketchBegin(MeshType* surface);
-		void SrufaceSketchUpdate(FXMVECTOR pos, XMVECTOR dir);
+		void SurfaceSketchBegin();
+		void SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir);
 		void SurfaceSketchEnd();
 
 		void OnAirDragBegin();

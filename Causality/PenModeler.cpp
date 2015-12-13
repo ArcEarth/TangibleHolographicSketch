@@ -1,6 +1,7 @@
 #include "pch_bcl.h"
 #include "PenModeler.h"
 #include "EigenExtension.h"
+#include <Geometrics\TriangleMesh.h>
 #include <PrimitiveVisualizer.h>
 #include <Models.h>
 #include "Scene.h"
@@ -99,25 +100,49 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 	}
 }
 
-void PenModeler::SurfaceSketchBegin(MeshType* surface)
+void PenModeler::SurfaceSketchBegin()
 {
 	m_patches.emplace_back();
 	m_state = Inking;
 }
 
-void PenModeler::SrufaceSketchUpdate(FXMVECTOR pos, XMVECTOR dir)
+void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 {	
 	bool touching = false;
 	// Find closest point on mesh using pen direction
-	if (touching) { // if pen is touching target
+	vector<XMFLOAT3> intersectionPoints;
+	Geometrics::RayIntersection(*m_pTargetMesh, pos, dir, &intersectionPoints);
+	if (intersectionPoints.size() == 0) {
+		cout << "Pen not touching; no intersections" << endl;
+		return;
+	}
+	Vector3 closest = intersectionPoints[0];
+	Vector3 penTipPos = pos;
+	float shortestDist = Vector3::Distance(closest, penTipPos);
+	//float shortestDist = XMVectorGetX(XMVector3Length(pos - XMLoad(closest)));
+	for (Vector3 point: intersectionPoints) {
+		float dist = Vector3::Distance(point, penTipPos);
+		if (dist < shortestDist) {
+			shortestDist = dist;
+			closest = point;
+		}
+	}
+	if (shortestDist < 0.25) {
+		// touching
 		auto& curve = m_patches.back().boundry();
 		curve.append(pos);
+	}
+	else {
+		cout << "Pen not touching; too far, " << shortestDist << endl;
 	}
 }
 
 void PenModeler::SurfaceSketchEnd()
 {
+	m_state = None;
 	auto& curve = m_patches.back().boundry();
+	if (curve.empty()) return;
+
 	curve.closeLoop();
 
 	//curve.append(curve[0]);
@@ -127,7 +152,6 @@ void PenModeler::SurfaceSketchEnd()
 
 	if (curve.size() > 100)
 		curve.resample(100);
-	m_state = None;
 }
 
 void PenModeler::OnAirDragBegin()
@@ -217,7 +241,7 @@ void PenModeler::Update(time_seconds const & time_delta)
 		switch (m_state)
 		{
 		case PenModeler::Inking:
-			SrufaceSketchUpdate(pos);
+			SrufaceSketchUpdate(pos, dir);
 			break;
 		case PenModeler::Dragging:
 			OnAirDragUpdate(pos);
