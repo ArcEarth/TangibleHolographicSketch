@@ -31,6 +31,7 @@ namespace Causality
 	protected:
 		SceneObject*		m_pRigid;
 		string				m_internalName;
+		IsometricTransform&	m_intrinsic;
 		sptr<Devices::LeapMotion>	m_pLeap;
 		sptr<Devices::IViconClient>	m_pVicon;
 		int					m_idx;

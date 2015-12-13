@@ -22,8 +22,10 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 		auto id = m_pVicon->GetRigidID(viconName);
 		if (id == -1) return false;
 		auto rigid = m_pVicon->GetRigid(id);
-		object->SetPosition(rigid.Translation);
-		object->SetOrientation(rigid.Rotation);
+		RigidTransform fin = m_intrinsic;
+		fin *= rigid;
+		object->SetPosition(fin.Translation);
+		object->SetOrientation(fin.Rotation);
 		return true;
 	}
 	return false;
@@ -64,6 +66,7 @@ bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 }
 
 TrackedObjectControl::TrackedObjectControl()
+	:m_intrinsic(m_Transform.LocalTransform())
 {
 	m_pRigid = nullptr;
 	m_pLeap = LeapMotion::GetForCurrentView();
@@ -84,6 +87,13 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 {
 	SceneObject::Parse(archive);
 	GetParam(archive, "index", m_idx);
+
+	GetParam(archive, "translation", m_intrinsic.Translation);
+	GetParam(archive, "scale", m_intrinsic.Scale);
+	Vector3 eular;
+	GetParam(archive, "rotation", eular);
+	m_intrinsic.Rotation = Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z);
+
 }
 
 void TrackedObjectControl::OnParentChanged(SceneObject * oldParent)
