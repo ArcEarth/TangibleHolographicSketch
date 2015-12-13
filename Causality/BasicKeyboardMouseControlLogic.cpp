@@ -113,20 +113,30 @@ void KeyboardMouseFirstPersonControl::OnKeyUp(const KeyboardEventArgs & e)
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent & e)
 {
+	std::cout << "On button down" << std::endl;
 	if (e.Button == CursorButtonEnum::RButton)
 	{
 		IsTrackingCursor = true;
 		//CursorMoveEventConnection = pWindow->CursorMove += MakeEventHandler(&App::OnCursorMove_RotateCamera, this);
+		rightButtonDown = true;
+	}
+	else {
+		leftButtonDown = true;
 	}
 }
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonUp(const CursorButtonEvent & e)
 {
+	std::cout << "On button up" << std::endl;
 	if (e.Button == CursorButtonEnum::RButton)
 	{
 		IsTrackingCursor = false;
 		//CursorMoveEventConnection.disconnect();
 		//pWindow->CursorMove -= CursorMoveEventConnection;
+		rightButtonDown = false;
+	}
+	else {
+		leftButtonDown = false;
 	}
 }
 

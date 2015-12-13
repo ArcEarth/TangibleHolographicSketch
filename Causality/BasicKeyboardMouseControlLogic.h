@@ -28,6 +28,9 @@ namespace Causality
 		virtual void OnMouseButtonDown(const CursorButtonEvent & e) override;
 		virtual void OnMouseButtonUp(const CursorButtonEvent & e) override;
 		virtual void OnMouseMove(const CursorMoveEventArgs & e) override;
+
+		bool isLeftButtonDown() const { return leftButtonDown;  }
+		bool isRightButtonDown() const { return rightButtonDown; }
 	public:
 		float											Speed;
 		float											AngularSpeed;
@@ -42,6 +45,8 @@ namespace Causality
 		IRigid*											m_pTarget = nullptr;
 
 		bool											IsTrackingCursor = false;
+		bool											leftButtonDown = false;
+		bool											rightButtonDown = false;
 		DirectX::Vector3								CameraVeclocity;
 		DirectX::Vector3								CameraAngularVeclocity;
 		DirectX::Vector3								AngularDisplacement; // Eular Angle

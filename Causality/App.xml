@@ -1,7 +1,13 @@
 <application>
+<<<<<<< HEAD
 	<kinect enable="false"></kinect>
 	<leap enable="false"></leap>
 	<vicon sever_ip="172.21.12.17" enable="true" verbose="true" scale="0.001"></vicon>
+=======
+  <kinect enable="false"></kinect>
+  <leap enable="false"></leap>
+  <vicon sever_ip="172.21.12.17" enable="true"></vicon>
+>>>>>>> origin/master
 
 	<assets path="..\Assets\"></assets>
 	<scenes path="ArSketch.xml"></scenes>

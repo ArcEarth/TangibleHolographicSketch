@@ -26,8 +26,15 @@
       <!--<object name="ground" position="0,-0.01,0" scale="5.0,0.005,5.0" mesh="{cube_mesh}"/>-->
       <object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
       <object name="mug" position="0,0.5,0" scale="0.05,0.05,0.05" mesh="{mug_mesh}">
+<<<<<<< HEAD
         <tracked_object index="0"></tracked_object>
         <pen_modeler></pen_modeler>
+=======
+        <tracked_object idx="0"></tracked_object>
+        <pen_modeler name="pen">
+          <tracked_pen idx="1"></tracked_pen>
+        </pen_modeler>
+>>>>>>> origin/master
       </object>
 
     </grid>

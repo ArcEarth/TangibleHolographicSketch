@@ -6,12 +6,15 @@
 #include <Models.h>
 #include "Vicon.h"
 #include "Scene.h"
+#include "BasicKeyboardMouseControlLogic.h"
 
+#include <iostream>
 
 using namespace Causality;
 using namespace Devices;
 using namespace Math;
 using namespace DirectX::Visualizers;
+using namespace std;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
@@ -109,16 +112,21 @@ public:
 
 	bool IsInking() const
 	{
-		return m_inkingStr > 0.5f && m_inkingStr > m_dragingStr && m_inkingStr > m_erasingStr;
+		return m_mouse->isLeftButtonDown();
+		// Was for leap:
+		//return m_inkingStr > 0.5f && m_inkingStr > m_dragingStr && m_inkingStr > m_erasingStr;
 	}
 	bool IsErasing() const
 	{
-		return m_erasingStr > 0.5f && m_erasingStr > m_dragingStr && m_erasingStr > m_inkingStr;
+		return false;
+		//return m_erasingStr > 0.5f && m_erasingStr > m_dragingStr && m_erasingStr > m_inkingStr;
 	}
 	bool IsDraging() const
 	{
-		return m_dragingStr > 0.5f && m_dragingStr > m_inkingStr && m_dragingStr > m_erasingStr;
+		return m_mouse->isRightButtonDown();
+		//return m_dragingStr > 0.5f && m_dragingStr > m_inkingStr && m_dragingStr > m_erasingStr;
 	}
+	void setMouse(const KeyboardMouseFirstPersonControl* m) { m_mouse = m; }
 
 private:
 	int m_idx;
@@ -126,8 +134,10 @@ private:
 	float m_erasingStr;
 	float m_dragingStr;
 
-	sptr<LeapMotion> m_pLeap;
-	sptr<IViconClient> m_pVicon;
+	const KeyboardMouseFirstPersonControl*
+								m_mouse;
+	sptr<LeapMotion>			m_pLeap;
+	sptr<IViconClient>			m_pVicon;
 };
 
 PenModeler::PenModeler(int objectIdx)
@@ -146,6 +156,17 @@ void PenModeler::Parse(const ParamArchive * store)
 	m_pMeshBuffer->CreateDeviceResources<VertexType,int>(device,
 		g_MeshBufferVertexCap,
 		g_MeshBufferIndexCap);
+}
+
+void Causality::PenModeler::OnParentChanged(SceneObject * oldParent)
+{
+	for (const auto& i : parent()->parent()->children())
+	{
+		if (i.Name == "primary_camera") {
+			m_pTracker->setMouse(dynamic_cast<const KeyboardMouseFirstPersonControl*>(i.first_child()));
+			break;
+		}
+	}
 }
 
 void PenModeler::SurfaceSketchBegin(MeshType* surface)
@@ -229,7 +250,8 @@ void PenModeler::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
 	bool visible = m_pTracker->SetObjectCoordinate(this, time_delta.count());
-	m_isVisable = visible;
+	//m_isVisable = visible;
+	m_isVisable = true;
 	if (m_isVisable)
 	{
 		XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
@@ -260,13 +282,12 @@ void PenModeler::Update(time_seconds const & time_delta)
 			OnAirDragUpdate(pos);
 			break;
 		case PenModeler::None:
+			break;
 		case PenModeler::Erasing:
 		default:
 			break;
 		}
-
 	}
-
 }
 
 RenderFlags PenModeler::GetRenderFlags() const
