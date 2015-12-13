@@ -10,6 +10,8 @@ namespace Causality
 	using Geometrics::Patch;
 	using Geometrics::Extrusion;
 	using Geometrics::MeshType;
+	
+	class KeyboardMouseFirstPersonControl;
 
 	class PenModeler : public VisualObject
 	{
@@ -38,6 +40,7 @@ namespace Causality
 
 		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
 
+		void OnParentChanged(SceneObject* oldParent) override;
 		void Update(time_seconds const& time_delta) override;
 
 		// Camera culling
