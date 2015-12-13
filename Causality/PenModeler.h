@@ -54,8 +54,6 @@ namespace Causality
 	private:
 		// the curves we sketched on the surface
 		PenModelerStateEnum			m_state;
-		// Target object
-		MeshType*					m_target;
 		vector<Patch>				m_patches;
 		vector<Extrusion>			m_extrusions;
 

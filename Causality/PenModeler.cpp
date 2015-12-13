@@ -21,7 +21,7 @@ static const size_t	g_MeshBufferVertexCap = 2048;
 static const size_t	g_MeshBufferIndexCap = 2048;
 
 PenModeler::PenModeler(int objectIdx)
-	: m_state(None), m_target(new MeshType), m_pTargetMesh(nullptr)
+	: m_state(None), m_pTargetMesh(nullptr)
 {
 	m_pMeshBuffer.reset(new DynamicMeshBuffer());
 	m_pTracker = nullptr;
