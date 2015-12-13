@@ -155,6 +155,30 @@ bool VisualObject::IsVisible(const BoundingGeometry & viewFrustum) const
 }
 
 
+CoordinateAxis::CoordinateAxis()
+{
+}
+
+CoordinateAxis::~CoordinateAxis()
+{
+	m_max = 1.0f;
+	m_majorIdent = 1.0f;
+	m_minorIdent = 0.25f;
+	m_ZX = false;
+	m_YZ = false;
+	m_XY = false;
+}
+
+void CoordinateAxis::Parse(const ParamArchive * archive)
+{
+	GetParam(archive, "max", m_max);
+	GetParam(archive, "major_ident", m_majorIdent);
+	GetParam(archive, "minor_ident", m_minorIdent);
+	GetParam(archive, "zx", m_ZX);
+	GetParam(archive, "xy", m_XY);
+	GetParam(archive, "yz", m_YZ);
+}
+
 bool CoordinateAxis::IsVisible(const BoundingGeometry & viewFrustum) const
 {
 	return g_DebugView;
@@ -162,7 +186,7 @@ bool CoordinateAxis::IsVisible(const BoundingGeometry & viewFrustum) const
 
 void CoordinateAxis::Render(IRenderContext * context, IEffect* pEffect)
 {
-	float ub = 10, lb = -10, majorIdent = 1, minorIdent = 0.25f;
+	float ub = m_max, lb = -m_max, majorIdent = m_majorIdent, minorIdent = m_minorIdent;
 	using Visualizers::g_PrimitiveDrawer;
 	using namespace DirectX;
 	//g_PrimitiveDrawer.DrawSphere({ .0f,.0f,.0f,0.02f }, Colors::Cyan);
@@ -171,16 +195,19 @@ void CoordinateAxis::Render(IRenderContext * context, IEffect* pEffect)
 	float Ar = 0.03f, Al = ub, Almr = Al - Ar, Alpr = Al + Ar;
 	g_PrimitiveDrawer.Begin();
 
-	for (float x = lb; x <= ub; x += minorIdent)
+	if (m_ZX)
 	{
-		g_PrimitiveDrawer.DrawLine({ -Al,.0f,x }, { Al,.0f,x }, Colors::DarkGray);
-		g_PrimitiveDrawer.DrawLine({ x,.0f,-Al }, { x,.0f,Al }, Colors::DarkGray);
-	}
+		for (float x = lb; x <= ub; x += minorIdent)
+		{
+			g_PrimitiveDrawer.DrawLine({ -Al,.0f,x }, { Al,.0f,x }, Colors::DarkGray);
+			g_PrimitiveDrawer.DrawLine({ x,.0f,-Al }, { x,.0f,Al }, Colors::DarkGray);
+		}
 
-	for (float x = lb; x <= ub; x += majorIdent)
-	{
-		g_PrimitiveDrawer.DrawLine({ -Al,.0f,x }, { Al,.0f,x }, Colors::DimGray);
-		g_PrimitiveDrawer.DrawLine({ x,.0f,-Al }, { x,.0f,Al }, Colors::DimGray);
+		for (float x = lb; x <= ub; x += majorIdent)
+		{
+			g_PrimitiveDrawer.DrawLine({ -Al,.0f,x }, { Al,.0f,x }, Colors::DimGray);
+			g_PrimitiveDrawer.DrawLine({ x,.0f,-Al }, { x,.0f,Al }, Colors::DimGray);
+		}
 	}
 
 	g_PrimitiveDrawer.DrawLine({ -Al,.0f,.0f }, { Al,.0f,.0f }, Colors::Red);

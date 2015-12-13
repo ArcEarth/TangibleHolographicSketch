@@ -99,12 +99,19 @@ namespace Causality
 
 	class CoordinateAxis : virtual public SceneObject, virtual public IVisual
 	{
+	public:
+		CoordinateAxis();
+		~CoordinateAxis();
 		// Inherited via IVisual
+		virtual void Parse(const ParamArchive* archive) override;
 		virtual bool IsVisible(const BoundingGeometry & viewFrustum) const override;
 		virtual void Render(IRenderContext * context, IEffect* pEffect = nullptr) override;
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection) override;
 
 		// Inherited via IVisual
 		virtual RenderFlags GetRenderFlags() const override;
+	private:
+		float m_majorIdent,m_minorIdent,m_max;
+		bool m_XY, m_YZ, m_ZX;
 	};
 }

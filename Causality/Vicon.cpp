@@ -5,6 +5,7 @@
 
 using namespace Causality::Devices;
 using namespace Causality;
+using namespace Causality::Math;
 
 XM_ALIGNATTR
 class ViconReaderImpl : public IViconClient, public ViconRTClient, public AlignedNew<XMVECTOR>
@@ -94,6 +95,12 @@ public:
 		m_world.Rotation = Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z);
 		this->init(sever_ip);
 		GetParam(archive, "verbose", m_verbose);
+
+		XMMATRIX Rot = XMMatrixIdentity();
+		Rot.r[2] = Rot.r[1];
+		Rot.r[1] = -g_XMIdentityR2.v;
+		m_world.Rotation = XMQuaternionRotationMatrix(Rot);
+
 		return true;
 	}
 	virtual bool IsStreaming() override
