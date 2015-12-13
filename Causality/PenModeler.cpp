@@ -57,13 +57,16 @@ void PenModeler::SurfaceSketchBegin(MeshType* surface)
 {
 	m_patches.emplace_back();
 	m_state = Inking;
-
 }
 
-void PenModeler::SrufaceSketchUpdate(FXMVECTOR pos)
-{
-	auto& curve = m_patches.back().boundry();
-	curve.append(pos);
+void PenModeler::SrufaceSketchUpdate(FXMVECTOR pos, XMVECTOR dir)
+{	
+	bool touching = false;
+	// Find closest point on mesh using pen direction
+	if (touching) { // if pen is touching target
+		auto& curve = m_patches.back().boundry();
+		curve.append(pos);
+	}
 }
 
 void PenModeler::SurfaceSketchEnd()
@@ -146,6 +149,7 @@ void PenModeler::Update(time_seconds const & time_delta)
 	if (m_isVisable)
 	{
 		XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
+		XMVECTOR dir = XMVector3Rotate(-g_XMIdentityR0.v, m_Transform.LclRotation);
 
 		if (m_state == None && m_pTracker->IsInking())
 		{

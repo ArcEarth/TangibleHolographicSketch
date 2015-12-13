@@ -33,7 +33,7 @@ namespace Causality
 		virtual void Parse(const ParamArchive* store) override;
 
 		void SurfaceSketchBegin(MeshType* surface);
-		void SrufaceSketchUpdate(FXMVECTOR pos);
+		void SrufaceSketchUpdate(FXMVECTOR pos, XMVECTOR dir);
 		void SurfaceSketchEnd();
 
 		void OnAirDragBegin();
@@ -54,7 +54,7 @@ namespace Causality
 	private:
 		// the curves we sketched on the surface
 		PenModelerStateEnum			m_state;
-
+		// Target object
 		MeshType*					m_target;
 		vector<Patch>				m_patches;
 		vector<Extrusion>			m_extrusions;
