@@ -28,6 +28,7 @@ namespace Causality
 			virtual bool Update() = 0;
 			virtual bool Initialize(const ParamArchive * archive) = 0;
 			virtual bool IsStreaming() = 0;
+			virtual void SetVerbose(bool verbose) = 0;
 		};
 	}
 }

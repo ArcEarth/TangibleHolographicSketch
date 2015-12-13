@@ -165,8 +165,8 @@ namespace Causality
 		}
 		else
 		{
-			posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
-			posY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
+			posX = (GetSystemMetrics(SM_CXSCREEN) - (int)screenWidth) / 2;
+			posY = (GetSystemMetrics(SM_CYSCREEN) - (int)screenHeight) / 2;
 		}
 
 		// Create the window with the screen settings and get the handle to it.

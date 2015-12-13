@@ -152,7 +152,7 @@ void ViconRTClient::showBodies(int toShow) const {
 
 	for (iBody = BodyChannels.begin(),
 		iBodyData = bodyPositions.begin();
-		iBody != BodyChannels.end(); iBody++, iBodyData++)
+		iBody != BodyChannels.end(); ++iBody)
 	{
 
 		if (toShow == BRIEF) {
@@ -160,8 +160,16 @@ void ViconRTClient::showBodies(int toShow) const {
 		}
 		else {
 			std::cout << iBody->Name << " pos(";
-			std::cout << iBodyData->TX << ", " << iBodyData->TY << ", " << iBodyData->TZ << ") ";
-			std::cout << " rot(" << iBodyData->EulerX << ", " << iBodyData->EulerY << ", " << iBodyData->EulerZ << ") " << std::endl;
+			if (iBodyData != bodyPositions.end())
+			{
+				std::cout << iBodyData->TX << ", " << iBodyData->TY << ", " << iBodyData->TZ << ") ";
+				std::cout << " rot(" << iBodyData->EulerX << ", " << iBodyData->EulerY << ", " << iBodyData->EulerZ << ") " << std::endl;
+				++iBodyData;
+			}
+			else
+			{
+				std::cout << "no data)" << std::endl;
+			}
 		}
 	}
 }

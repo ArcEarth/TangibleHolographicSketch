@@ -27,7 +27,7 @@ public:
 
 	ViconReaderImpl()
 	{
-
+		m_verbose = false;
 	}
 
 	// Inherited via IViconClient
@@ -72,8 +72,16 @@ public:
 	virtual bool Update() override
 	{
 		this->update();
+		if (m_verbose)
+			this->showBodies(1);
 		return true;
 	}
+
+	virtual void SetVerbose(bool verbose) override
+	{
+		m_verbose = verbose;
+	}
+
 	// Inherited via IViconClient
 	virtual bool Initialize(const ParamArchive * archive) override
 	{
@@ -85,6 +93,7 @@ public:
 		GetParam(archive, "rotation", eular);
 		m_world.Rotation = Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z);
 		this->init(sever_ip);
+		GetParam(archive, "verbose", m_verbose);
 		return true;
 	}
 	virtual bool IsStreaming() override
@@ -93,8 +102,8 @@ public:
 	}
 
 private:
-	IsometricTransform m_world;
-
+	IsometricTransform  m_world;
+	bool				m_verbose;
 };
 
 wptr<ViconReaderImpl> g_wpVicon;

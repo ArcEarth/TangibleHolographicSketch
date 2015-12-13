@@ -278,6 +278,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <ClCompile Include="SkyDome.cpp" />
     <ClCompile Include="StreamDevice.cpp" />
     <ClCompile Include="TrackedObjectControl.cpp" />
+    <ClCompile Include="TrackerdPen.cpp" />
     <ClCompile Include="Vicon.cpp" />
     <ClCompile Include="VisualObject.cpp" />
   </ItemGroup>
@@ -316,6 +317,7 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <ClInclude Include="StreamDevice.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="TrackedObjectControl.h" />
+    <ClInclude Include="TrackerdPen.h" />
     <ClInclude Include="Vicon.h" />
     <ClInclude Include="VisualObject.h" />
     <ClInclude Include="OculusRift.h" />
