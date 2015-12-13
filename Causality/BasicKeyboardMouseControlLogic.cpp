@@ -113,7 +113,6 @@ void KeyboardMouseFirstPersonControl::OnKeyUp(const KeyboardEventArgs & e)
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent & e)
 {
-	std::cout << "On button down" << std::endl;
 	if (e.Button == CursorButtonEnum::RButton)
 	{
 		IsTrackingCursor = true;
@@ -127,7 +126,6 @@ void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent 
 
 void KeyboardMouseFirstPersonControl::OnMouseButtonUp(const CursorButtonEvent & e)
 {
-	std::cout << "On button up" << std::endl;
 	if (e.Button == CursorButtonEnum::RButton)
 	{
 		IsTrackingCursor = false;
