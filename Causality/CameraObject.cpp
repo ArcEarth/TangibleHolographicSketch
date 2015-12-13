@@ -429,7 +429,7 @@ void SoftShadowCamera::CreateDeviceResources(IRenderDevice * pDevice, DirectX::R
 	pEffectRender = std::make_shared<EffectRenderControl>();
 	pEffectRender->SetRenderTargetClearence(true);
 	pEffectRender->SetRenderTarget(canvas);
-	pEffectRender->SetBackground(Colors::Gray.v);
+	pEffectRender->SetBackground(Colors::DarkGray.v);
 	pShadowEffect = std::make_shared<ShadowMapEffect>(pDevice);
 	pShadowEffect->SetEffectMode(ShadowMapEffect::ScreenSpaceShadowRender); // Second shadow effect for render
 	pShadowEffect->SetScreenSpaceLightsShadowMap(shadowBuffer.ShaderResourceView(), bluredShadowBuffer.ShaderResourceView());

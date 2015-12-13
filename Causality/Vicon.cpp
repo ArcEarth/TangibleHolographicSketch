@@ -17,7 +17,7 @@ protected:
 		Vector3 t(body.TX, body.TY, body.TZ);
 
 		rigid.Translation = t * m_world;
-		rigid.Rotation = m_world.Rotation * q;
+		rigid.Rotation = q * m_world.Rotation;
 	}
 
 public:

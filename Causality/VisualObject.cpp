@@ -157,16 +157,16 @@ bool VisualObject::IsVisible(const BoundingGeometry & viewFrustum) const
 
 CoordinateAxis::CoordinateAxis()
 {
-}
-
-CoordinateAxis::~CoordinateAxis()
-{
 	m_max = 1.0f;
 	m_majorIdent = 1.0f;
 	m_minorIdent = 0.25f;
 	m_ZX = false;
 	m_YZ = false;
 	m_XY = false;
+}
+
+CoordinateAxis::~CoordinateAxis()
+{
 }
 
 void CoordinateAxis::Parse(const ParamArchive * archive)

@@ -21,9 +21,20 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 		// name of some marker in there will be objName:Mark1
 		auto id = m_pVicon->GetRigidID(viconName);
 		if (id == -1) return false;
+
+		//auto vicon = m_pVicon->GetWorldTransform();
+		//auto world = vicon;
+		//world *= m_intrinsic;
+		//m_pVicon->SetWorldTransform(world);
+
 		auto rigid = m_pVicon->GetRigid(id);
+
+		//m_pVicon->SetWorldTransform(vicon);
+
 		RigidTransform fin = m_intrinsic;
 		fin *= rigid;
+		//rigid.Rotation = m_intrinsic.Rotation * rigid.Rotation;
+
 		object->SetPosition(fin.Translation);
 		object->SetOrientation(fin.Rotation);
 		return true;
@@ -90,9 +101,22 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 
 	GetParam(archive, "translation", m_intrinsic.Translation);
 	GetParam(archive, "scale", m_intrinsic.Scale);
-	Vector3 eular;
-	GetParam(archive, "rotation", eular);
-	m_intrinsic.Rotation = Quaternion::CreateFromYawPitchRoll(eular.y, eular.x, eular.z);
+	string rotstr;
+	if (GetParam(archive, "rotation", rotstr))
+	{
+		assert(rotstr[0] == '[');
+		Matrix4x4 mat = Matrix4x4::Identity;
+		sscanf_s(rotstr.c_str(),"[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
+			&mat(0, 0), &mat(0, 1), &mat(0, 2),
+			&mat(1, 0), &mat(1, 1), &mat(1, 2),
+			&mat(2, 0), &mat(2, 1), &mat(2, 2)
+			);
+		auto m = XMLoad(mat);
+		//XMMATRIX v = XMMatrixIdentity();
+		//v *= m;
+		auto q = XMQuaternionRotationMatrix(m);
+		m_intrinsic.Rotation = q;
+	}
 
 }
 
