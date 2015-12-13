@@ -13,10 +13,12 @@
 
 #pragma once
 
+#if !defined(_SIMPLE_MATH_NO_VIEWPORT)
 #if defined(_XBOX_ONE) && defined(_TITLE)
 #include <d3d11_x.h>
 #else
 #include <d3d11_1.h>
+#endif
 #endif
 
 #include <functional>
@@ -740,6 +742,7 @@ public:
     bool Intersects( const Plane& plane, _Out_ float& Dist ) const;
 };
 
+#if !defined(_SIMPLE_MATH_NO_VIEWPORT)
 //------------------------------------------------------------------------------
 // Viewport
 class Viewport
@@ -792,6 +795,8 @@ public:
     static RECT __cdecl ComputeDisplayArea(DXGI_SCALING scaling, UINT backBufferWidth, UINT backBufferHeight, int outputWidth, int outputHeight);
     static RECT __cdecl ComputeTitleSafeArea(UINT backBufferWidth, UINT backBufferHeight);
 };
+
+#endif
 
 #include "SimpleMath.inl"
 
@@ -907,6 +912,7 @@ namespace std
         }
     };
 
+#if !defined(_SIMPLE_MATH_NO_VIEWPORT)
     template<> struct less<DirectX::SimpleMath::Viewport>
     {
         bool operator()(const DirectX::SimpleMath::Viewport& vp1, const DirectX::SimpleMath::Viewport& vp2) const
@@ -923,5 +929,5 @@ namespace std
             return false;
         }
     };
-
+#endif
 } // namespace std

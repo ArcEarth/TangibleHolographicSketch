@@ -1200,7 +1200,7 @@ namespace DirectX {
 		{
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-			if (indexSize > IndexBufferCapacity)
+			if (indicesCount > IndexBufferCapacity)
 				throw out_of_range("Input indices data out of buffer capacity");
 
 			auto hr = pContext->Map(pIndexBuffer.Get(), 0, D3D11_MAP::D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

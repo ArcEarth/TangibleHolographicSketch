@@ -234,7 +234,7 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 			IndexType upIdx_1 = idx_1 + polarSubdiv;
 
 			pushTriangle(indices, idx, idx_1, upIdx);
-			pushTriangle(indices, upIdx_1, idx_1, idx);
+			pushTriangle(indices, idx_1, upIdx_1, upIdx);
 		}
 	}
 

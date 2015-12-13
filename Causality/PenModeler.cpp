@@ -63,17 +63,21 @@ void PenModeler::SurfaceSketchBegin(MeshType* surface)
 void PenModeler::SrufaceSketchUpdate(FXMVECTOR pos)
 {
 	auto& curve = m_patches.back().boundry();
-	curve.push_back(pos);
+	curve.append(pos);
 }
 
 void PenModeler::SurfaceSketchEnd()
 {
 	auto& curve = m_patches.back().boundry();
-	curve.push_back(curve[0]);
-	auto curveMap = Eigen::Matrix<float, -1, 4, Eigen::RowMajor>::MapAligned((float*)curve.data(), curve.size(), 4);
-	Eigen::laplacianSmooth(curveMap, 0.8);
-	curve.updateLength();
-	curve.resample(100);
+	curve.closeLoop();
+
+	//curve.append(curve[0]);
+	//auto curveMap = Eigen::Matrix<float, -1, 4, Eigen::RowMajor>::MapAligned((float*)curve.data(), curve.size(), 4);
+	//Eigen::laplacianSmooth(curveMap, 0.8);
+	//curve.updateLength();
+
+	if (curve.size() > 100)
+		curve.resample(100);
 	m_state = None;
 }
 
@@ -102,11 +106,11 @@ void PenModeler::OnAirDragBegin()
 void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 {
 	auto& extruder = m_extrusions.back();
-	extruder.axis().push_back(pos);
+	extruder.axis().append(pos);
 
-	if (extruder.axis().size() > 20)
+	if (extruder.axis().size() > 16)
 	{
-		extruder.triangulate(10, 10);
+		extruder.triangulate(16, 16);
 		UpdateMeshBuffer(extruder);
 	}
 }
@@ -236,6 +240,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	g_PrimitiveDrawer.End();
 
+	context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
 	m_pMeshBuffer->Draw(context, pEffect);
 
 	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);

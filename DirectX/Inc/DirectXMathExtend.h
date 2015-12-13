@@ -30,6 +30,8 @@
 #include "DirectXMathAVX2.h"
 #endif
 
+// Disable Viewport class to prevent <SimpleMath.h> to drag d3d11 headers in
+#define _SIMPLE_MATH_NO_VIEWPORT 1
 #include <SimpleMath.h>
 
 #ifndef XM_ALIGNATTR

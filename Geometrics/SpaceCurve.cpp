@@ -1,16 +1,20 @@
+#define NOMINMAX
 #include "SpaceCurve.h"
 
 using namespace Geometrics;
 using namespace DirectX;
 
 
-SpaceCurve::SpaceCurve() {}
+SpaceCurve::SpaceCurve() {
+	m_isClose = false;
+}
 
 SpaceCurve::~SpaceCurve() {}
 
-SpaceCurve::SpaceCurve(const std::vector<Vector3>& Trajectory)
+SpaceCurve::SpaceCurve(const gsl::span<Vector3>& trajectory, bool closeLoop/* = false*/)
 {
-	for (auto& point : Trajectory)
+	m_isClose = closeLoop;
+	for (auto& point : trajectory)
 	{
 		this->push_back(point);
 	}
@@ -19,7 +23,7 @@ SpaceCurve::SpaceCurve(const std::vector<Vector3>& Trajectory)
 
 std::vector<Vector3> SpaceCurve::FixCountSampling(unsigned int SampleSegmentCount, bool Smooth/* = true*/) const
 {
-	if (m_anchors.size() <= 1) {
+	if (size() <= 1) {
 		return std::vector<Vector3>();
 	}
 	float Interval = length() / SampleSegmentCount;
@@ -31,25 +35,11 @@ std::vector<Vector3> SpaceCurve::FixCountSampling(unsigned int SampleSegmentCoun
 
 	for (unsigned int i = 0; i < SampleSegmentCount + 1; i++, r += Interval)
 	{
-		while ((k < m_anchors.size() - 1) && (m_anchors[k].w < r)) k++;
-		float t = r - m_anchors[k - 1].w;
-		float f = m_anchors[k].w - m_anchors[k - 1].w;
-		if (abs(f) < 1.192092896e-7f)
-		{
-			XMVECTOR v2 = XMLoadFloat4A(&m_anchors[k]);
-			XMStoreFloat3(&sample[i], v2);
-		}
-		else
-		{
-			XMVECTOR v0 = XMLoadFloat4A(&m_anchors[k - 1]);
-			XMVECTOR v1 = XMLoadFloat4A(&m_anchors[k]);
-			XMVECTOR v2 = XMVectorLerp(v0, v1, t);
-			XMStoreFloat3(&sample[i], v2);
-		}
+		sample[i] = position(r);
 	}
 
 	if (Smooth)
-		LaplaianSmoothing(sample, 16);
+		laplacianSmooth<Vector3>(sample, 0.8f, 4, m_isClose);
 
 	return sample;
 }
@@ -63,11 +53,21 @@ std::vector<Vector3> SpaceCurve::FixCountSampling2(unsigned int SampleSegmentCou
 
 void SpaceCurve::resample(size_t anchorCount, bool smooth)
 {
-	auto sample = FixCountSampling(anchorCount, smooth);
+	auto sample = FixCountSampling2(anchorCount);
 
 	m_anchors.resize(sample.size());
 	for (int i = 0; i < sample.size(); i++)
 		reinterpret_cast<Vector3&>(m_anchors[i]) = sample[i];
+
+	if (m_isClose)
+		m_anchors.push_back(m_anchors[0]);
+
+	updateLength();
+}
+
+void Geometrics::SpaceCurve::smooth(float alpha, unsigned iteration)
+{
+	laplacianSmooth<Vector4>( gsl::span<Vector4>((Vector4*)data(), size()), alpha, iteration, m_isClose);
 	updateLength();
 }
 
@@ -83,37 +83,87 @@ std::vector<Vector3> SpaceCurve::FixIntervalSampling(float Interval) const
 	return smoothSampler.FixCountSampling(Count, false);
 }
 
-void SpaceCurve::push_back(const Vector3& p)
-{
-	const float* ptr = reinterpret_cast<const float*>(&p);
-	XMFLOAT4A content(ptr);
-	if (m_anchors.empty()) {
-		content.w = .0f;
-		m_anchors.push_back(content);
+void SpaceCurve::setClose(bool close) {
+	if (!m_isClose && close)
+	{
+		auto btr = XMLoadA(m_anchors.back());
+		m_anchors.push_back(m_anchors[0]);
+		auto vtr = XMLoadA(m_anchors[0]);
+		btr = btr - vtr;
+		btr += XMVector3Length(btr);
+		m_anchors.back().w = XMVectorGetW(btr);
 	}
-	else {
-		XMVECTOR vtr = XMLoadFloat4A(&content);
-		XMVECTOR btr = XMLoadFloat4A(&(m_anchors.back()));
-		float len = XMVectorGetW(btr + XMVector3Length(vtr - btr));
-		if (abs(len - m_anchors.back().w) < XM_EPSILON * 8)
-			return;
-		content.w = len;
-	}
-	m_anchors.push_back(content);
+
+	m_isClose = close; 
 }
 
-void XM_CALLCONV SpaceCurve::push_back(FXMVECTOR p)
+size_t SpaceCurve::size() const { 
+	return m_anchors.empty() ? 0 : m_anchors.size() - m_isClose; }
+
+float SpaceCurve::length() const
 {
-	push_back(Vector3(p));
+	if (m_anchors.empty()) return 0.0f;
+	return m_anchors.back().w;
+}
+
+void XM_CALLCONV SpaceCurve::push_back(FXMVECTOR vtr)
+{
+	float len = .0f;
+	if (m_anchors.empty()) {
+		m_anchors.emplace_back();
+		XMStoreA(m_anchors.back(), vtr);
+		m_anchors.back().w = .0f;
+	}
+	else
+	{
+		XMVECTOR btr = XMLoadA(m_anchors[size() - 1]);
+		len = XMVectorGetW(btr + XMVector3Length(vtr - btr));
+
+		// ingnore duplicated anchors
+		if (abs(len - m_anchors.back().w) < XM_EPSILON * 8)
+			return;
+
+		if (!m_isClose)
+			m_anchors.emplace_back();
+
+		XMStoreA(m_anchors.back(), vtr);
+		m_anchors.back().w = len;
+	}
+
+	if (m_isClose)
+	{
+		XMVECTOR v = XMLoadA(m_anchors[0]);
+		len = len + XMVectorGetW(XMVector3Length(v - vtr));
+		XMStoreA(m_anchors.back(), v);
+		m_anchors.back().w = len;
+	}
+
+}
+
+XMVECTOR Geometrics::SpaceCurve::back() const { return XMLoadFloat4A(&m_anchors[size() - 1]); }
+
+void SpaceCurve::push_back(const Vector3& p)
+{
+	push_back(XMLoad(p));
 }
 
 // Tangent vector at anchor index
 XMVECTOR SpaceCurve::extract(float t) const
 {
-	assert(t <= length() && t >= .0f, "t must belongs to [0,length()]");
+	float l = length();
+	if (m_isClose)
+	{
+		t = fmodf(t, l);
+		if (t < .0f)
+			t += l;
+	}
+	else
+	{
+		// clamp to [0,l]
+		t = std::max(.0f, std::min(t, l));
+	}
 
 	unsigned int a = 0, b = m_anchors.size() - 1;
-	t = t * length();
 	while (b - a > 1)
 	{
 		unsigned int k = (a + b) / 2;
@@ -151,7 +201,6 @@ XMVECTOR SpaceCurve::tangent(int idx) const
 
 		// set w = 0 as tangent are pure direction
 		v1 = XMVectorSelect(v1, XMVectorZero(), g_XMIdentityR3.v);
-
 	}
 
 	return v1;
@@ -159,11 +208,22 @@ XMVECTOR SpaceCurve::tangent(int idx) const
 
 XMVECTOR SpaceCurve::tangent(float t) const
 {
-	assert(t <= length() && t >= .0f, "t must belongs to [0,length()]");
+	float l = length();
+	if (m_isClose)
+	{
+		t = fmodf(t, l);
+		if (t < .0f)
+			t += l;
+	}
+	else
+	{
+		// clamp to [0,l]
+		t = std::max(.0f, std::min(t, l));
+	}
 
 	// binary search for parameter
 	int a = 0, b = m_anchors.size() - 1;
-	t = t * length();
+
 	while (b - a > 1)
 	{
 		unsigned int k = (a + b) / 2;
@@ -179,32 +239,6 @@ XMVECTOR SpaceCurve::tangent(float t) const
 	return v2;
 }
 
-void SpaceCurve::LaplaianSmoothing(std::vector<Vector3>& Curve, unsigned IterationTimes /*= 1*/)
-{
-	unsigned int N = Curve.size();
-	std::vector<Vector3> Cache(N);
-	Vector3* BUFF[2] = { &Curve[0],&Cache[0] };
-	unsigned int src = 0, dst = 1;
-	for (unsigned int k = 0; k < IterationTimes; k++)
-	{
-		BUFF[dst][0] = BUFF[src][0];
-		BUFF[dst][N - 1] = BUFF[src][N - 1];
-		for (unsigned int i = 1; i < N - 1; i++)
-		{
-			BUFF[dst][i] = (BUFF[src][i - 1] + BUFF[src][i + 1])*0.5f;
-		}
-		dst = !dst;
-		src = !src;
-	}
-	if (dst == 0)
-	{
-		for (unsigned int i = 0; i < N; i++)
-		{
-			BUFF[0][i] = BUFF[1][i];
-		}
-	}
-}
-
 void SpaceCurve::updateLength()
 {
 	m_anchors[0].w = 0;
@@ -218,9 +252,3 @@ void SpaceCurve::updateLength()
 		p0 = p1;
 	}
 }
-
-//float DistanceSegmentToSegment(const LineSegement &S1, const LineSegement &S2);
-float DistanceSegmentToSegment(FXMVECTOR S0P0, FXMVECTOR S0P1, FXMVECTOR S1P0, GXMVECTOR S1P1);
-//inline float Length(const LineSegement& Ls){
-//	return Distance(Ls.first,Ls.second);
-//}
