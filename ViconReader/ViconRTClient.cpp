@@ -798,8 +798,10 @@ int ViconRTClient::getBodyChannelID(const std::string &name) const {
 		[&name](const auto& body) {
 		return body.Name == name;}
 	);
-	if (iBody != BodyChannels.end())
-		return iBody - iBody1;
+	int id = iBody - iBody1;
+	if (iBody != BodyChannels.end() && bodyPositions.size() > id)
+		return id;
+
 	return -1;
 }
 
