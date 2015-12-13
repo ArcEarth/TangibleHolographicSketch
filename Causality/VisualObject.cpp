@@ -151,7 +151,7 @@ bool VisualObject::IsVisible(const BoundingGeometry & viewFrustum) const
 	if (!m_isVisable || m_pRenderModel == nullptr) return false;
 	auto box = m_pRenderModel->GetOrientedBoundingBox();
 	box.Transform(box, this->GlobalTransformMatrix());
-	return viewFrustum.Contains(box) != ContainmentType::DISJOINT;
+	return true;// viewFrustum.Contains(box) != ContainmentType::DISJOINT;
 }
 
 

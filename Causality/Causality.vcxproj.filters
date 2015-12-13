@@ -129,7 +129,9 @@
       <Filter>Devices</Filter>
     </ClCompile>
     <ClCompile Include="StreamDevice.cpp" />
-    <ClCompile Include="TrackerdPen.cpp" />
+    <ClCompile Include="TrackerdPen.cpp">
+      <Filter>ArSketch Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">

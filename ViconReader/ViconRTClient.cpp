@@ -147,7 +147,10 @@ void ViconRTClient::showBodies(int toShow) const {
 	std::vector< BodyChannel >::const_iterator iBody;
 	std::vector< BodyData >::const_iterator iBodyData;
 
-
+	if (bodyPositions.size() < BodyChannels.size()) {
+		std::cout << "ViconRTClient: No data yet" << std::endl;
+		return;
+	}
 	std::cout << "ViconRTClient: Showing Body Data" << std::endl;
 
 	for (iBody = BodyChannels.begin(),

@@ -3,6 +3,7 @@
 #include "SmartPointers.h"
 #include "Geometrics\SpaceCurve.h"
 #include "Geometrics\Extrusion.h"
+#include "TrackerdPen.h"
 
 namespace Causality
 {
@@ -28,6 +29,7 @@ namespace Causality
 		PenModeler(int objectIdx = 1);
 		~PenModeler();
 
+		void AddChild(SceneObject* child) override;
 		virtual void Parse(const ParamArchive* store) override;
 
 		void SurfaceSketchBegin(MeshType* surface);
@@ -59,7 +61,6 @@ namespace Causality
 
 		uptr<DynamicMeshBuffer>		m_pMeshBuffer;
 
-		class TrackedPen;
-		uptr<TrackedPen>			m_pTracker;
+		TrackedPen*					m_pTracker;
 	};
 }

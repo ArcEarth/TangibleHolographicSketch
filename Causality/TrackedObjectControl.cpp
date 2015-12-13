@@ -65,6 +65,7 @@ bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 
 TrackedObjectControl::TrackedObjectControl()
 {
+	m_pRigid = nullptr;
 	m_pLeap = LeapMotion::GetForCurrentView();
 	m_pVicon = IViconClient::GetFroCurrentView();
 
@@ -81,6 +82,7 @@ TrackedObjectControl::~TrackedObjectControl()
 
 void TrackedObjectControl::Parse(const ParamArchive * archive)
 {
+	SceneObject::Parse(archive);
 	GetParam(archive, "index", m_idx);
 }
 
@@ -94,6 +96,6 @@ void TrackedObjectControl::Update(time_seconds const & time_delta)
 	SceneObject::Update(time_delta);
 	if (m_pVicon)
 		UpdateFromVicon(time_delta.count());
-	else
-		UpdateFromVicon(time_delta.count());
+	else if (m_pLeap)
+		UpdateFromLeapHand(time_delta.count());
 }

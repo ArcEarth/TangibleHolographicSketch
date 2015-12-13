@@ -1,13 +1,9 @@
 #include "pch_bcl.h"
 #include "PenModeler.h"
-#include "LeapMotion.h"
 #include "EigenExtension.h"
 #include <PrimitiveVisualizer.h>
 #include <Models.h>
-#include "Vicon.h"
 #include "Scene.h"
-#include "BasicKeyboardMouseControlLogic.h"
-
 #include <iostream>
 
 using namespace Causality;
@@ -18,155 +14,43 @@ using namespace std;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
-
+typedef uint32_t IndexType;
 typedef VertexPositionNormal VertexType;
 static const size_t	g_MeshBufferVertexCap = 2048;
 static const size_t	g_MeshBufferIndexCap = 2048;
 
-
-class PenModeler::TrackedPen
-{
-public:
-	TrackedPen(int idx)
-	{
-		m_idx = idx;
-		m_pLeap = LeapMotion::GetForCurrentView();
-		m_pVicon = IViconClient::GetFroCurrentView();
-		if (m_pVicon && !m_pVicon->IsStreaming())
-			m_pVicon.reset();
-
-		XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
-		m_pLeap->SetDeviceWorldCoord(world);
-		m_inkingStr = 0;
-		m_dragingStr = 0;
-		m_erasingStr = 0;
-	}
-
-	bool SetObjectCoordinate(SceneObject* object, double dt)
-	{
-		if (m_pVicon)
-			return SetObjectCoordinateFromVicon(object, dt);
-		else if (m_pLeap)
-			return SetObjectCoordinateFromLeap(object, dt);
-		return false;
-	}
-
-	bool SetObjectCoordinateFromVicon(SceneObject* object, double dt)
-	{
-		if (m_pVicon)
-		{
-			auto id = m_pVicon->GetRigidID(object->Name);
-			if (id == -1) return false;
-			auto rigid = m_pVicon->GetRigid(id);
-			object->SetPosition(rigid.Translation);
-			object->SetOrientation(rigid.Rotation);
-			return true;
-
-		}
-		return false;
-	}
-
-
-	bool SetObjectCoordinateFromLeap(SceneObject* object, double dt)
-	{
-		if (!object) return false;
-		auto frame = m_pLeap->Controller().frame();
-		XMMATRIX world = m_pLeap->ToWorldTransform();
-
-		auto& hands = frame.hands();
-		for (auto& hand : hands)
-		{
-			if (m_idx && hand.isRight() || !m_idx && hand.isLeft())
-			{
-				m_inkingStr = hand.pinchStrength();
-				m_dragingStr = hand.grabStrength();
-
-				auto indexFingerList = hand.fingers().fingerType(Leap::Finger::Type::TYPE_INDEX);
-				auto indexFinger = *indexFingerList.begin(); //since there is only one per hand
-
-				XMVECTOR pos = indexFinger.tipPosition().toVector3<Vector3>();
-				//XMVECTOR pos = hand.palmPosition().toVector3<Vector3>();
-
-				pos = XMVector3TransformCoord(pos, world);
-
-				XMVECTOR xdir = hand.palmNormal().toVector3<Vector3>();
-				XMVECTOR ydir = indexFinger.bone(Leap::Bone::Type::TYPE_DISTAL).direction().toVector3<Vector3>();
-				//XMVECTOR ydir = hand.direction().toVector3<Vector3>();
-				XMVECTOR zdir = XMVector3Cross(xdir, ydir);
-
-				XMMATRIX rot = XMMatrixIdentity();
-				rot.r[0] = xdir;
-				rot.r[1] = ydir;
-				rot.r[2] = zdir;
-
-				//! HACK, since rot(world) == I
-				XMVECTOR rotQ = XMQuaternionRotationMatrix(rot);
-
-				object->SetPosition(pos);
-				object->SetOrientation(rotQ);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool IsInking() const
-	{
-		return m_mouse->isLeftButtonDown();
-		// Was for leap:
-		//return m_inkingStr > 0.5f && m_inkingStr > m_dragingStr && m_inkingStr > m_erasingStr;
-	}
-	bool IsErasing() const
-	{
-		return false;
-		//return m_erasingStr > 0.5f && m_erasingStr > m_dragingStr && m_erasingStr > m_inkingStr;
-	}
-	bool IsDraging() const
-	{
-		return m_mouse->isRightButtonDown();
-		//return m_dragingStr > 0.5f && m_dragingStr > m_inkingStr && m_dragingStr > m_erasingStr;
-	}
-	void setMouse(const KeyboardMouseFirstPersonControl* m) { m_mouse = m; }
-
-private:
-	int m_idx;
-	float m_inkingStr;
-	float m_erasingStr;
-	float m_dragingStr;
-
-	const KeyboardMouseFirstPersonControl*
-								m_mouse;
-	sptr<LeapMotion>			m_pLeap;
-	sptr<IViconClient>			m_pVicon;
-};
-
 PenModeler::PenModeler(int objectIdx)
-	: m_pTracker(new TrackedPen(objectIdx)), m_state(None), m_target(new MeshType)
+	: m_state(None), m_target(new MeshType)
 {
 	m_pMeshBuffer.reset(new DynamicMeshBuffer());
+	m_pTracker = nullptr;
 }
 
 PenModeler::~PenModeler()
 {
 }
 
+void PenModeler::AddChild(SceneObject * child)
+{
+	SceneObject::AddChild(child);
+	auto pPen = dynamic_cast<TrackedPen*>(child);
+	if (pPen)
+	{
+		m_pTracker = pPen;
+	}
+}
+
 void PenModeler::Parse(const ParamArchive * store)
 {
+	SceneObject::Parse(store);
 	auto device = this->Scene->GetRenderDevice();
-	m_pMeshBuffer->CreateDeviceResources<VertexType,int>(device,
+	m_pMeshBuffer->CreateDeviceResources<VertexType,IndexType>(device,
 		g_MeshBufferVertexCap,
 		g_MeshBufferIndexCap);
 }
 
-void Causality::PenModeler::OnParentChanged(SceneObject * oldParent)
+void PenModeler::OnParentChanged(SceneObject * oldParent)
 {
-	for (const auto& i : parent()->parent()->children())
-	{
-		if (i.Name == "primary_camera") {
-			m_pTracker->setMouse(dynamic_cast<const KeyboardMouseFirstPersonControl*>(i.first_child()));
-			break;
-		}
-	}
 }
 
 void PenModeler::SurfaceSketchBegin(MeshType* surface)
@@ -249,8 +133,11 @@ void PenModeler::OnAirDragEnd()
 void PenModeler::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
-	bool visible = m_pTracker->SetObjectCoordinate(this, time_delta.count());
-	//m_isVisable = visible;
+	if (!m_pTracker)
+		return;
+
+	m_pTracker->Update(time_delta);
+	m_isVisable = m_pTracker->IsVisible();
 	m_isVisable = true;
 	if (m_isVisable)
 	{
@@ -321,7 +208,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 		XMVECTOR rot = GetOrientation();
 		XMVECTOR yDir = XMVector3Rotate(g_XMIdentityR1.v, rot);
 		XMVECTOR pos = GetPosition();
-		XMVECTOR color = Colors::White.v;
+		XMVECTOR color = Colors::Yellow.v;
 
 		if (m_pTracker->IsInking())
 			color = Colors::LimeGreen.v;
