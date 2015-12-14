@@ -27,15 +27,19 @@ namespace Geometrics
 {
 	using DirectX::Vector3;
 	using DirectX::Color;
+	using DirectX::Vector2;
 
 	struct Vertex
 	{
 		Vector3 position;
 		Vector3 normal;
-		Color	color = Color(1.0, 0.0, 0.0);
+		Vector2 uv;
+		//Color	color = Color(1.0, 0.0, 0.0);
 	};
 
-	using MeshType = TriangleMesh<Vertex, uint32_t>;
+	typedef uint16_t Index;
+
+	using MeshType = TriangleMesh<Vertex, Index>;
 
 	// public interface - not super efficient, if you use multiple CSG operations you should
 	// use BSP trees and convert them into model only once. Another optimization trick is

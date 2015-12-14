@@ -8,7 +8,7 @@
 namespace Causality
 {
 	using Geometrics::Curve;
-	using Geometrics::Patch;
+	using Geometrics::SurfacePatch;
 	using Geometrics::Extrusion;
 	using Geometrics::MeshType;
 	
@@ -54,14 +54,22 @@ namespace Causality
 	private:
 		// the curves we sketched on the surface
 		PenModelerStateEnum			m_state;
-		vector<Patch>				m_patches;
+		vector<SurfacePatch>		m_patches;
 		vector<Extrusion>			m_extrusions;
 
-		vector<uptr<DynamicMeshBuffer>>		
-									m_meshBuffers;
-		sptr<IMaterial>				m_pMaterial;
 		IRenderDevice*				m_pDevice;
+		I2DContext*					m_p2DContex;
+
+		vector<uptr<DynamicMeshBuffer>>
+									m_meshBuffers;
+
+		// Decal texture for rendering highlights in target model
+		sptr<IMaterial>				m_decalMat;
+		uptr<RenderableTexture2D>	m_decal;
+		// material for extrusion
+		sptr<IMaterial>				m_extruMat;
+
 		TrackedPen*					m_pTracker;
-		MeshType*					m_pTargetMesh;
+		MeshType*					m_target;
 	};
 }

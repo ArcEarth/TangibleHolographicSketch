@@ -216,6 +216,7 @@
     <ClInclude Include="Inc\HUD.h" />
     <ClInclude Include="Inc\PostProcessingEffect.h" />
     <ClInclude Include="Inc\ShadowMapGenerationEffect.h" />
+    <ClInclude Include="Inc\VertexTraits.h" />
     <ClInclude Include="Src\tiny_obj_loader.h" />
     <ClInclude Include="Inc\Locatable.h" />
     <ClInclude Include="Inc\Material.h" />

@@ -120,6 +120,9 @@
     <ClInclude Include="Inc\AlignedVector.h">
       <Filter>Include</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\VertexTraits.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

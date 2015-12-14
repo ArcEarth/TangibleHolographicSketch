@@ -70,10 +70,9 @@ namespace Geometrics
 		XMFLOAT4A* data() { return m_anchors.data(); }
 		const XMFLOAT4A* data() const { return m_anchors.data(); }
 		void clear() { m_anchors.clear(); }
-		void push_back(const Vector3& p);
-		void XM_CALLCONV push_back(FXMVECTOR p);
-		void XM_CALLCONV append(FXMVECTOR p) { push_back(p); }
-
+		bool push_back(const Vector3& p, bool force = false);
+		bool XM_CALLCONV push_back(FXMVECTOR p, bool force = false);
+		bool XM_CALLCONV append(FXMVECTOR p, bool force = false) { return push_back(p,force); }
 		XMVECTOR back() const;
 
 		// Retrive the point at parameter position 't' belongs to [0,1]
@@ -98,6 +97,7 @@ namespace Geometrics
 		inline XMVECTOR operator()(float t) const { return extract(t); }
 
 
+		std::vector<Vector3> sample(size_t sampleCount);
 		void resample(size_t anchorCount, bool smooth = true);
 
 		void smooth(float alpha/* = 0.8f*/, unsigned iteration /*= 1*/);

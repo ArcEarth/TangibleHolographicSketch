@@ -4,7 +4,6 @@
 #include <fstream>
 #include <filesystem>
 #include <wrl\client.h>
-#include <VertexTypes.h>
 
 #if defined(_XBOX_ONE) && defined(_TITLE)
 #include <d3d11_x.h>
@@ -25,49 +24,12 @@
 #pragma warning(pop)
 
 #include <DirectXMath.h>
-
-#ifndef HAS_MEMBER_FUNCTION
-#define HAS_MEMBER_FUNCTION(member_name, name)                                   \
-    template<typename T, typename Signature>                            \
-    struct name {                                                       \
-        typedef char yes[1];                                            \
-        typedef char no [2];                                            \
-        template <typename U, U> struct type_check;                     \
-        template <typename _1> static yes &chk(type_check<Signature, &_1::member_name > *); \
-        template <typename   > static no  &chk(...);                    \
-        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
-    }
-#endif // !HAS_MEM_FUNC
-
-#ifndef HAS_MEMBER
-#define HAS_MEMBER(member_name, name)                                   \
-    template<typename T>												\
-    struct name {                                                       \
-        typedef char yes[1];                                            \
-        typedef char no [2];                                            \
-        template <typename> static yes &chk(decltype(T::member_name)*);			\
-        template <typename> static no  &chk(...);                    \
-        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
-    }
-#endif // !HAS_MEM_FUNC
-
-
-
+#include <VertexTypes.h>
+#include "VertexTraits.h"
 
 namespace DirectX
 {
 	using Microsoft::WRL::ComPtr;
-
-	namespace VertexTraits
-	{
-		HAS_MEMBER(position, has_position);
-		HAS_MEMBER(normal, has_normal);
-		HAS_MEMBER(textureCoordinate, has_tex);
-		HAS_MEMBER(color, has_color);
-		HAS_MEMBER(tanget, has_tanget);
-		HAS_MEMBER(weights, has_weights);
-
-	}
 
 #if defined (__cplusplus_winrt)
 	inline Platform::String^ ErrorDescription(HRESULT hr)

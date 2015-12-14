@@ -25,7 +25,7 @@ static const size_t	g_MeshBufferIndexCap = 65536;
 static float g_contactThred = 1.6f; //cm
 
 PenModeler::PenModeler(int objectIdx)
-	: m_state(None), m_pTargetMesh(nullptr)
+	: m_state(None), m_target(nullptr)
 {
 	m_pTracker = nullptr;
 	m_patches.reserve(100);
@@ -51,7 +51,7 @@ void PenModeler::Parse(const ParamArchive * store)
 {
 	SceneObject::Parse(store);
 	m_pDevice = this->Scene->GetRenderDevice();
-	m_pMaterial = this->Scene->Assets().GetMaterial("default");
+	m_extruMat = this->Scene->Assets().GetMaterial("default");
 }
 
 void PenModeler::OnParentChanged(SceneObject * oldParent)
@@ -72,19 +72,19 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 	using DirectX::Scene::DefaultStaticModel;
 	using DirectX::Scene::DefaultSkinningModel;
 
-	if (m_pTargetMesh)
+	if (m_target)
 	{
-		delete m_pTargetMesh;
-		m_pTargetMesh = nullptr;
+		delete m_target;
+		m_target = nullptr;
 	}
 
 	{
 		auto pModel = dynamic_cast<DefaultStaticModel*>(pVisual->RenderModel());
 		if (pModel)
 		{
-			m_pTargetMesh = new MeshType;
-			auto& vertics = m_pTargetMesh->vertices;
-			auto& indices = m_pTargetMesh->indices;
+			m_target = new MeshType;
+			auto& vertics = m_target->vertices;
+			auto& indices = m_target->indices;
 
 			MeshType::VertexType vt;
 			for (auto& v : pModel->Vertices)
@@ -113,28 +113,24 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 {
 	bool touching = false;
 	// Find closest point on mesh using pen direction
-	vector<XMFLOAT3> intersectionPoints;
-	Geometrics::RayIntersection(*m_pTargetMesh, pos, dir, &intersectionPoints);
-	if (intersectionPoints.size() == 0) {
+	vector<Geometrics::MeshRayIntersectionInfo> interInfos;
+	m_target->intersect(pos, dir, &interInfos);
+
+	if (interInfos.size() == 0) {
 		cout << "Pen not touching; no intersections" << endl;
 		return;
 	}
-	Vector3 closest = intersectionPoints[0];
-	Vector3 penTipPos = pos;
-	float shortestDist = Vector3::Distance(closest, penTipPos);
-	//float shortestDist = XMVectorGetX(XMVector3Length(pos - XMLoad(closest)));
-	for (Vector3 point : intersectionPoints) {
-		float dist = Vector3::Distance(point, penTipPos);
-		if (dist < shortestDist) {
-			shortestDist = dist;
-			closest = point;
-		}
-	}
+
+	auto& info = interInfos[0];
+
+	float shortestDist = info.distance;
+
 	// this is cm
 	if (shortestDist < g_contactThred) {
 		// touching
-		auto& curve = m_patches.back().boundry();
-		curve.append(closest);
+		auto & patch = m_patches.back();
+		//auto& curve = patch.boundry();
+		patch.append(info.position, info.facet);
 	}
 	else {
 		cout << "Pen not touching; too far, " << shortestDist << endl;
@@ -144,24 +140,25 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 void PenModeler::SurfaceSketchEnd()
 {
 	m_state = None;
-	auto& curve = m_patches.back().boundry();
+	auto& patch = m_patches.back();
+	auto& curve = patch.boundry();
 	if (curve.empty())
 	{
 		m_patches.pop_back();
 	}
 
-	curve.closeLoop();
+	patch.closeLoop();
 
 	//curve.append(curve[0]);
 	//auto curveMap = Eigen::Matrix<float, -1, 4, Eigen::RowMajor>::MapAligned((float*)curve.data(), curve.size(), 4);
 	//Eigen::laplacianSmooth(curveMap, 0.8);
 	//curve.updateLength();
 
-	if (curve.size() > 100)
-	{
-		curve.resample(100);
-	}
-	curve.smooth(0.8f, 4);
+	//if (curve.size() > 100)
+	//{
+	//	curve.resample(100);
+	//}
+	//curve.smooth(0.8f, 4);
 }
 
 void PenModeler::OnAirDragBegin()
@@ -362,7 +359,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	if (m_meshBuffers.empty())
 		return;
 
-	m_pMaterial->SetupEffect(pEffect);
+	m_extruMat->SetupEffect(pEffect);
 	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
 	if (pSkin)
 		pSkin->SetWeightsPerVertex(0);

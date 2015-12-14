@@ -5,7 +5,7 @@ using namespace Geometrics;
 using namespace DirectX;
 using namespace std;
 
-typedef uint32_t IndexType;
+typedef uint16_t IndexType;
 
 Extrusion::Extrusion()
 	: m_top(nullptr), m_bottom(nullptr), m_path(nullptr), m_dirty(1)
@@ -13,7 +13,7 @@ Extrusion::Extrusion()
 
 }
 
-Extrusion::Extrusion(Patch * top, Patch * bottom, Curve * axis)
+Extrusion::Extrusion(SurfacePatch * top, SurfacePatch * bottom, Curve * axis)
 	: m_top(top), m_bottom(bottom), m_path(axis), m_dirty(1)
 {}
 
@@ -21,11 +21,11 @@ Extrusion::~Extrusion()
 {
 
 }
-
-int Extrusion::intersect(const Ray & ray, std::vector<Vector3>& intersections)
-{
-	return RayIntersection(m_mesh, ray.position, ray.direction, reinterpret_cast<std::vector<DirectX::XMFLOAT3>*>(&intersections));
-}
+//
+//int Extrusion::intersect(const Ray & ray, std::vector<float>* intersections)
+//{
+//	return m_mesh.intersect(ray.position, ray.direction, intersections);
+//}
 
 MeshType & Extrusion::mesh() { assert(!m_dirty); return m_mesh; }
 
@@ -176,7 +176,8 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	auto  interval = length / axisSubdiv;
 	auto& vertices = m_mesh.vertices;
 	auto& indices = m_mesh.indices;
-	vertices.reserve(axisSubdiv * polarSubdiv);
+
+	vertices.reserve((axisSubdiv + 1) * (polarSubdiv + 1));
 	indices.reserve(3 * axisSubdiv * polarSubdiv * 2);
 
 	int idxBase = vertices.size();
@@ -204,9 +205,11 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 		// axis rotation
 		XMVECTOR rt = XMQuaternionMultiply(r0, r0t);
 
-		for (int i = 0; i < polarSubdiv; ++i)
+		// [0,polarSubdiv], 0 and polarSubdiv should be overlaped
+		for (int i = 0; i <= polarSubdiv; ++i)
 		{
 			XMVECTOR v, vt;
+			float polart = (float)i / (float)(polarSubdiv + 1);
 
 			v = bottom.position(i);
 			vt = bottom.tangent(i);
@@ -224,20 +227,22 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 			Vertex vtx;
 			vtx.position = v;
 			vtx.normal = XMVector3Cross(tt, vt);
+			vtx.uv = Vector2(polart, t);
 
 			vertices.push_back(vtx);
 		}
 	}
 
+	int cols = polarSubdiv + 1;
 	for (int axisIdx = 0; axisIdx < axisSubdiv; axisIdx++)
 	{
 		for (int i = 0; i < polarSubdiv; ++i)
 		{
-			IndexType idx = axisIdx * polarSubdiv + i;
-			IndexType upIdx = idx + polarSubdiv;
+			IndexType idx = axisIdx * cols + i;
+			IndexType upIdx = idx + cols;
 
-			IndexType idx_1 = axisIdx * polarSubdiv + (i + 1) % polarSubdiv;
-			IndexType upIdx_1 = idx_1 + polarSubdiv;
+			IndexType idx_1 = axisIdx * cols + (i + 1)/* % polarSubdiv*/;
+			IndexType upIdx_1 = idx_1 + cols;
 
 			pushTriangle(indices, idx, idx_1, upIdx);
 			pushTriangle(indices, idx_1, upIdx_1, upIdx);
@@ -248,9 +253,76 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	return m_mesh;
 }
 
-MeshType & Geometrics::Patch::triangulate(size_t subdiv)
+//inline Curve & Geometrics::SurfacePatch::boundry() { return m_boundry; }
+
+const Curve & SurfacePatch::boundry() const { return m_boundry; }
+
+MeshType & SurfacePatch::mesh() { return m_mesh; }
+
+const MeshType & SurfacePatch::mesh() const { return m_mesh; }
+
+void SurfacePatch::clear()
+{
+	m_boundry.clear();
+	m_uvCurve.clear();
+}
+
+bool SurfacePatch::append(XMVECTOR position, int fid)
+{
+	if (m_boundry.append(position))
+	{
+		auto& tri = m_surface->facet(fid);
+		auto& vertics = m_surface->vertices;
+
+		auto BC = TriangleTests::BarycentricCoordinate(position, vertics[tri[0]].position, vertics[tri[1]].position, vertics[tri[2]].position);
+		auto uv = XMVectorBaryCentricV(vertics[tri[0]].uv, vertics[tri[1]].uv, vertics[tri[2]].uv, BC);
+
+		// append uv forcely
+		m_uvCurve.append(uv, true);
+	}
+	m_dirty |= 2;
+	return false;
+}
+
+void SurfacePatch::closeLoop()
+{
+	m_boundry.closeLoop();
+	m_uvCurve.closeLoop();
+}
+
+XMVECTOR SurfacePatch::unproject(XMVECTOR uv, int& fid)
+{
+	auto& vertics = m_surface->vertices;
+	auto& tri = m_surface->facet(fid);
+	auto BC = TriangleTests::BarycentricCoordinate(uv, vertics[tri[0]].uv, vertics[tri[1]].uv, vertics[tri[2]].uv);
+
+
+	XMVECTOR vali = XMVectorLessOrEqual(BC, XMVectorZero());
+	XMUINT3 out;
+	XMStoreUInt3(&out, vali);
+
+	if (out.x)
+		fid = m_surface->adjacentFacet(fid, 0);
+	else if (out.y)
+		fid = m_surface->adjacentFacet(fid, 1);
+	else if (out.z)
+		fid = m_surface->adjacentFacet(fid, 2);
+	else
+		return XMVectorBaryCentricV(vertics[tri[0]].position, vertics[tri[1]].position, vertics[tri[2]].position, BC);
+	return unproject(uv, fid);
+
+
+}
+
+void SurfacePatch::unprojectBoundry(int startFid)
 {
 	assert(!"Not implemented yet");
-	m_dirty = false;
+	m_dirty = 0;
+}
+
+MeshType & SurfacePatch::triangulate(size_t subdiv)
+{
+	assert(!"Not implemented yet");
+	m_dirty = 0;
 	return m_mesh;
 }
