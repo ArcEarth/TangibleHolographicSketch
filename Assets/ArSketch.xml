@@ -15,9 +15,13 @@
 
       <light name="sun_light" primary="false" color="#FF808080" position="5,10,5" near="2" far="16" focus="0,0,0" up="0,0,-1" hfov="3" wfov="3" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
 
-      <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="25">
+      <!--<shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="12">
         <first_person_keyboard_mouse_control />
-        <tracked_object name="camera_tracker" index="0" translation="0.0303101689,-0.0101860091,-0.0414803699" rotation="{-0.498596758,0.570285380,0.476107776,-0.446651191}"/>
+        <tracked_object name="camera_tracker" index="0" translation="0.032,-0.009,-0.016" rotation="{-0.496,0.572,0.477,-0.446}"/>
+      </shadow_camera>-->
+      <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="75">
+        <first_person_keyboard_mouse_control />
+        <tracked_object name="camera_tracker" index="0" translation="0.032,-0.009,-0.016" rotation="{-0.496,0.572,0.477,-0.446}"/>
       </shadow_camera>
       <!--<dummy name="camera">
         <coordinate_axis max="0.1"/>
@@ -29,8 +33,8 @@
       <coordinate_axis max="3" zx="true"/>
 
       <object name="ground" position="0,-1.0,0" scale="5.0,0.005,5.0" mesh="{cube_mesh}"/>
-      <object name="table" position="0,0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
-      <object name="mug2" position="0,0.5,0" scale="0.05,0.05,0.05" mesh="{mug_mesh}">
+      <object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
+      <object name="mug2" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
         
         <tracked_object name="mug_tracker" index="0" translation="0.00548750907,0.00485016312,-0.0493366420" rotation="{-0.624368191,-0.311971784,-0.329536378,-0.635801673}"/>
