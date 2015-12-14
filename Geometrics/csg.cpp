@@ -49,6 +49,7 @@ namespace Geometrics
 		Vertex ret;
 		ret.position = lerp(a.position, b.position, t);
 		ret.normal = lerp(a.normal, b.normal, t);
+		ret.color = Color::Lerp(a.color, b.color, t);
 		//ret.uv = lerp(a.uv, b.uv, t);
 		return ret;
 	}

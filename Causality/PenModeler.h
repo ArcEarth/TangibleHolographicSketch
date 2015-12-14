@@ -59,6 +59,7 @@ namespace Causality
 
 		vector<uptr<DynamicMeshBuffer>>		
 									m_meshBuffers;
+		sptr<IMaterial>				m_pMaterial;
 		IRenderDevice*				m_pDevice;
 		TrackedPen*					m_pTracker;
 		MeshType*					m_pTargetMesh;

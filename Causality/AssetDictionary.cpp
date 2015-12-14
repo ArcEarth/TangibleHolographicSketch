@@ -450,6 +450,15 @@ AssetDictionary::audio_clip_type* AssetDictionary::GetAudio(const string & key)
 	return nullptr;// GetAsset<audio_clip_type>(key);
 }
 
+sptr<AssetDictionary::material_type> Causality::AssetDictionary::GetMaterial(const string & key) const
+{
+	auto itr = materials.find(key);
+	if (itr != materials.end())
+		*itr;
+	else
+		return default_material;
+}
+
 void AssetDictionary::SetRenderDevice(IRenderDevice * device)
 {
 	m_device = device;

@@ -6,7 +6,9 @@
 #include <Models.h>
 #include "Scene.h"
 #include <iostream>
-
+#include <ShaderEffect.h>
+#include "AssetDictionary.h"
+#include "Settings.h"
 
 using namespace Causality;
 using namespace Devices;
@@ -17,7 +19,7 @@ using namespace std;
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
 typedef uint32_t IndexType;
-typedef VertexPositionNormal VertexType;
+typedef VertexPositionNormalColor VertexType;
 static const size_t	g_MeshBufferVertexCap = 2048;
 static const size_t	g_MeshBufferIndexCap = 2048;
 
@@ -48,6 +50,7 @@ void PenModeler::Parse(const ParamArchive * store)
 {
 	SceneObject::Parse(store);
 	m_pDevice = this->Scene->GetRenderDevice();
+	m_pMaterial = this->Scene->Assets().GetMaterial("default");
 }
 
 void PenModeler::OnParentChanged(SceneObject * oldParent)
@@ -106,7 +109,7 @@ void PenModeler::SurfaceSketchBegin()
 }
 
 void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
-{	
+{
 	bool touching = false;
 	// Find closest point on mesh using pen direction
 	vector<XMFLOAT3> intersectionPoints;
@@ -119,7 +122,7 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 	Vector3 penTipPos = pos;
 	float shortestDist = Vector3::Distance(closest, penTipPos);
 	//float shortestDist = XMVectorGetX(XMVector3Length(pos - XMLoad(closest)));
-	for (Vector3 point: intersectionPoints) {
+	for (Vector3 point : intersectionPoints) {
 		float dist = Vector3::Distance(point, penTipPos);
 		if (dist < shortestDist) {
 			shortestDist = dist;
@@ -325,7 +328,19 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	g_PrimitiveDrawer.End();
 
-	context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
+	if (!g_DebugView)
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
+	else
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
+
+	if (m_meshBuffers.empty())
+		return;
+
+	m_pMaterial->SetupEffect(pEffect);
+	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
+	if (pSkin)
+		pSkin->SetWeightsPerVertex(0);
+	pEffect->Apply(context);
 	for (int i = 0; i < m_meshBuffers.size(); i++) {
 		m_meshBuffers[i]->Draw(context, pEffect);
 	}
