@@ -57,8 +57,9 @@ namespace Causality
 		vector<Patch>				m_patches;
 		vector<Extrusion>			m_extrusions;
 
-		uptr<DynamicMeshBuffer>		m_pMeshBuffer;
-
+		vector<uptr<DynamicMeshBuffer>>		
+									m_meshBuffers;
+		IRenderDevice*				m_pDevice;
 		TrackedPen*					m_pTracker;
 		MeshType*					m_pTargetMesh;
 	};

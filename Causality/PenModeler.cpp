@@ -24,8 +24,10 @@ static const size_t	g_MeshBufferIndexCap = 2048;
 PenModeler::PenModeler(int objectIdx)
 	: m_state(None), m_pTargetMesh(nullptr)
 {
-	m_pMeshBuffer.reset(new DynamicMeshBuffer());
 	m_pTracker = nullptr;
+	m_patches.reserve(100);
+	m_extrusions.reserve(100);
+	m_meshBuffers.reserve(100);
 }
 
 PenModeler::~PenModeler()
@@ -45,10 +47,7 @@ void PenModeler::AddChild(SceneObject * child)
 void PenModeler::Parse(const ParamArchive * store)
 {
 	SceneObject::Parse(store);
-	auto device = this->Scene->GetRenderDevice();
-	m_pMeshBuffer->CreateDeviceResources<VertexType, IndexType>(device,
-		g_MeshBufferVertexCap,
-		g_MeshBufferIndexCap);
+	m_pDevice = this->Scene->GetRenderDevice();
 }
 
 void PenModeler::OnParentChanged(SceneObject * oldParent)
@@ -130,7 +129,7 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 	if (shortestDist < 0.25) {
 		// touching
 		auto& curve = m_patches.back().boundry();
-		curve.append(pos);
+		curve.append(closest);
 	}
 	else {
 		cout << "Pen not touching; too far, " << shortestDist << endl;
@@ -160,6 +159,12 @@ void PenModeler::OnAirDragBegin()
 		return;
 	m_state = Dragging;
 	m_extrusions.emplace_back();
+	m_meshBuffers.emplace_back(new DynamicMeshBuffer());
+	auto& meshBuffer = *m_meshBuffers.back();
+	meshBuffer.CreateDeviceResources<VertexType, IndexType>(m_pDevice,
+		g_MeshBufferVertexCap,
+		g_MeshBufferIndexCap);
+
 	auto& extruder = m_extrusions.back();
 
 	XMVECTOR lclPos = m_Transform.LclTranslation;
@@ -168,6 +173,7 @@ void PenModeler::OnAirDragBegin()
 	for (int i = 0; i < m_patches.size(); i++)
 	{
 		auto& curv = m_patches[i].boundry();
+		if (curv.empty()) continue;
 		float distance = LineSegmentTest::Distance(lclPos, (XMFLOAT3*)curv.data(), curv.size(), sizeof(XMFLOAT4A));
 		if (distance < minDis)
 			minDis = distance, idx = i;
@@ -194,11 +200,11 @@ void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
 	auto& vertices = extruder.mesh().vertices;
 	auto& indices = extruder.mesh().indices;
 
-	m_pMeshBuffer->UpdateVertexBuffer(context,
+	m_meshBuffers.back()->UpdateVertexBuffer(context,
 		reinterpret_cast<VertexType*>(vertices.data()),
 		vertices.size());
 
-	m_pMeshBuffer->UpdateIndexBuffer(context, indices.data(), indices.size());
+	m_meshBuffers.back()->UpdateIndexBuffer(context, indices.data(), indices.size());
 
 }
 
@@ -320,7 +326,9 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	g_PrimitiveDrawer.End();
 
 	context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
-	m_pMeshBuffer->Draw(context, pEffect);
+	for (int i = 0; i < m_meshBuffers.size(); i++) {
+		m_meshBuffers[i]->Draw(context, pEffect);
+	}
 
 	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);
 }
