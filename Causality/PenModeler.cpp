@@ -6,7 +6,9 @@
 #include <Models.h>
 #include "Scene.h"
 #include <iostream>
-
+#include <ShaderEffect.h>
+#include "AssetDictionary.h"
+#include "Settings.h"
 
 using namespace Causality;
 using namespace Devices;
@@ -17,9 +19,10 @@ using namespace std;
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
 typedef uint32_t IndexType;
-typedef VertexPositionNormal VertexType;
-static const size_t	g_MeshBufferVertexCap = 2048;
-static const size_t	g_MeshBufferIndexCap = 2048;
+typedef VertexPositionNormalColor VertexType;
+static const size_t	g_MeshBufferVertexCap = 4096;
+static const size_t	g_MeshBufferIndexCap = 65536;
+static float g_contactThred = 1.6f; //cm
 
 PenModeler::PenModeler(int objectIdx)
 	: m_state(None), m_pTargetMesh(nullptr)
@@ -48,6 +51,7 @@ void PenModeler::Parse(const ParamArchive * store)
 {
 	SceneObject::Parse(store);
 	m_pDevice = this->Scene->GetRenderDevice();
+	m_pMaterial = this->Scene->Assets().GetMaterial("default");
 }
 
 void PenModeler::OnParentChanged(SceneObject * oldParent)
@@ -106,7 +110,7 @@ void PenModeler::SurfaceSketchBegin()
 }
 
 void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
-{	
+{
 	bool touching = false;
 	// Find closest point on mesh using pen direction
 	vector<XMFLOAT3> intersectionPoints;
@@ -119,14 +123,15 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 	Vector3 penTipPos = pos;
 	float shortestDist = Vector3::Distance(closest, penTipPos);
 	//float shortestDist = XMVectorGetX(XMVector3Length(pos - XMLoad(closest)));
-	for (Vector3 point: intersectionPoints) {
+	for (Vector3 point : intersectionPoints) {
 		float dist = Vector3::Distance(point, penTipPos);
 		if (dist < shortestDist) {
 			shortestDist = dist;
 			closest = point;
 		}
 	}
-	if (shortestDist < 0.25) {
+	// this is cm
+	if (shortestDist < g_contactThred) {
 		// touching
 		auto& curve = m_patches.back().boundry();
 		curve.append(closest);
@@ -140,7 +145,10 @@ void PenModeler::SurfaceSketchEnd()
 {
 	m_state = None;
 	auto& curve = m_patches.back().boundry();
-	if (curve.empty()) return;
+	if (curve.empty())
+	{
+		m_patches.pop_back();
+	}
 
 	curve.closeLoop();
 
@@ -150,7 +158,10 @@ void PenModeler::SurfaceSketchEnd()
 	//curve.updateLength();
 
 	if (curve.size() > 100)
+	{
 		curve.resample(100);
+	}
+	curve.smooth(0.8f, 4);
 }
 
 void PenModeler::OnAirDragBegin()
@@ -169,7 +180,7 @@ void PenModeler::OnAirDragBegin()
 
 	XMVECTOR lclPos = m_Transform.LclTranslation;
 	float minDis = std::numeric_limits<float>::max();
-	int idx;
+	int idx = -1;
 	for (int i = 0; i < m_patches.size(); i++)
 	{
 		auto& curv = m_patches[i].boundry();
@@ -177,6 +188,11 @@ void PenModeler::OnAirDragBegin()
 		float distance = LineSegmentTest::Distance(lclPos, (XMFLOAT3*)curv.data(), curv.size(), sizeof(XMFLOAT4A));
 		if (distance < minDis)
 			minDis = distance, idx = i;
+	}
+	if (idx < 0)
+	{
+		m_state = None;
+		return;
 	}
 	extruder.setBottom(&m_patches[idx]);
 	extruder.setAxis(new Curve());
@@ -189,7 +205,7 @@ void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 
 	if (extruder.axis().size() > 16)
 	{
-		extruder.triangulate(16, 16);
+		extruder.triangulate(64, 32);
 		UpdateMeshBuffer(extruder);
 	}
 }
@@ -211,6 +227,18 @@ void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
 void PenModeler::OnAirDragEnd()
 {
 	m_state = None;
+	auto& extrusion = m_extrusions.back();
+	auto& axis = extrusion.axis();
+	if (axis.empty())
+	{
+		m_extrusions.pop_back();
+	}
+	else
+	{
+		axis.smooth(0.8f, 4);
+		extrusion.triangulate(64, 32);
+	}
+
 }
 
 void PenModeler::Update(time_seconds const & time_delta)
@@ -306,7 +334,8 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 		float length = 0.05f;
 		float radius = 0.01f;
-		g_PrimitiveDrawer.DrawCone(pos - (yDir * length), yDir, length, radius, color);
+		g_PrimitiveDrawer.DrawSphere(pos, 0.0075f, color);
+		g_PrimitiveDrawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
 	}
 
 	if (m_patches.empty())
@@ -325,7 +354,19 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	g_PrimitiveDrawer.End();
 
-	context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
+	if (!g_DebugView)
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
+	else
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
+
+	if (m_meshBuffers.empty())
+		return;
+
+	m_pMaterial->SetupEffect(pEffect);
+	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
+	if (pSkin)
+		pSkin->SetWeightsPerVertex(0);
+	pEffect->Apply(context);
 	for (int i = 0; i < m_meshBuffers.size(); i++) {
 		m_meshBuffers[i]->Draw(context, pEffect);
 	}

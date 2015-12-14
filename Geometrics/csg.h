@@ -26,13 +26,14 @@
 namespace Geometrics
 {
 	using DirectX::Vector3;
+	using DirectX::Color;
 
 	struct Vertex
 	{
 		Vector3 position;
 		Vector3 normal;
+		Color	color = Color(1.0, 0.0, 0.0);
 	};
-
 
 	using MeshType = TriangleMesh<Vertex, uint32_t>;
 

@@ -113,10 +113,7 @@ namespace Causality
 			return effects[key];
 		}
 
-		const sptr<material_type>&	GetMaterial(const string& key) const
-		{
-			return materials[key];
-		}
+		sptr<material_type>			GetMaterial(const string& key) const;
 
 		template<typename VertexType>
 		const cptr<ID3D11InputLayout>& GetInputLayout(IEffect* pEffct = nullptr);

@@ -21,7 +21,7 @@
       </shadow_camera>-->
       <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="75">
         <first_person_keyboard_mouse_control />
-        <tracked_object name="camera_tracker" index="0" translation="0.032,-0.009,-0.016" rotation="{-0.496,0.572,0.477,-0.446}"/>
+        <!--<tracked_object name="camera_tracker" index="0" translation="0.032,-0.009,-0.016" rotation="{-0.496,0.572,0.477,-0.446}"/>-->
       </shadow_camera>
       <!--<dummy name="camera">
         <coordinate_axis max="0.1"/>

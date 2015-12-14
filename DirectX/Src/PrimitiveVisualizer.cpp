@@ -225,7 +225,7 @@ namespace DirectX{
 			m_pEffect->SetVertexColorEnabled(false);
 			m_pCylinder = DirectX::GeometricPrimitive::CreateCylinder(pContext, 1.0f, 2.0f,16);
 			m_pCylinder->CreateInputLayout(m_pEffect.get(), &m_pGeometryInputLayout);
-			m_pSphere = DirectX::GeometricPrimitive::CreateGeoSphere(pContext, 2.0f, 1);
+			m_pSphere = DirectX::GeometricPrimitive::CreateGeoSphere(pContext, 2.0f, 3);
 			m_pCube = DirectX::GeometricPrimitive::CreateCube(pContext, 2.0f);
 			m_pCone = DirectX::GeometricPrimitive::CreateCone(pContext,2.0f,1.0f,16);
 
