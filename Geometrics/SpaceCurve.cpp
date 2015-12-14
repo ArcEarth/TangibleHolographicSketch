@@ -51,6 +51,11 @@ std::vector<Vector3> SpaceCurve::FixCountSampling2(unsigned int SampleSegmentCou
 	return smoothSampler.FixCountSampling(SampleSegmentCount, false);
 }
 
+std::vector<Vector3> Geometrics::SpaceCurve::sample(size_t sampleCount)
+{
+	return FixCountSampling2(sampleCount);
+}
+
 void SpaceCurve::resample(size_t anchorCount, bool smooth)
 {
 	auto sample = FixCountSampling2(anchorCount);
@@ -106,7 +111,7 @@ float SpaceCurve::length() const
 	return m_anchors.back().w;
 }
 
-void XM_CALLCONV SpaceCurve::push_back(FXMVECTOR vtr)
+bool XM_CALLCONV SpaceCurve::push_back(FXMVECTOR vtr, bool force)
 {
 	float len = .0f;
 	if (m_anchors.empty()) {
@@ -120,8 +125,8 @@ void XM_CALLCONV SpaceCurve::push_back(FXMVECTOR vtr)
 		len = XMVectorGetW(btr + XMVector3Length(vtr - btr));
 
 		// ingnore duplicated anchors
-		if (abs(len - m_anchors.back().w) < XM_EPSILON * 8)
-			return;
+		if (!force && abs(len - m_anchors.back().w) < XM_EPSILON * 8)
+			return false;
 
 		if (!m_isClose)
 			m_anchors.emplace_back();
@@ -137,14 +142,14 @@ void XM_CALLCONV SpaceCurve::push_back(FXMVECTOR vtr)
 		XMStoreA(m_anchors.back(), v);
 		m_anchors.back().w = len;
 	}
-
+	return true;
 }
 
 XMVECTOR Geometrics::SpaceCurve::back() const { return XMLoadFloat4A(&m_anchors[size() - 1]); }
 
-void SpaceCurve::push_back(const Vector3& p)
+bool SpaceCurve::push_back(const Vector3& p,bool force)
 {
-	push_back(XMLoad(p));
+	return push_back(XMLoad(p),force);
 }
 
 // Tangent vector at anchor index

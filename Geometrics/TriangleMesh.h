@@ -1,8 +1,10 @@
 #pragma once
 
-#include <DirectXCollision.h>
+#include <DirectXMathExtend.h>
 #include <vector>
 #include <gsl.h>
+#include <VertexTraits.h>
+#include <unordered_map>
 
 namespace Geometrics
 {
@@ -61,29 +63,47 @@ namespace Geometrics
 			indices.clear();
 		}
 
+		inline const FaceType& facet(int idx) const
+		{
+			return reinterpret_cast<const FaceType&>(indices[idx * FaceType::VertexCount]);
+		}
+
+		inline FaceType& facet(int idx)
+		{
+			return reinterpret_cast<FaceType&>(indices[idx * FaceType::VertexCount]);
+		}
+
 		auto facets() {
 			return gsl::span<FaceType>(
 				reinterpret_cast<FaceType*>(indices.data()),
 				indices.size() / FaceType::VertexCount);
 		}
+
 		auto facets() const {
 			return gsl::span<const FaceType>(
 				reinterpret_cast<const FaceType*>(indices.data()),
 				indices.size() / FaceType::VertexCount);
 		}
 
+		const VertexType& vertex(int facet, int vidx) const
+		{
+			return this->vertices[facet * VertexCount + vidx];
+		}
+
+		VertexType& vertex(int facet, int vidx)
+		{
+			return this->vertices[facet * VertexCount + vidx];
+		}
+
 		std::vector<VertexType> vertices;
 		std::vector<IndexType>	indices;
 	};
 
-	template <typename _VertexType, typename _IndexType = uint16_t>
-	using TriangleMesh = PolygonSoup<_VertexType, _IndexType, Triangle<_IndexType>>;
-
-	template <typename _VertexType, typename _IndexType>
-	size_t RayIntersection(const TriangleMesh<_VertexType, _IndexType> &Mesh, DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<DirectX::XMFLOAT3>* output = nullptr)
+	template <class _VertexType, class _IndexType>
+	int intersect(const PolygonSoup<_VertexType, _IndexType, Triangle<_IndexType>> &Mesh, DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<float>* distances = nullptr)
 	{
 		using namespace DirectX;
-		size_t count = 0;
+		int count = 0;
 		XMVECTOR vDir = XMVector3Normalize(Direction);
 		for (const auto& tri : Mesh.facets())
 		{
@@ -96,15 +116,175 @@ namespace Geometrics
 			bool hr = DirectX::TriangleTests::Intersects(Origin, vDir, v0, v1, v2, distance);
 			if (hr) {
 				++count;
-				if (output) {
-					output->emplace_back();
-					XMStoreFloat3(&output->back(), distance*vDir + Origin);
+				if (distances) {
+					distances->push_back(distances);
 				}
 			}
 		}
 		return count;
 	}
 
+
+	struct MeshRayIntersectionInfo
+	{
+		using Vector3 = DirectX::Vector3;
+
+		Vector3 position;
+		float	distance;
+		Vector3 barycentric;
+		int		facet; // facet id
+
+		inline bool operator < (const MeshRayIntersectionInfo& rhs)
+		{
+			return this->distance < rhs.distance;
+		}
+	};
+
+	/// <summary>
+	/// Basic triangle mesh, each index represent an edge, which is the edge oppsite to the vertex in it's owner triangle
+	/// </summary>
+	template <typename _VertexType, typename _IndexType = uint16_t>
+	class TriangleMesh : public PolygonSoup<_VertexType, _IndexType, Triangle<_IndexType>>
+	{
+	public:
+		static const size_t VertexCount = FaceType::VertexCount;
+
+	public:
+		// edge's reverse edge
+		// stores the adjacent edges of a edge in a triangle
+		std::vector<IndexType> revedges;
+
+		// vertex's first adjacant edge
+		// std::vector<IndexType> vedges;
+
+		union EdgeType
+		{
+			_IndexType v[2];
+			struct {
+				_IndexType v0, v1;
+			};
+		};
+
+		inline EdgeType edge(int facet, int edge) const
+		{
+			EdgeType e;
+			auto& tri = facet(facet);
+			switch (edge)
+			{
+			case 0 :
+				e.v0 = tri[1];
+				e.v1 = tri[2];
+				break;
+			case 1 :
+				e.v0 = tri[2];
+				e.v1 = tri[0];
+				break;
+			case 2 :
+				e.v0 = tri[0];
+				e.v1 = tri[1];
+				break;
+			default:
+				e.v0 = -1;
+				e.v1 = -1;
+				break;
+			}
+			return e;
+		}
+
+		inline EdgeType edge(int eid) const
+		{
+			return edge(eid / VertexCount, eid % VertexCount);
+		}
+
+		inline int adjacentFacet(int facet, int edge) const
+		{
+			return revedges[facet * VertexCount + edge] / VertexCount;
+		}
+
+		inline int adjacentFacet(int eid) const
+		{
+			return revedges[eid] / VertexCount;
+		}
+
+		// build the adjacent map so we can access all the 1 rings
+		void build()
+		{
+			// intialize all adjacant edges to -1
+			revedges.resize(this->indices.size(), -1);
+			_IndexType vsize = this->vertices.size();
+			int esize = this->indices.size();
+
+			// make sure int for hash is enough
+			assert(vsize*vsize < std::numeric_limits<int>::max());
+			std::unordered_map<int, _IndexType> edges(esize * 2);
+			// max items inside this table should be less than (esize / 2)
+
+			_IndexType fid = 0;
+			for (const Triangle<_IndexType>& tri : this->facets())
+			{
+				for (_IndexType i = 0; i < VertexCount; i++)
+				{
+					_IndexType eid = i + fid * 3;
+					auto e = edge(fid, i);
+
+					int ehash = e.v0 * vsize + e.v1;
+					int revehash = e.v0 + e.v1 * vsize;
+
+					auto revItr = edges.find(revehash);
+					if (revItr != edges.end())
+					{
+						edges[ehash] = fid + 0;
+					}
+					else // find reversed edge, remove from edges map
+					{
+						auto revEid = *revItr;
+						revedges[eid] = revEid;
+						revedges[revEid] = eid;
+						edges.erase(revItr);
+					}
+				}
+
+				++fid;
+			}
+		}
+
+		int intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
+		{
+			assert(revedges.size() == indices.size());
+			using namespace DirectX;
+			size_t count = 0;
+			XMVECTOR vDir = XMVector3Normalize(Direction);
+			auto fid = 0;
+			for (const auto& tri : this->facets())
+			{
+				float distance;
+
+				XMVECTOR v0 = XMLoadFloat3(&this->vertices[tri[0]].position);
+				XMVECTOR v1 = XMLoadFloat3(&this->vertices[tri[1]].position);
+				XMVECTOR v2 = XMLoadFloat3(&this->vertices[tri[2]].position);
+
+				bool hr = DirectX::TriangleTests::Intersects(Origin, vDir, v0, v1, v2, distance);
+				if (hr) {
+					++count;
+					if (output) {
+						output->emplace_back();
+						auto& info = output->back();
+						XMVECTOR pos = distance * vDir + Origin;
+						XMVECTOR bc = DirectX::TriangleTests::BarycentricCoordinate(pos, v0, v1, v2);
+						info.facet = fid;
+						info.position = pos;
+						info.distance = distance;
+						info.barycentric = bc;
+					}
+				}
+				++fid;
+			}
+
+			if (output)
+				std::sort(output->begin(), output->end());
+			return count;
+		}
+	};
 
 	namespace Internal
 	{

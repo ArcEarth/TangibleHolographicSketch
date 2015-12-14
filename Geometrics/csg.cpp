@@ -47,10 +47,11 @@ namespace Geometrics
 	inline static Vertex interpolate(const Vertex & a, const Vertex & b, float t)
 	{
 		Vertex ret;
-		ret.position = lerp(a.position, b.position, t);
-		ret.normal = lerp(a.normal, b.normal, t);
-		ret.color = Color::Lerp(a.color, b.color, t);
+		ret.position = Vector3::Lerp(a.position, b.position, t);
+		ret.normal = Vector3::Lerp(a.normal, b.normal, t);
+		//ret.color = Color::Lerp(a.color, b.color, t);
 		//ret.uv = lerp(a.uv, b.uv, t);
+		ret.uv = Vector2::Lerp(a.uv, b.uv, t);
 		return ret;
 	}
 
