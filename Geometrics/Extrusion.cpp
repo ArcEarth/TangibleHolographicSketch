@@ -140,6 +140,7 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	auto path = *m_path;
 
 	path.resample(axisSubdiv + 1);
+	//path.smooth(0.8f, 8);
 
 	XMVECTOR p0 = path.position(0);;
 	XMVECTOR t0 = path.tangent(0);
@@ -181,6 +182,7 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 	int idxBase = vertices.size();
 
 	XMVECTOR r0t = XMQuaternionIdentity();
+	XMVECTOR tprev = t0;
 	for (int axisIdx = 0; axisIdx <= axisSubdiv; axisIdx++)
 	{
 		float t = axisIdx * interval;
@@ -193,7 +195,11 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 
 		// update rotation only if the tangent are not zero
 		if (XMVector4Greater(tt, g_XMEpsilon.v))
-			r0t = XMQuaternionRotationVectorToVector(t0, tt);
+		{
+			XMVECTOR rtprevt = XMQuaternionRotationVectorToVector(tprev, tt);
+			r0t = XMQuaternionMultiply(r0t, rtprevt);
+			tprev = tt;
+		}
 
 		// axis rotation
 		XMVECTOR rt = XMQuaternionMultiply(r0, r0t);

@@ -20,8 +20,9 @@ REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
 typedef uint32_t IndexType;
 typedef VertexPositionNormalColor VertexType;
-static const size_t	g_MeshBufferVertexCap = 2048;
-static const size_t	g_MeshBufferIndexCap = 2048;
+static const size_t	g_MeshBufferVertexCap = 4096;
+static const size_t	g_MeshBufferIndexCap = 65536;
+static float g_contactThred = 1.6f; //cm
 
 PenModeler::PenModeler(int objectIdx)
 	: m_state(None), m_pTargetMesh(nullptr)
@@ -129,7 +130,8 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 			closest = point;
 		}
 	}
-	if (shortestDist < 0.25) {
+	// this is cm
+	if (shortestDist < g_contactThred) {
 		// touching
 		auto& curve = m_patches.back().boundry();
 		curve.append(closest);
@@ -143,7 +145,10 @@ void PenModeler::SurfaceSketchEnd()
 {
 	m_state = None;
 	auto& curve = m_patches.back().boundry();
-	if (curve.empty()) return;
+	if (curve.empty())
+	{
+		m_patches.pop_back();
+	}
 
 	curve.closeLoop();
 
@@ -153,7 +158,10 @@ void PenModeler::SurfaceSketchEnd()
 	//curve.updateLength();
 
 	if (curve.size() > 100)
+	{
 		curve.resample(100);
+	}
+	curve.smooth(0.8f, 4);
 }
 
 void PenModeler::OnAirDragBegin()
@@ -172,7 +180,7 @@ void PenModeler::OnAirDragBegin()
 
 	XMVECTOR lclPos = m_Transform.LclTranslation;
 	float minDis = std::numeric_limits<float>::max();
-	int idx;
+	int idx = -1;
 	for (int i = 0; i < m_patches.size(); i++)
 	{
 		auto& curv = m_patches[i].boundry();
@@ -180,6 +188,11 @@ void PenModeler::OnAirDragBegin()
 		float distance = LineSegmentTest::Distance(lclPos, (XMFLOAT3*)curv.data(), curv.size(), sizeof(XMFLOAT4A));
 		if (distance < minDis)
 			minDis = distance, idx = i;
+	}
+	if (idx < 0)
+	{
+		m_state = None;
+		return;
 	}
 	extruder.setBottom(&m_patches[idx]);
 	extruder.setAxis(new Curve());
@@ -192,7 +205,7 @@ void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 
 	if (extruder.axis().size() > 16)
 	{
-		extruder.triangulate(16, 16);
+		extruder.triangulate(64, 32);
 		UpdateMeshBuffer(extruder);
 	}
 }
@@ -214,6 +227,18 @@ void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
 void PenModeler::OnAirDragEnd()
 {
 	m_state = None;
+	auto& extrusion = m_extrusions.back();
+	auto& axis = extrusion.axis();
+	if (axis.empty())
+	{
+		m_extrusions.pop_back();
+	}
+	else
+	{
+		axis.smooth(0.8f, 4);
+		extrusion.triangulate(64, 32);
+	}
+
 }
 
 void PenModeler::Update(time_seconds const & time_delta)

@@ -84,7 +84,7 @@ std::vector<Vector3> SpaceCurve::FixIntervalSampling(float Interval) const
 }
 
 void SpaceCurve::setClose(bool close) {
-	if (!m_isClose && close)
+	if (!m_isClose && close && !empty())
 	{
 		auto btr = XMLoadA(m_anchors.back());
 		m_anchors.push_back(m_anchors[0]);
