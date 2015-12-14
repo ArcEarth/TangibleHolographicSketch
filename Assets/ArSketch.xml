@@ -15,9 +15,9 @@
 
       <light name="sun_light" primary="false" color="#FF808080" position="5,10,5" near="2" far="16" focus="0,0,0" up="0,0,-1" hfov="3" wfov="3" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
 
-      <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="75">
+      <shadow_camera name="camera" primary="true" background="#FFFFFFFF" position="0,1.2,0.8" focus="0,0,0" up="0,1,0" ipd="0.065" fov="25">
         <first_person_keyboard_mouse_control />
-        <tracked_object name="camera_tracker" index="0" translation="0.0394087061,-0.0110831345,-0.0571103394" rotation="{-0.439892471,0.526546955,0.534501433,-0.493508875}"/>
+        <tracked_object name="camera_tracker" index="0" translation="0.0303101689,-0.0101860091,-0.0414803699" rotation="{-0.498596758,0.570285380,0.476107776,-0.446651191}"/>
       </shadow_camera>
       <!--<dummy name="camera">
         <coordinate_axis max="0.1"/>

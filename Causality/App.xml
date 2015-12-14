@@ -6,6 +6,6 @@
 	<assets path="..\Assets\"></assets>
 	<scenes path="ArSketch.xml"></scenes>
 
-	<window width="1800" height="1080" fullscreen="false"></window>
+	<window width="1920" height="1080" fullscreen="false"></window>
 	<console width="640" height="720"></console>
 </application>

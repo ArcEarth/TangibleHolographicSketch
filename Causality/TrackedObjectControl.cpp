@@ -24,7 +24,9 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 
 		auto rigid = m_pVicon->GetRigid(id);
 
-		auto calabrate = rigid.Inversed();
+		RigidTransform calibrate;
+		calibrate.Translation.y = 0.015f;
+		calibrate *= rigid.Inversed();
 
 		RigidTransform fin = m_intrinsic;
 		fin *= rigid;
