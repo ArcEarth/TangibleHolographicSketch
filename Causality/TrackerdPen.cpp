@@ -11,6 +11,7 @@ using namespace Math;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(tracked_pen, TrackedPen);
 
+const float TrackedPen::TipLength = 0.0145f;
 
 TrackedPen::TrackedPen()
 {

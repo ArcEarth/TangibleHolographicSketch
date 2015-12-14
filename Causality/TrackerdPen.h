@@ -26,6 +26,8 @@ namespace Causality
 
 		void setMouse(const KeyboardMouseFirstPersonControl* m);
 
+		// = 0.0145 m
+		static const float TipLength;
 	protected:
 		bool  m_visible;
 		float m_inkingStr;
