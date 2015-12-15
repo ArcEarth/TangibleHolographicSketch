@@ -19,7 +19,7 @@ using namespace std;
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
 typedef uint16_t IndexType;
-typedef VertexPositionNormalColor VertexType;
+typedef VertexPositionNormalTexture VertexType;
 static const size_t	g_MeshBufferVertexCap = 4096;
 static const size_t	g_MeshBufferIndexCap = 16384;
 static const size_t g_DecalResolution = 512;
@@ -99,10 +99,12 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 			auto& indices = m_target->indices;
 
 			MeshType::VertexType vt;
+			//static_assert(sizeof(MeshType::VertexType) == sizeof(DefaultStaticModel::VertexType));
 			for (auto& v : pModel->Vertices)
 			{
 				vt.position = v.position;
 				vt.normal = v.normal;
+				vt.uv = v.textureCoordinate;
 				vertics.push_back(vt);
 			}
 			for (auto& f : pModel->Facets)
@@ -138,7 +140,7 @@ void PenModeler::CreateDeviceResources()
 
 	m_decalMat.reset(new PhongMaterial());
 	m_decalMat->DiffuseMap = m_decal->ShaderResourceView();
-	m_decalMat->CreateDeviceResources(m_pDevice, true);
+	//m_decalMat->CreateDeviceResources(m_pDevice, true);
 
 	ThrowIfFailed(m_p2DFactory->CreatePathGeometry(&m_patchGeos));
 	ThrowIfFailed(m_patchGeos->Open(&m_patchGeoSink));
@@ -164,7 +166,7 @@ void PenModeler::CreateDeviceResources()
 	color = { .2f,0.7f,.2f,1.0f };
 	ThrowIfFailed(m_p2DContex->CreateSolidColorBrush(color, &m_brush));
 
-	color = { .0f,.0f,.0f,.0f };
+	//color = { .0f,.0f,.0f,.0f };
 
 	m_p2DContex->SetTarget(m_decal->BitmapView());
 	m_p2DContex->BeginDraw();
@@ -389,25 +391,26 @@ void DrawCurve(const Curve& curve, FXMVECTOR color)
 
 void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 {
-	if (m_isVisable && m_pTracker)
+	if (!m_isVisable || !m_pTracker) return;
+	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
+	if (pSkin)
+		pSkin->SetWeightsPerVertex(0);
+	auto pEM = dynamic_cast<IEffectMatrices*>(pEffect);
+	if (pEM)
 	{
-		g_PrimitiveDrawer.SetWorld(XMMatrixIdentity());
-		XMVECTOR rot = GetOrientation();
-		XMVECTOR yDir = XMVector3Rotate(-g_XMIdentityR0.v, rot);
-		XMVECTOR pos = GetPosition();
-		XMVECTOR color = Colors::Yellow.v;
-
-		if (m_pTracker->IsInking())
-			color = Colors::LimeGreen.v;
-		else if (m_pTracker->IsDraging())
-			color = Colors::Red.v;
-
-		float length = 0.05f;
-		float radius = 0.01f;
-		g_PrimitiveDrawer.DrawSphere(pos - (yDir * TrackedPen::TipLength), 0.0075f, color);
-		g_PrimitiveDrawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
-		//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
+		pEM->SetWorld(this->parent()->GetGlobalTransform().TransformMatrix());
 	}
+
+	if (!g_DebugView)
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
+	else
+		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
+
+	m_decalMat->SetupEffect(pEffect);
+	pEffect->Apply(context);
+	m_meshBuffer->Draw(context, pEffect);
+
+	RenderPen();	//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
 
 	if (m_patches.empty())
 		return;
@@ -425,34 +428,41 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	g_PrimitiveDrawer.End();
 
-	m_decalMat->SetupEffect(pEffect);
-	//auto pEM = dynamic_cast<IEffectMatrices*>(pEffect);
-	//if (pEM)
-	//{
-	//	pEM->SetWorld();
-	//}
-	pEffect->Apply(context);
-	m_meshBuffer->Draw(context, pEffect);
-
-
-	if (!g_DebugView)
-		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
-	else
-		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
-
 	if (m_extruBuffers.empty())
 		return;
 
+	if (pEM)
+	{
+		pEM->SetWorld(this->GetGlobalTransform().TransformMatrix());
+	}
+
 	m_extruMat->SetupEffect(pEffect);
-	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
-	if (pSkin)
-		pSkin->SetWeightsPerVertex(0);
 	pEffect->Apply(context);
 	for (int i = 0; i < m_extruBuffers.size(); i++) {
 		m_extruBuffers[i]->Draw(context, pEffect);
 	}
 
 	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);
+}
+
+void Causality::PenModeler::RenderPen()
+{
+	g_PrimitiveDrawer.SetWorld(XMMatrixIdentity());
+	XMVECTOR rot = GetOrientation();
+	XMVECTOR yDir = XMVector3Rotate(-g_XMIdentityR0.v, rot);
+	XMVECTOR pos = GetPosition();
+	XMVECTOR color = Colors::Yellow.v;
+
+	if (m_pTracker->IsInking())
+		color = Colors::LimeGreen.v;
+	else if (m_pTracker->IsDraging())
+		color = Colors::Red.v;
+
+	float length = 0.05f;
+	float radius = 0.01f;
+	g_PrimitiveDrawer.DrawSphere(pos - (yDir * TrackedPen::TipLength), 0.0075f, color);
+	g_PrimitiveDrawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
+
 }
 
 void XM_CALLCONV PenModeler::UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection)

@@ -30,7 +30,7 @@ namespace Causality
 
 	public:
 		PenModeler(int objectIdx = 1);
-		~PenModeler();
+		~PenModeler() override;
 
 		void OnParentChanged(SceneObject* oldParent) override;
 		void ExtractMeshFromVisual(Causality::VisualObject * pVisual);
@@ -53,6 +53,7 @@ namespace Causality
 		virtual RenderFlags GetRenderFlags() const;
 		virtual bool IsVisible(const BoundingGeometry& viewFrustum) const;
 		virtual void Render(IRenderContext *context, IEffect* pEffect = nullptr);
+		void RenderPen();
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);
 
 	private:

@@ -35,6 +35,7 @@ namespace Causality
 	{
 	public:
 		VisualObject();
+		~VisualObject() override;
 
 		virtual void Parse(const ParamArchive* store) override;
 		//int										MaxLoD() const;
@@ -101,7 +102,7 @@ namespace Causality
 	{
 	public:
 		CoordinateAxis();
-		~CoordinateAxis();
+		~CoordinateAxis() override;
 		// Inherited via IVisual
 		virtual void Parse(const ParamArchive* archive) override;
 		virtual bool IsVisible(const BoundingGeometry & viewFrustum) const override;
