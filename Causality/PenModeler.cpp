@@ -331,8 +331,9 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 		float length = 0.05f;
 		float radius = 0.01f;
-		g_PrimitiveDrawer.DrawSphere(pos, 0.0075f, color);
+		g_PrimitiveDrawer.DrawSphere(pos - (yDir * TrackedPen::TipLength), 0.0075f, color);
 		g_PrimitiveDrawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
+		//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
 	}
 
 	if (m_patches.empty())

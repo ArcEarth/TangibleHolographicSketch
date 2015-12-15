@@ -39,7 +39,7 @@
         
         <tracked_object name="mug_tracker" index="0" translation="-0.007,-0.000,-0.049" rotation="{-0.638,-0.278,-0.307,-0.649}" />
         <pen_modeler name="pen">
-          <tracked_pen name="pen_tracker" index="1" translation="(0.048,-0.089,-0.013)" rotation="{-0.356,-0.597,-0.620,-0.364}"></tracked_pen>
+          <tracked_pen name="pen_tracker" index="1" translation="0.051,-0.090,-0.013" rotation="{0.345,0.605,0.626,0.351}"></tracked_pen>
           <coordinate_axis max="2"/>
         </pen_modeler>
       </object>

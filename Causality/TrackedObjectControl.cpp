@@ -26,7 +26,7 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 
 		//RigidTransform calibrate;
 		////calibrate.Translation.x = -0.0145;
-		////calibrate.Translation.y = 0.0075f;
+		//calibrate.Translation.y = 0.0075f;
 		//calibrate *= rigid.Inversed();
 
 		//Vector4 cq = calibrate.Rotation;
