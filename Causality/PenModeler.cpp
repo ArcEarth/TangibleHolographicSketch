@@ -18,7 +18,7 @@ using namespace std;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 
-typedef uint32_t IndexType;
+typedef uint16_t IndexType;
 typedef VertexPositionNormalColor VertexType;
 static const size_t	g_MeshBufferVertexCap = 4096;
 static const size_t	g_MeshBufferIndexCap = 16384;
@@ -111,7 +111,6 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 					indices.push_back(f[i]);
 			}
 			m_target->build();
-			return;
 		}
 
 		CreateDeviceResources();
@@ -125,12 +124,24 @@ void PenModeler::CreateDeviceResources()
 	m_meshBuffer.reset(new DynamicMeshBuffer);
 	m_meshBuffer->CreateDeviceResources<VertexType, IndexType>(m_pDevice, g_MeshBufferVertexCap, g_MeshBufferIndexCap);
 
+	auto context = this->Scene->GetRenderContext();
+
+	// Update our mesh with same geometry as the target
+	m_meshBuffer->UpdateVertexBuffer(context,
+		reinterpret_cast<VertexType*>(m_target->vertices.data()),
+		m_target->vertices.size());
+	m_meshBuffer->UpdateIndexBuffer(context, m_target->indices.data(), m_target->indices.size());
+
+
 	m_decal.reset(new RenderableTexture2D(m_pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true));
 	m_decal->CreateD2DBitmapView(m_p2DContex);
+
 	m_decalMat.reset(new PhongMaterial());
 	m_decalMat->DiffuseMap = m_decal->ShaderResourceView();
-	m_p2DFactory->CreatePathGeometry(&m_patchGeos);
-	m_patchGeos->Open(&m_patchGeoSink);
+	m_decalMat->CreateDeviceResources(m_pDevice, true);
+
+	ThrowIfFailed(m_p2DFactory->CreatePathGeometry(&m_patchGeos));
+	ThrowIfFailed(m_patchGeos->Open(&m_patchGeoSink));
 	auto& pSink = m_patchGeoSink;
 	pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
 	pSink->BeginFigure(
@@ -146,22 +157,23 @@ void PenModeler::CreateDeviceResources()
 	};
 	pSink->AddLines(points, ARRAYSIZE(points));
 	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+	pSink->Close();
 	pSink.Reset();
 
 	D2D1_COLOR_F color;
 	color = { .2f,0.7f,.2f,1.0f };
-	m_p2DContex->CreateSolidColorBrush(color, &m_brush);
+	ThrowIfFailed(m_p2DContex->CreateSolidColorBrush(color, &m_brush));
 
 	color = { .0f,.0f,.0f,.0f };
 
 	m_p2DContex->SetTarget(m_decal->BitmapView());
-	m_p2DContex->Clear(color);
 	m_p2DContex->BeginDraw();
+	m_p2DContex->Clear(color);
 	m_p2DContex->FillGeometry(m_patchGeos.Get(), m_brush.Get());
 	color = { .0f,1.0f,.0f,1.0f };
 	m_brush->SetColor(color);
 	m_p2DContex->DrawGeometry(m_patchGeos.Get(), m_brush.Get());
-	m_p2DContex->EndDraw();
+	ThrowIfFailed(m_p2DContex->EndDraw());
 }
 
 void PenModeler::SurfaceSketchBegin()
@@ -412,6 +424,16 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	}
 
 	g_PrimitiveDrawer.End();
+
+	m_decalMat->SetupEffect(pEffect);
+	//auto pEM = dynamic_cast<IEffectMatrices*>(pEffect);
+	//if (pEM)
+	//{
+	//	pEM->SetWorld();
+	//}
+	pEffect->Apply(context);
+	m_meshBuffer->Draw(context, pEffect);
+
 
 	if (!g_DebugView)
 		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());

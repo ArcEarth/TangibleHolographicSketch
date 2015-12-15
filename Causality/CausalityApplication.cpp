@@ -208,6 +208,7 @@ bool App::OnStartup(const std::vector<std::string>& args)
 	Scenes.emplace_back(new Scene);
 	auto& selector = Scenes.back();
 	selector->SetRenderDeviceAndContext(pDevice.Get(), pContext.Get());
+	selector->SetHudRenderDevice(pDeviceResources->GetD2DFactory(), pDeviceResources->GetD2DDeviceContext(), pDeviceResources->GetDWriteFactory());
 	selector->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
 
 	concurrency::task<void> loadScene([sceneFile,&selector]() {

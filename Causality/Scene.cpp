@@ -55,6 +55,13 @@ void Scene::SetRenderDeviceAndContext(IRenderDevice * device, IRenderContext * c
 	m_context = context;
 }
 
+void Scene::SetHudRenderDevice(I2DFactory * pD2dFactory, I2DContext* pD2dContext, ITextFactory * pTextFactory)
+{
+	m_2dFactory = pD2dFactory;
+	m_textFactory = pTextFactory;
+	m_2dContext = pD2dContext;
+}
+
 void Scene::SetCanvas(DirectX::RenderTarget & canvas) {
 	for (auto& camera : m_cameras)
 	{

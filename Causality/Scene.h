@@ -112,7 +112,7 @@ namespace Causality
 		ITextFactory*			GetTextFactory() { return m_textFactory.Get(); }
 
 		void SetRenderDeviceAndContext(IRenderDevice* device, IRenderContext* context);
-		void SetHudRenderDevice(I2DFactory* pD2dFactory, ITextFactory* pTextFactory);
+		void SetHudRenderDevice(I2DFactory* pD2dFactory,I2DContext* pD2dContext, ITextFactory* pTextFactory);
 
 		RenderTarget&		Canvas() { return m_canvas; }
 		const RenderTarget&	Canvas() const { return m_canvas; }

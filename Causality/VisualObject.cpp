@@ -120,6 +120,8 @@ void VisualObject::Parse(const ParamArchive* store)
 {
 	SceneObject::Parse(store);
 
+	GetParam(store, "visible", m_isVisable);
+
 	float mass = 1.0f;
 	GetParam(store, "mass", mass);
 
