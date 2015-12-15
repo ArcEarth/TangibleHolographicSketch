@@ -7,7 +7,7 @@ cbuffer ShadowMapEffectCBuffer REGISTER(b0)
 	float4x4 ViewProjection;
 	float4x4 UVTransform;
 	float3   EyePosition;
-	float	 padding;
+	float	 Bias;
 
 	float4	 MaterialAmbient;
 	float4	 MaterialDiffuse;
@@ -21,5 +21,6 @@ cbuffer ShadowMapEffectCBuffer REGISTER(b0)
 	float4	 LightPosition[MAX_LIGHTS];
 	float4x4 LightViewProjection[MAX_LIGHTS];
 	float4	 LightDirection[MAX_LIGHTS];
+    float    LightBias[MAX_LIGHTS];
 	uint     IsPointLight[MAX_LIGHTS];
 };

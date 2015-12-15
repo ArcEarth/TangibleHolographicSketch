@@ -495,7 +495,7 @@ void AssetDictionary::SetRenderDevice(IRenderDevice * device)
 		//default_skinned_effect = pSEffect;
 
 		default_material = std::make_unique<PhongMaterial>();
-		default_material->DiffuseColor = DirectX::Colors::Purple.v;
+		default_material->DiffuseColor = DirectX::Colors::Aquamarine.v;
 		default_material->pDefaultRequestEffect = default_effect.get();
 		default_material->Name = "Default";
 

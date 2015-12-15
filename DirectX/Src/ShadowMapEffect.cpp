@@ -644,8 +644,11 @@ void XM_CALLCONV ShadowMapEffect::SetLightSpecularColor(int whichLight, FXMVECTO
 	//! Not support
 }
 
-void DirectX::ShadowMapEffect::SetLightShadowMapBias(int whichLight, float bias)
+void ShadowMapEffect::SetLightShadowMapBias(int whichLight, float bias)
 {
+	pImpl->constants.Bias = bias;
+	pImpl->constants.LightBias[whichLight] = bias;
+	pImpl->dirtyFlags |= EffectDirtyFlags::ConstantBuffer;
 }
 
 void ShadowMapEffect::SetLightShadowMap(int whichLight, ID3D11ShaderResourceView * pTexture)
