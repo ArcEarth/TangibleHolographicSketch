@@ -182,7 +182,6 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</Command>
       <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>__AVX__</UndefinePreprocessorDefinitions>
-      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -217,7 +216,6 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
       <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>__AVX__</UndefinePreprocessorDefinitions>
-      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -1563,7 +1563,9 @@ namespace DirectX
 		float		Tw; // padding
 
 		RigidTransform()
-		{}
+			: Tw(1.0f)
+		{
+		}
 
 		// Extract the Matrix Representation of this rigid transform
 		inline XMMATRIX TransformMatrix() const
@@ -1587,13 +1589,14 @@ namespace DirectX
 		{
 			// R' = R^-1
 			XMVECTOR q = XMLoadA(Rotation);
-			q = XMQuaternionConjugate(q);
+			q = XMQuaternionInverse(q);
 			XMStoreA(Rotation, q);
 
 			// T' = -T*R^-1
-			q = XMVector3Rotate(XMLoadA(Translation), q);
-			q = -q;
-			XMStoreA(Translation, q);
+			XMVECTOR v = XMLoadA(Translation);
+			v = -v;
+			v = XMVector3Rotate(v, q);
+			XMStoreA(Translation, v);
 		}
 
 		template <typename _TTransform>
@@ -1612,12 +1615,14 @@ namespace DirectX
 		{
 			auto& local = *this;
 			XMVECTOR ParQ = XMLoadA(global.Rotation);
-			XMVECTOR Q = XMQuaternionMultiply(XMLoadA(local.Rotation), ParQ);
+			XMVECTOR Q = XMLoadA(local.Rotation);
+			Q = XMQuaternionMultiply(Q, ParQ);
 			XMStoreA(this->Rotation, Q);
 
 			XMVECTOR V = XMLoadA(local.Translation);
 			V = XMVector3Rotate(V, ParQ);
-			V = XMVectorAdd(V, XMLoadA(global.Translation));
+			XMVECTOR gV = XMLoadA(global.Translation);
+			V = XMVectorAdd(V, gV);
 
 			XMStoreA(this->Translation, V);
 			return *this;

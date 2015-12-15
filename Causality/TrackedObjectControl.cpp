@@ -24,13 +24,15 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 
 		auto rigid = m_pVicon->GetRigid(id);
 
-		//RigidTransform calibrate;
-		////calibrate.Translation.x = -0.0145;
+		RigidTransform calibrate;
+		RigidTransform temp2;
+		//calibrate.Translation.x = -0.0145;
 		//calibrate.Translation.y = 0.0075f;
-		//calibrate *= rigid.Inversed();
+		calibrate = rigid.Inversed();
+		//temp2 *= rigid;
 
-		//Vector4 cq = calibrate.Rotation;
-		//std::cout << "translation=\"" << calibrate.Translation << "\" rotation=\"{" << cq << "}\"" << std::endl;
+		Vector4 cq = calibrate.Rotation;
+		std::cout << object->Name << " : translation=\"" << calibrate.Translation << "\" rotation=\"{" << cq << "}\"" << std::endl;
 
 		RigidTransform fin = m_intrinsic;
 		fin *= rigid;
