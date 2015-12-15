@@ -34,6 +34,7 @@ namespace Causality
 
 		void OnParentChanged(SceneObject* oldParent) override;
 		void ExtractMeshFromVisual(Causality::VisualObject * pVisual);
+		void CreateDeviceResources();
 		void AddChild(SceneObject* child) override;
 		virtual void Parse(const ParamArchive* store) override;
 
@@ -68,6 +69,8 @@ namespace Causality
 
 		cptr<ID2D1PathGeometry>		m_patchGeos;
 		cptr<ID2D1GeometrySink>		m_patchGeoSink;
+		cptr<ID2D1SolidColorBrush>	m_brush;
+
 
 		uptr<DynamicMeshBuffer>		m_meshBuffer;
 		vector<uptr<DynamicMeshBuffer>>
