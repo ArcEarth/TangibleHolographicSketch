@@ -14,9 +14,6 @@ SamplerState ShadowSampler : register(s2);
 
 #include "ShadowMapEffectStructures.hlsli"
 
-static const float bias = 3e-3f;
-static const float spbias = 0.0000003f;
-
 //
 // lambert lighting function
 //
@@ -84,7 +81,7 @@ float4 PS_OneLightNoTex(PSInputOneLightNoTex pixel) : SV_TARGET
 	for (int i = 0; i < 1; i++)
 	{
         NormalizeLightUV(pixel.lightUv[i]);
-		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
+        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - Bias);
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
 	}
 	diffuse = saturate(diffuse + specular);
@@ -110,7 +107,7 @@ float4 PS_OneLightTex(PSInputOneLightTex pixel) : SV_TARGET
 	for (int i = 0; i < 1; i++)
 	{
         NormalizeLightUV(pixel.lightUv[i]);
-		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
+        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - Bias);
 		//float shadowAmount = 1.0f;
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
 		specular += shadowAmount * SpecularContribution(toEyeVector, LightDirection[i].xyz, worldNormal, MaterialSpecular.rgb, MaterialSpecularPower, LightColor[i].a, LightColor[i].rgb);
@@ -146,7 +143,7 @@ float4 PS_OneLightTexBump(PSInputOneLightTexBump pixel) : SV_TARGET
 	for (int i = 0; i < 1; i++)
 	{
         NormalizeLightUV(pixel.lightUv[i]);
-		float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
+        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - Bias);
 		diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
 		specular += shadowAmount * SpecularContribution(toEyeVector, LightDirection[i].xyz, worldNormal, MaterialSpecular.rgb, MaterialSpecularPower, LightColor[i].a, LightColor[i].rgb);
 	}
@@ -181,7 +178,7 @@ float4 PS_OneLightTexBumpSpecular(PSInputOneLightTexBump pixel) : SV_TARGET
     for (int i = 0; i < 1; i++)
     {
         NormalizeLightUV(pixel.lightUv[i]);
-        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - bias);
+        float shadowAmount = SampleShadow(ShadowTex, pixel.lightUv[i].xy, pixel.lightUv[i].z - Bias);
         diffuse += shadowAmount * LambertLighting(LightDirection[i].xyz, worldNormal, LightColor[i].rgb, matDiffuse);
         specular += shadowAmount * SpecularContribution(toEyeVector, LightDirection[i].xyz, worldNormal, matSpecular.rgb, MaterialSpecularPower, LightColor[i].a, LightColor[i].rgb);
     }
@@ -263,7 +260,7 @@ float4 PS_ScreenSpaceTexBump(PSInputScreenSpaceTex pixel) : SV_TARGET
 	float3 matDiffuse = MaterialDiffuse.rgb * texDiffuse.rgb;
 
 	float4 shadowAmount = ShadowTex.Load(pixel.pos).rgba;
-	float3 specular = .0f;																	   //shadowAmount = abs(pixel.pos.z - shadowAmount.w) < spbias ? shadowAmount : 1.0f;
+	float3 specular = .0f;																	   //shadowAmount = abs(pixel.pos.z - shadowAmount.w) < Bias ? shadowAmount : 1.0f;
 
 	[unroll]
 	for (int i = 0; i < 1; i++)
@@ -287,8 +284,8 @@ float4 PS_BinaryOneLightNoTex(PSInputBinaryOneLightNoTex pixel) : SV_TARGET
 	{
         NormalizeLightUV(pixel.lightUv[i]);
 		float shadowDepth = ShadowTex.Sample(ShadowSampler, pixel.lightUv[i].xy).r;
-		amount[i] = (shadowDepth + bias > pixel.lightUv[i].z) ? 1.0f : 0.0f;
-	}
+        amount[i] = (shadowDepth + Bias > pixel.lightUv[i].z) ? 1.0f : 0.0f;
+    }
 
 	//clip(0.85 - amount.r);
 
@@ -310,8 +307,8 @@ float4 PS_BinaryOneLightTex(PSInputBinaryOneLightTex pixel) : SV_TARGET
 	{
         NormalizeLightUV(pixel.lightUv[i]);
 		float shadowDepth = ShadowTex.Sample(ShadowSampler, pixel.lightUv[i].xy).r;
-		amount[i] = (shadowDepth + bias > pixel.lightUv[i].z) ? alpha : 0.0f;
-	}
+        amount[i] = (shadowDepth + Bias > pixel.lightUv[i].z) ? alpha : 0.0f;
+    }
 
 	//clip(0.85 - amount.r);
 

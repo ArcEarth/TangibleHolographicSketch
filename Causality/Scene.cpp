@@ -220,6 +220,7 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 		XMVECTOR direction;
 		XMMATRIX view;
 		XMMATRIX proj;
+		float	 bias;
 		ID3D11ShaderResourceView* shadow;
 	};
 
@@ -239,6 +240,7 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 		{
 			Lps[i].view = pView->GetViewMatrix();
 			Lps[i].proj = pView->GetProjectionMatrix();
+			Lps[i].bias = 0.0005f;
 		}
 	}
 
@@ -264,6 +266,7 @@ void Scene::SetupEffectsLights(DirectX::IEffect * pEffect)
 					pELS->SetLightShadowMap(i, Lps[i].shadow);
 					pELS->SetLightView(i, Lps[i].view);
 					pELS->SetLightProjection(i, Lps[i].proj);
+					pELS->SetLightShadowMapBias(i, Lps[i].bias);
 				}
 
 			}
