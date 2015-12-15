@@ -35,9 +35,11 @@
 
       <object name="ground" position="0,-1.0,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
       <object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
+
       <object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
-        <coordinate_axis max="2"/>
-      </object>>
+        <coordinate_axis max="100"/>
+        <tracked_object name="bottle_tracker" index="3" translation="-0.002, 0.003,-0.167" rotation="{0.003, 0.702, 0.713,-0.002}" />
+      </object>
       
       <object name="mug2" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
