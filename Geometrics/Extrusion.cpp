@@ -249,6 +249,8 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 		}
 	}
 
+	m_mesh.build();
+
 	m_dirty = false;
 	return m_mesh;
 }

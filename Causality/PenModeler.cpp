@@ -98,6 +98,7 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 				for (int i = 0; i < 3; ++i)
 					indices.push_back(f[i]);
 			}
+			m_target->build();
 			return;
 		}
 	}

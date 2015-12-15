@@ -168,7 +168,7 @@ namespace Geometrics
 		inline EdgeType edge(int facet, int edge) const
 		{
 			EdgeType e;
-			auto& tri = facet(facet);
+			auto& tri = this->facet(facet);
 			switch (edge)
 			{
 			case 0 :
@@ -237,7 +237,7 @@ namespace Geometrics
 					}
 					else // find reversed edge, remove from edges map
 					{
-						auto revEid = *revItr;
+						auto revEid = revItr->second;
 						revedges[eid] = revEid;
 						revedges[revEid] = eid;
 						edges.erase(revItr);
@@ -250,7 +250,7 @@ namespace Geometrics
 
 		int intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
 		{
-			assert(revedges.size() == indices.size());
+			//assert(revedges.size() == indices.size());
 			using namespace DirectX;
 			size_t count = 0;
 			XMVECTOR vDir = XMVector3Normalize(Direction);
