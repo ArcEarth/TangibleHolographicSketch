@@ -662,8 +662,8 @@ void HMDCamera::EndFrame()
 
 void HMDCamera::SetIPD(float ipd) {
 	m_ipd = ipd;
-	m_Views[0]->SetDisplacement(XMVectorSet(0.5f * ipd, 0, 0, 0));
-	m_Views[1]->SetDisplacement(XMVectorSet(-0.5f * ipd, 0, 0, 0));
+	m_Views[0]->SetDisplacement(XMVectorSet(-0.5f * ipd, 0, 0, 0));
+	m_Views[1]->SetDisplacement(XMVectorSet(0.5f * ipd, 0, 0, 0));
 }
 
 void HMDCamera::SetPerspective(float fov, float aspect, float _near, float _far)

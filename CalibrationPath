@@ -38,3 +38,8 @@ pen
 translation="0.044,-0.075,-0.013" rotation="{ 0.349, 0.605, 0.623, 0.352}
 camera
 translation="0.032,-0.009,-0.016" rotation="{-0.496,0.572,0.477,-0.446}
+
+shadow camera
+aspect, near, far
+1,4,8,
+1.77778,0.1,20
