@@ -9,7 +9,7 @@
     <mesh name="cube_mesh" src="cube.obj"></mesh>
     <mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>
-    <mesh name="bottle_mesh" src="wine_bottle.obj"></mesh>
+    <!--<mesh name="bottle_mesh" src="wine_bottle.obj"></mesh>-->
   </scene.assets>
   <scene.content>
     <grid name="root">
@@ -27,9 +27,9 @@
 
       <object name="ground" position="0,-1.0,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
       <object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
-      <object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
+      <!--<object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
         <coordinate_axis max="2"/>
-      </object>>
+      </object>>-->
       
       <object name="mug2" visible="true" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
