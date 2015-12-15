@@ -9,7 +9,7 @@ REGISTER_SCENE_OBJECT_IN_PARSER(scene_object, SceneObject);
 
 SceneObject::~SceneObject()
 {
-	int *p = nullptr;
+	int *p = nullptr;  
 }
 
 SceneObject::SceneObject() {

@@ -30,7 +30,7 @@ namespace Causality
 
 	public:
 		PenModeler(int objectIdx = 1);
-		~PenModeler();
+		~PenModeler() override;
 
 		void OnParentChanged(SceneObject* oldParent) override;
 		void ExtractMeshFromVisual(Causality::VisualObject * pVisual);
@@ -49,10 +49,12 @@ namespace Causality
 		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
 		void Update(time_seconds const& time_delta) override;
 
+		void UpdateRenderGeometry(array_view<Vector3> points, const Vector2& canvasSize);
 		// Camera culling
 		virtual RenderFlags GetRenderFlags() const;
 		virtual bool IsVisible(const BoundingGeometry& viewFrustum) const;
 		virtual void Render(IRenderContext *context, IEffect* pEffect = nullptr);
+		void RenderPen();
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);
 
 	private:
@@ -68,7 +70,6 @@ namespace Causality
 		I2DFactory*					m_p2DFactory;
 
 		cptr<ID2D1PathGeometry>		m_patchGeos;
-		cptr<ID2D1GeometrySink>		m_patchGeoSink;
 		cptr<ID2D1SolidColorBrush>	m_brush;
 
 

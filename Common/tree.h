@@ -861,7 +861,11 @@ namespace stdx
 		{
 			auto child = _first_child;
 			while (child != nullptr)
+			{
+				auto* pNext = child->_next_sibling;
 				internal_delete<_Ty>(child);
+				child = pNext;
+			}
 #ifdef _DEBUG
 			_parent = nullptr;
 #endif

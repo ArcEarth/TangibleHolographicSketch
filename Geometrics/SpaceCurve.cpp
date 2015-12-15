@@ -51,7 +51,7 @@ std::vector<Vector3> SpaceCurve::FixCountSampling2(unsigned int SampleSegmentCou
 	return smoothSampler.FixCountSampling(SampleSegmentCount, false);
 }
 
-std::vector<Vector3> Geometrics::SpaceCurve::sample(size_t sampleCount)
+std::vector<Vector3> Geometrics::SpaceCurve::sample(size_t sampleCount) const
 {
 	return FixCountSampling2(sampleCount);
 }

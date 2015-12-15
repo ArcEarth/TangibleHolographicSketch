@@ -116,6 +116,11 @@ VisualObject::VisualObject()
 	m_isFocuesd = false;
 }
 
+Causality::VisualObject::~VisualObject()
+{
+
+}
+
 void VisualObject::Parse(const ParamArchive* store)
 {
 	SceneObject::Parse(store);
