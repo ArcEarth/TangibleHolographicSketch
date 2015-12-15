@@ -1,6 +1,7 @@
 #pragma once
 #include "SceneObject.h"
 #include "SmartPointers.h"
+#include <Common\Filter.h>
 
 namespace Causality
 {
@@ -29,6 +30,10 @@ namespace Causality
 		bool UpdateFromLeapHand(double time_delta);
 
 	protected:
+		LowPassFilter<Vector3,float>	m_posFilter;
+		LowPassFilter<Quaternion,float>	m_rotFilter;
+		float				m_freq;
+
 		SceneObject*		m_pRigid;
 		string				m_internalName;
 		IsometricTransform&	m_intrinsic;

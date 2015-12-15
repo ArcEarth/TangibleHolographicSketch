@@ -13,6 +13,8 @@ REGISTER_SCENE_OBJECT_IN_PARSER(tracked_object, TrackedObjectControl);
 
 bool TrackedObjectControl::UpdateFromVicon(double dt)
 {
+	m_freq = 1.0 / dt;
+
 	if (m_pVicon)
 	{
 		auto object = m_pRigid;
@@ -32,10 +34,16 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 		//temp2 *= rigid;
 
 		Vector4 cq = calibrate.Rotation;
-		std::cout << object->Name << " : translation=\"" << calibrate.Translation << "\" rotation=\"{" << cq << "}\"" << std::endl;
+		//std::cout << object->Name << " : translation=\"" << calibrate.Translation << "\" rotation=\"{" << cq << "}\"" << std::endl;
 
 		RigidTransform fin = m_intrinsic;
 		fin *= rigid;
+
+		if (Vector3::Distance(rigid.Translation,Vector3::Zero) < 0.001f)
+			return true;
+
+		fin.Translation = m_posFilter.Apply(fin.Translation);
+		fin.Rotation = m_rotFilter.Apply(fin.Rotation);
 
 		object->SetPosition(fin.Translation);
 		object->SetOrientation(fin.Rotation);
@@ -90,6 +98,9 @@ TrackedObjectControl::TrackedObjectControl()
 
 	XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
 	m_pLeap->SetDeviceWorldCoord(world);
+
+	m_posFilter.SetUpdateFrequency(&m_freq);
+	m_rotFilter.SetUpdateFrequency(&m_freq);
 }
 
 TrackedObjectControl::~TrackedObjectControl()
@@ -125,7 +136,7 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 		else if (rotstr[0] == '{') // Quaternion
 		{
 			Quaternion q;
-			sscanf_s(rotstr.c_str(), "{%f,%f,%f,%f}",&q.x, &q.y, &q.z, &q.w);
+			sscanf_s(rotstr.c_str(), "{%f,%f,%f,%f}", &q.x, &q.y, &q.z, &q.w);
 			m_intrinsic.Rotation = q;
 		}
 		else if (rotstr[0] == '<')
@@ -136,6 +147,11 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 		}
 	}
 
+	float tvcap = 2.0f, rvcap = 5.0f;
+	GetParam(archive,"tvcap", tvcap);
+	m_posFilter.SetCutoffFrequency(tvcap);
+	GetParam(archive, "rvcap", rvcap);
+	m_rotFilter.SetCutoffFrequency(rvcap);
 }
 
 void TrackedObjectControl::OnParentChanged(SceneObject * oldParent)

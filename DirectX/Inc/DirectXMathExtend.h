@@ -2016,40 +2016,6 @@ namespace DirectX
 
 	//Some supporting method
 
-	namespace TriangleTests
-	{
-		/// <summary>
-		/// return the barycentric coordinate of position P inside triangle V0,V1,V2 ,
-		/// so that V0 * bc.x + V1 * bc.y + V2 * bc.z = P ,
-		/// bc.w are unspecified
-		/// </summary>
-		/// <param name="P">Position inside triangle</param>
-		/// <param name="V0"></param>
-		/// <param name="V1"></param>
-		/// <param name="V2"></param>
-		/// <returns></returns>
-		inline XMVECTOR XM_CALLCONV BarycentricCoordinate(FXMVECTOR P, FXMVECTOR V0, FXMVECTOR V1, GXMVECTOR V2)
-		{
-			XMVECTOR E = V2 - V1;
-			XMVECTOR R0 = P - V1;
-			R0 = XMVector3Cross(R0, E);
-
-			E = V0 - V2;
-			XMVECTOR R1 = P - V2;
-			R1 = XMVector3Cross(R1, E);
-
-			E = V1 - V0;
-			XMVECTOR R2 = P - V0;
-			R2 = XMVector3Cross(R2, E);
-
-			E = R0 + R1 + R2;
-			R0 = XMVectorSelect(R1, R0, g_XMSelect1000.v); // r0 r1 r1 r1
-			R0 = XMVectorSelect(R2, R0, g_XMSelect1100.v); // r1 r1 r2 r2
-			R0 /= E;
-			return R0;
-		}
-	}
-
 	/// <summary>
 	/// 
 	/// </summary>
@@ -2068,6 +2034,47 @@ namespace DirectX
 		T = XMVectorSplatZ(BC);
 		V = XMVectorMultiplyAdd(V2, T, V);
 		return V;
+	}
+
+	namespace TriangleTests
+	{
+		/// <summary>
+		/// return the barycentric coordinate of position P inside triangle V0,V1,V2 ,
+		/// so that V0 * bc.x + V1 * bc.y + V2 * bc.z = P ,
+		/// bc.w are unspecified
+		/// </summary>
+		/// <param name="P">Position inside triangle</param>
+		/// <param name="V0"></param>
+		/// <param name="V1"></param>
+		/// <param name="V2"></param>
+		/// <returns></returns>
+		inline XMVECTOR XM_CALLCONV BarycentricCoordinate(FXMVECTOR P, FXMVECTOR V0, FXMVECTOR V1, GXMVECTOR V2)
+		{
+			XMVECTOR E = V2 - V1;
+			XMVECTOR R0 = P - V1;
+			R0 = XMVector3Cross(R0, E);
+			R0 = XMVector3Length(R0);
+
+			E = V0 - V2;
+			XMVECTOR R1 = P - V2;
+			R1 = XMVector3Cross(R1, E);
+			R1 = XMVector3Length(R1);
+
+			E = V1 - V0;
+			XMVECTOR R2 = P - V0;
+			R2 = XMVector3Cross(R2, E);
+			R2 = XMVector3Length(R2);
+
+			E = R0 + R1 + R2;
+			R0 = XMVectorSelect(R1, R0, g_XMSelect1000.v); // r0 r1 r1 r1
+			R0 = XMVectorSelect(R2, R0, g_XMSelect1100.v); // r1 r1 r2 r2
+			R0 /= E;
+
+			XMVECTOR PR = XMVectorBaryCentricV(V0, V1, V2, R0);
+			PR -= P;
+			assert(XMVectorGetX(XMVector3Length(PR)) < 0.001f);
+			return R0;
+		}
 	}
 
 	namespace LineSegmentTest

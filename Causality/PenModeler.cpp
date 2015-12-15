@@ -24,7 +24,7 @@ static const size_t	g_MeshBufferVertexCap = 4096;
 static const size_t	g_MeshBufferIndexCap = 16384;
 static const size_t g_DecalResolution = 512;
 
-static float g_contactThred = 1.6f; //cm
+static float g_contactThred = 0.5f; //cm
 
 inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)
 {
@@ -196,6 +196,7 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 	bool touching = false;
 	// Find closest point on mesh using pen direction
 	vector<Geometrics::MeshRayIntersectionInfo> interInfos;
+	pos -= dir * TrackedPen::TipLength * 0.5f / parent()->GetScale().x;
 	m_target->intersect(pos, dir, &interInfos);
 
 	if (interInfos.size() == 0) {
@@ -402,7 +403,7 @@ void PenModeler::UpdateRenderGeometry(array_view<Vector3> points, const Vector2 
 	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
 	pSink->Close();
 	pSink.Reset();
-	cout << "Successfully update Geometry" << endl;
+	// cout << "Successfully update Geometry" << endl;
 }
 
 //XMVECTOR Causality::PenModeler::GetDirection()
@@ -450,11 +451,10 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 		color = GetD2DColor(fill);
 		m_brush->SetColor(color);
 		m_p2DContex->FillGeometry(m_patchGeos.Get(), m_brush.Get());
-		color = GetD2DColor(stroke);;
+		color = GetD2DColor(stroke);
 		m_brush->SetColor(color);
 		m_p2DContex->DrawGeometry(m_patchGeos.Get(), m_brush.Get());
 		ThrowIfFailed(m_p2DContex->EndDraw());
-
 	}
 
 	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
@@ -470,8 +470,8 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	pEffect->Apply(context);
 	m_meshBuffer->Draw(context, pEffect);
 
-	if (pEM)
-		pEM->SetWorld(this->GetGlobalTransform().TransformMatrix());
+	//if (pEM)
+	//	pEM->SetWorld(this->GetGlobalTransform().TransformMatrix());
 
 	m_extruMat->SetupEffect(pEffect);
 	pEffect->Apply(context);
