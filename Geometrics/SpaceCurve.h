@@ -97,7 +97,7 @@ namespace Geometrics
 		inline XMVECTOR operator()(float t) const { return extract(t); }
 
 
-		std::vector<Vector3> sample(size_t sampleCount);
+		std::vector<Vector3> sample(size_t sampleCount) const;
 		void resample(size_t anchorCount, bool smooth = true);
 
 		void smooth(float alpha/* = 0.8f*/, unsigned iteration /*= 1*/);

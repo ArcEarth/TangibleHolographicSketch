@@ -49,6 +49,7 @@ namespace Causality
 		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
 		void Update(time_seconds const& time_delta) override;
 
+		void UpdateRenderGeometry(array_view<Vector3> points, const Vector2& canvasSize);
 		// Camera culling
 		virtual RenderFlags GetRenderFlags() const;
 		virtual bool IsVisible(const BoundingGeometry& viewFrustum) const;
@@ -69,7 +70,6 @@ namespace Causality
 		I2DFactory*					m_p2DFactory;
 
 		cptr<ID2D1PathGeometry>		m_patchGeos;
-		cptr<ID2D1GeometrySink>		m_patchGeoSink;
 		cptr<ID2D1SolidColorBrush>	m_brush;
 
 

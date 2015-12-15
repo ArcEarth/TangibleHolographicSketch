@@ -31,7 +31,7 @@ namespace Causality
 	IRenderDevice* GetSceneRenderDevice(Scene*);
 
 	// Scene object acts like entities for render
-	class VisualObject : virtual public SceneObject, virtual public IVisual
+	class VisualObject : public SceneObject, public IVisual
 	{
 	public:
 		VisualObject();
@@ -75,7 +75,7 @@ namespace Causality
 		//std::shared_ptr<Bullet::CollisionShape>		m_CollisionShape;
 	};
 
-	class GlowingBorder : virtual public SceneObject, virtual public IVisual
+	class GlowingBorder : public SceneObject, public IVisual
 	{
 	public:
 		GlowingBorder();
@@ -98,7 +98,7 @@ namespace Causality
 		Color			m_Color;
 	};
 
-	class CoordinateAxis : virtual public SceneObject, virtual public IVisual
+	class CoordinateAxis : public SceneObject, public IVisual
 	{
 	public:
 		CoordinateAxis();

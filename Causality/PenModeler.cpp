@@ -32,6 +32,12 @@ inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)
 	return cf;
 }
 
+inline D2D1_POINT_2F XM_CALLCONV GetD2DPoint(const Vector2& v)
+{
+	D2D1_POINT_2F dv = reinterpret_cast<const D2D1_POINT_2F&>(v);
+	return dv;
+}
+
 
 
 PenModeler::PenModeler(int objectIdx)
@@ -143,8 +149,8 @@ void PenModeler::CreateDeviceResources()
 	//m_decalMat->CreateDeviceResources(m_pDevice, true);
 
 	ThrowIfFailed(m_p2DFactory->CreatePathGeometry(&m_patchGeos));
-	ThrowIfFailed(m_patchGeos->Open(&m_patchGeoSink));
-	auto& pSink = m_patchGeoSink;
+	cptr<ID2D1GeometrySink> pSink;
+	ThrowIfFailed(m_patchGeos->Open(&pSink));
 	pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
 	pSink->BeginFigure(
 		D2D1::Point2F(346, 255),
@@ -166,7 +172,7 @@ void PenModeler::CreateDeviceResources()
 	color = { .2f,0.7f,.2f,1.0f };
 	ThrowIfFailed(m_p2DContex->CreateSolidColorBrush(color, &m_brush));
 
-	//color = { .0f,.0f,.0f,.0f };
+	color = { .0f,.0f,.0f,.0f };
 
 	m_p2DContex->SetTarget(m_decal->BitmapView());
 	m_p2DContex->BeginDraw();
@@ -181,6 +187,7 @@ void PenModeler::CreateDeviceResources()
 void PenModeler::SurfaceSketchBegin()
 {
 	m_patches.emplace_back();
+	m_patches.back().setSurface(m_target);
 	m_state = Inking;
 }
 
@@ -206,6 +213,13 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 		auto & patch = m_patches.back();
 		//auto& curve = patch.boundry();
 		patch.append(info.position, info.facet);
+
+		auto& uvCurve = patch.uvBoundry();
+		if (uvCurve.size() > 2)
+		{
+			auto uvs = patch.uvBoundry().sample(std::min((int)uvCurve.size(), 100));
+			UpdateRenderGeometry(uvs, Vector2(g_DecalResolution));
+		}
 	}
 	else {
 		cout << "Pen not touching; too far, " << shortestDist << endl;
@@ -361,6 +375,36 @@ void PenModeler::Update(time_seconds const & time_delta)
 	}
 }
 
+void PenModeler::UpdateRenderGeometry(array_view<Vector3> points, const Vector2 & canvasSize)
+{
+	if (points.size() <= 1)
+		return;
+
+	m_p2DFactory->CreatePathGeometry(&m_patchGeos);
+	cptr<ID2D1GeometrySink> pSink;
+	ThrowIfFailed(m_patchGeos->Open(&pSink));
+	pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+
+	int n = points.size();
+	vector<D2D1_POINT_2F> dpoints(n);
+	for (int i = 0; i < n; i++)
+	{
+		Vector2 p(points[i].x, points[i].y);
+		dpoints[i] = GetD2DPoint(p * canvasSize);
+	}
+
+	pSink->BeginFigure(
+		dpoints[0],
+		D2D1_FIGURE_BEGIN_FILLED
+		);
+
+	pSink->AddLines(&dpoints[1], n - 1);
+	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+	pSink->Close();
+	pSink.Reset();
+	cout << "Successfully update Geometry" << endl;
+}
+
 //XMVECTOR Causality::PenModeler::GetDirection()
 //{
 //
@@ -392,6 +436,27 @@ void DrawCurve(const Curve& curve, FXMVECTOR color)
 void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 {
 	if (!m_isVisable || !m_pTracker) return;
+
+	Color transparent = Colors::Transparent.v;
+	Color stroke = Colors::LimeGreen;
+	Color fill = Colors::YellowGreen;
+	if (m_state == Inking)
+	{
+		m_p2DContex->SetTarget(m_decal->BitmapView());
+		m_p2DContex->BeginDraw();
+		D2D1_COLOR_F color;
+		color = GetD2DColor(transparent);
+		m_p2DContex->Clear(color);
+		color = GetD2DColor(fill);
+		m_brush->SetColor(color);
+		m_p2DContex->FillGeometry(m_patchGeos.Get(), m_brush.Get());
+		color = GetD2DColor(stroke);;
+		m_brush->SetColor(color);
+		m_p2DContex->DrawGeometry(m_patchGeos.Get(), m_brush.Get());
+		ThrowIfFailed(m_p2DContex->EndDraw());
+
+	}
+
 	auto pSkin = dynamic_cast<IEffectSkinning*>(pEffect);
 	if (pSkin)
 		pSkin->SetWeightsPerVertex(0);
@@ -401,14 +466,23 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 		pEM->SetWorld(this->parent()->GetGlobalTransform().TransformMatrix());
 	}
 
+	m_decalMat->SetupEffect(pEffect);
+	pEffect->Apply(context);
+	m_meshBuffer->Draw(context, pEffect);
+
+	if (pEM)
+		pEM->SetWorld(this->GetGlobalTransform().TransformMatrix());
+
+	m_extruMat->SetupEffect(pEffect);
+	pEffect->Apply(context);
 	if (!g_DebugView)
 		context->RSSetState(g_PrimitiveDrawer.GetStates()->CullNone());
 	else
 		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
+	for (int i = 0; i < m_extruBuffers.size(); i++) {
+		m_extruBuffers[i]->Draw(context, pEffect);
+	}
 
-	m_decalMat->SetupEffect(pEffect);
-	pEffect->Apply(context);
-	m_meshBuffer->Draw(context, pEffect);
 
 	RenderPen();	//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
 
@@ -428,21 +502,6 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	g_PrimitiveDrawer.End();
 
-	if (m_extruBuffers.empty())
-		return;
-
-	if (pEM)
-	{
-		pEM->SetWorld(this->GetGlobalTransform().TransformMatrix());
-	}
-
-	m_extruMat->SetupEffect(pEffect);
-	pEffect->Apply(context);
-	for (int i = 0; i < m_extruBuffers.size(); i++) {
-		m_extruBuffers[i]->Draw(context, pEffect);
-	}
-
-	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);
 }
 
 void Causality::PenModeler::RenderPen()
