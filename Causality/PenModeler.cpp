@@ -21,7 +21,9 @@ REGISTER_SCENE_OBJECT_IN_PARSER(pen_modeler, PenModeler);
 typedef uint32_t IndexType;
 typedef VertexPositionNormalColor VertexType;
 static const size_t	g_MeshBufferVertexCap = 4096;
-static const size_t	g_MeshBufferIndexCap = 65536;
+static const size_t	g_MeshBufferIndexCap = 16384;
+static const size_t g_DecalResolution = 1024;
+
 static float g_contactThred = 1.6f; //cm
 
 PenModeler::PenModeler(int objectIdx)
@@ -30,7 +32,7 @@ PenModeler::PenModeler(int objectIdx)
 	m_pTracker = nullptr;
 	m_patches.reserve(100);
 	m_extrusions.reserve(100);
-	m_meshBuffers.reserve(100);
+	m_extruBuffers.reserve(100);
 }
 
 PenModeler::~PenModeler()
@@ -101,6 +103,16 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 			m_target->build();
 			return;
 		}
+		if (!m_meshBuffer)
+		{
+			m_meshBuffer.reset(new DynamicMeshBuffer);
+			m_meshBuffer->CreateDeviceResources<VertexType, IndexType>(m_pDevice, g_MeshBufferVertexCap, g_MeshBufferIndexCap);
+			//m_decal.reset(new RenderableTexture2D(m_pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true));
+			//m_decal->CreateD2DBitmapView(m_p2DContex);
+			//m_decalMat.reset(new PhongMaterial());
+			//m_decalMat->DiffuseMap = m_decal->ShaderResourceView();
+			//m_p2DFactory->CreatePathGeometry(&m_patchGeos);
+		}
 	}
 }
 
@@ -168,8 +180,8 @@ void PenModeler::OnAirDragBegin()
 		return;
 	m_state = Dragging;
 	m_extrusions.emplace_back();
-	m_meshBuffers.emplace_back(new DynamicMeshBuffer());
-	auto& meshBuffer = *m_meshBuffers.back();
+	m_extruBuffers.emplace_back(new DynamicMeshBuffer());
+	auto& meshBuffer = *m_extruBuffers.back();
 	meshBuffer.CreateDeviceResources<VertexType, IndexType>(m_pDevice,
 		g_MeshBufferVertexCap,
 		g_MeshBufferIndexCap);
@@ -214,11 +226,11 @@ void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
 	auto& vertices = extruder.mesh().vertices;
 	auto& indices = extruder.mesh().indices;
 
-	m_meshBuffers.back()->UpdateVertexBuffer(context,
+	m_extruBuffers.back()->UpdateVertexBuffer(context,
 		reinterpret_cast<VertexType*>(vertices.data()),
 		vertices.size());
 
-	m_meshBuffers.back()->UpdateIndexBuffer(context, indices.data(), indices.size());
+	m_extruBuffers.back()->UpdateIndexBuffer(context, indices.data(), indices.size());
 
 }
 
@@ -358,7 +370,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	else
 		context->RSSetState(g_PrimitiveDrawer.GetStates()->Wireframe());
 
-	if (m_meshBuffers.empty())
+	if (m_extruBuffers.empty())
 		return;
 
 	m_extruMat->SetupEffect(pEffect);
@@ -366,8 +378,8 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	if (pSkin)
 		pSkin->SetWeightsPerVertex(0);
 	pEffect->Apply(context);
-	for (int i = 0; i < m_meshBuffers.size(); i++) {
-		m_meshBuffers[i]->Draw(context, pEffect);
+	for (int i = 0; i < m_extruBuffers.size(); i++) {
+		m_extruBuffers[i]->Draw(context, pEffect);
 	}
 
 	//g_PrimitiveDrawer.DrawSphere(pos, radius, color);

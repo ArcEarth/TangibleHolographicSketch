@@ -5,6 +5,9 @@
 #include "Geometrics\Extrusion.h"
 #include "TrackerdPen.h"
 
+struct ID2D1PathGeometry1;
+struct ID2D1GeometrySink;
+
 namespace Causality
 {
 	using Geometrics::Curve;
@@ -54,17 +57,24 @@ namespace Causality
 	private:
 		// the curves we sketched on the surface
 		PenModelerStateEnum			m_state;
+
 		vector<SurfacePatch>		m_patches;
+
 		vector<Extrusion>			m_extrusions;
 
 		IRenderDevice*				m_pDevice;
 		I2DContext*					m_p2DContex;
+		I2DFactory*					m_p2DFactory;
 
+		cptr<ID2D1PathGeometry>		m_patchGeos;
+		cptr<ID2D1GeometrySink>		m_patchGeoSink;
+
+		uptr<DynamicMeshBuffer>		m_meshBuffer;
 		vector<uptr<DynamicMeshBuffer>>
-									m_meshBuffers;
+									m_extruBuffers;
 
 		// Decal texture for rendering highlights in target model
-		sptr<IMaterial>				m_decalMat;
+		sptr<PhongMaterial>			m_decalMat;
 		uptr<RenderableTexture2D>	m_decal;
 		// material for extrusion
 		sptr<IMaterial>				m_extruMat;

@@ -231,7 +231,7 @@ namespace Geometrics
 					int revehash = e.v0 + e.v1 * vsize;
 
 					auto revItr = edges.find(revehash);
-					if (revItr != edges.end())
+					if (revItr == edges.end())
 					{
 						edges[ehash] = fid + 0;
 					}

@@ -5,7 +5,7 @@ newmtl Material
 Ns 96.078431
 Ka 0.000000 0.000000 0.000000
 Kd 0.640000 0.640000 0.640000
-map_Kd KAMEN-stup.png
+map_Kd Grass_texture_1.tif
 Ks 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
