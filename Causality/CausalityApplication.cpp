@@ -6,12 +6,13 @@
 #include <PrimitiveVisualizer.h>
 #include <ppltasks.h>
 
-#include "Kinect.h"
+#include "KinectSensor.h"
 #include "OculusRift.h"
 #include "LeapMotion.h"
 #include "Vicon.h"
 
 #include <tinyxml2.h>
+#include "Tests.h"
 
 using namespace Causality;
 using namespace std;
@@ -145,6 +146,7 @@ bool App::OnStartup(const std::vector<std::string>& args)
 	GetParam(appSettings, "title", title);
 
 	unsigned width = 1280, height = 720;
+	int x, y;
 	bool fullscreen = false;
 
 	// Initialize Windows
@@ -153,9 +155,20 @@ bool App::OnStartup(const std::vector<std::string>& args)
 		GetParam(consoleSettings, "width", width);
 		GetParam(consoleSettings, "height", height);
 		GetParam(consoleSettings, "fullscreen", fullscreen);
+		GetParam(consoleSettings, "left", x);
+		GetParam(consoleSettings, "top", y);
 
 		pConsole = make_shared<DebugConsole>();
 		pConsole->Initialize(title, width, height, fullscreen);
+		pConsole->Move(x, y);
+	}
+
+	bool runTest = false;
+	GetParam(appSettings, "run_test", runTest);
+	if (runTest && !TestManager::RunTest())
+	{
+		std::cout << "[Error] Test Failed! Press any key to exit" << std::endl;
+		return false;
 	}
 
 	if (windowSettings)
@@ -163,11 +176,16 @@ bool App::OnStartup(const std::vector<std::string>& args)
 		GetParam(windowSettings, "width", width);
 		GetParam(windowSettings, "height", height);
 		GetParam(windowSettings, "fullscreen", fullscreen);
+		GetParam(windowSettings, "left", x);
+		GetParam(windowSettings, "top", y);
 	}
 
 	pWindow = make_shared<NativeWindow>();
 	if (!pRift)
+	{
 		pWindow->Initialize(title, width, height, fullscreen);
+		pWindow->Move(x, y);
+	}
 	else
 	{
 		//auto res = pRift->Resoulution();
@@ -242,7 +260,8 @@ void App::SetupDevices(const ParamArchive* arch)
 	GetParam(setting, "enable", enable);
 	if (setting && enable)
 	{
-		pLeap = Devices::LeapMotion::GetForCurrentView();
+		pLeap = Devices::LeapSensor::GetForCurrentView();
+		pLeap->Initialize(setting);
 	}
 
 	setting = arch->FirstChildElement("kinect");
@@ -256,6 +275,7 @@ void App::SetupDevices(const ParamArchive* arch)
 				XMQuaternionRotationRollPitchYaw(-XM_PI / 12.0f, XM_PI, 0), // Orientation
 				XMVectorSet(0, 0.0, 1.0f, 1.0f)); // Position
 			pKinect->SetDeviceCoordinate(kinectCoord);
+			//pKinect->Start();
 		}
 	}
 
@@ -280,13 +300,12 @@ void App::RegisterComponent(IAppComponent *pComponent)
 	//auto pAnimatable = pComponent->As<ITimeAnimatable>();
 	//if (pAnimatable)
 	//	Regs.push_back(TimeElapsed += MakeEventHandler(&ITimeAnimatable::UpdateAnimation, pAnimatable));
-	auto pHands = pComponent->As<IUserHandsInteractive>();
-	if (pHands && pLeap)
-	{
-		Regs.push_back(pLeap->HandsTracked += MakeEventHandler(&IUserHandsInteractive::OnHandsTracked, pHands));
-		Regs.push_back(pLeap->HandsLost += MakeEventHandler(&IUserHandsInteractive::OnHandsTrackLost, pHands));
-		Regs.push_back(pLeap->HandsMove += MakeEventHandler(&IUserHandsInteractive::OnHandsMove, pHands));
-	}
+	//auto pHands = pComponent->As<IUserHandsInteractive>();
+	//if (pHands && pLeap)
+	//{
+	//	Regs.push_back(pLeap->HandsTracked += MakeEventHandler(&IUserHandsInteractive::OnHandsTracked, pHands));
+	//	Regs.push_back(pLeap->HandsLost += MakeEventHandler(&IUserHandsInteractive::OnHandsTrackLost, pHands));
+	//}
 	//Components.push_back(std::move(pComponent));
 }
 
@@ -305,14 +324,14 @@ void App::OnExit()
 
 bool App::OnIdle()
 {
-	if (pLeap)
-		pLeap->PullFrame();
+	if (pLeap && !pLeap->IsAsychronize())
+		pLeap->Update();
 
-	if (pVicon)
+	if (pVicon && !pVicon->IsAsychronize())
 		pVicon->Update();
 
-	//if (pKinect)
-	//	pKinect->ProcessFrame();
+	if (pKinect && !pKinect->IsAsychronize())
+		pKinect->Update();
 
 	for (auto& pScene : Scenes)
 	{

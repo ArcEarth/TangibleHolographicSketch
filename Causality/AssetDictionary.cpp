@@ -15,7 +15,7 @@ using namespace Causality;
 using namespace std::tr2::sys;
 using namespace DirectX;
 using namespace DirectX::Scene;
-using boost::any;
+//using boost::any;
 
 AssetDictionary::AssetDictionary()
 {
@@ -102,7 +102,7 @@ AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * sto
 			path ref(src);
 			if (ref.extension().string() == ".obj")
 			{
-				auto mesh = LoadObjMesh(name, src, flipNormal);
+				auto mesh = LoadObjMesh(name, src, flipNormal, store);
 				return mesh;
 			}
 			else if (ref.extension().string() == ".fbx")
@@ -118,13 +118,13 @@ AssetDictionary::mesh_type * AssetDictionary::ParseMesh(const ParamArchive * sto
 
 				if (pMat != nullptr)
 				{
-					auto mesh = LoadFbxMesh(name, src, pMat);
+					auto mesh = LoadFbxMesh(name, src, pMat, store);
 					return mesh;
 				}
 				else
 				{
 					// import material
-					auto mesh = LoadFbxMesh(name, src, true);
+					auto mesh = LoadFbxMesh(name, src, true, store);
 					return mesh;
 				}
 			}
@@ -204,8 +204,10 @@ AssetDictionary::behavier_type * AssetDictionary::ParseBehavier(const ParamArchi
 {
 	using behavier_type = AssetDictionary::behavier_type;
 	const char* src = nullptr, *name = nullptr;
+	const char* axisSys= nullptr;
 	GetParam(store, "name", name);
 	GetParam(store, "src", src);
+
 	if (!strcmp(GetArchiveName(store), "behavier"))
 	{
 		if (src)
@@ -229,7 +231,11 @@ AssetDictionary::behavier_type * AssetDictionary::ParseBehavier(const ParamArchi
 					if (aname && asrc)
 						actionlist.emplace_back(aname, asrc);
 				}
-				return LoadBehavierFbxs(name, arma, actionlist);
+				return LoadBehavierFbxs(name, arma, actionlist, store);
+			}
+			else
+			{
+				return LoadBehavierFbx(name, arma, store);
 			}
 		}
 		//else
@@ -262,7 +268,7 @@ inline std::wstring towstring(const string& str)
 	return std::wstring(str.begin(), str.end());
 }
 
-AssetDictionary::mesh_type * AssetDictionary::LoadObjMesh(const string & key, const string & fileName, bool flipNormal)
+AssetDictionary::mesh_type * AssetDictionary::LoadObjMesh(const string & key, const string & fileName, bool flipNormal, const ParamArchive* aditionalOptions)
 {
 	typedef DefaultStaticModel mesh_type;
 	auto *pObjModel = DefaultStaticModel::CreateFromObjFile((mesh_directory / fileName).wstring(), m_device.Get(), texture_directory.wstring(), flipNormal);
@@ -283,13 +289,14 @@ AssetDictionary::mesh_type * AssetDictionary::LoadObjMesh(const string & key, co
 	return meshes[key];
 }
 
-AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, const std::shared_ptr<material_type> &pMaterial)
+AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, const std::shared_ptr<material_type> &pMaterial, const ParamArchive* aditionalOptions)
 {
 	typedef DefaultSkinningModel model_type;
 
-	FbxParser fbx;
-	fbx.ImportMesh((mesh_directory / fileName).string(), true); // with rewind
-	auto datas = fbx.GetMeshs();
+	FbxParser fbxparser(aditionalOptions);
+
+	fbxparser.ImportMesh((mesh_directory / fileName).string(), true); // with rewind
+	auto datas = fbxparser.GetMeshs();
 	if (datas.size() == 0)
 		return nullptr;
 	auto& mesh = datas.front();
@@ -320,13 +327,14 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 	return meshes[key];
 }
 
-AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, bool importMaterial)
+AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, const string & fileName, bool importMaterial, const ParamArchive* aditionalOptions )
 {
 	typedef DefaultSkinningModel model_type;
 
-	FbxParser fbx;
-	fbx.ImportMesh((mesh_directory / fileName).string(), true); // with rewind
-	auto datas = fbx.GetMeshs();
+	FbxParser fbxparser(aditionalOptions);
+
+	fbxparser.ImportMesh((mesh_directory / fileName).string(), true); // with rewind
+	auto datas = fbxparser.GetMeshs();
 	if (datas.size() == 0)
 		return nullptr;
 
@@ -373,19 +381,36 @@ AssetDictionary::mesh_type * AssetDictionary::LoadFbxMesh(const string & key, co
 
 AssetDictionary::texture_type * AssetDictionary::LoadTexture(const string & key, const string & fileName)
 {
+	auto itr = textures.find(key);
+	if (itr != textures.end()) return itr->second;
+	// else create the key
 	textures[key] = DirectX::Texture::CreateFromDDSFile(m_device.Get(), (texture_directory / fileName).c_str());
 	return textures[key];
 }
 
-AssetDictionary::armature_type * AssetDictionary::LoadArmature(const string & key, const string & fileName)
+AssetDictionary::armature_type * AssetDictionary::LoadArmature(const string & key, const string & fileName, const ParamArchive* aditionalOptions)
 {
-	std::ifstream file((mesh_directory / fileName).wstring());
-	auto pArmature = new armature_type(file);
-	m_assets[key] = pArmature;
-	return pArmature;
+	bool result = false;
+	path filepath = animation_directory / fileName;
+	if (!exists(filepath))
+		filepath = mesh_directory / fileName;
+
+	if (exists(filepath))
+	{
+		FbxParser fbxparser(aditionalOptions);
+
+		auto result = fbxparser.ImportArmature(filepath.string());
+		auto pArmature = fbxparser.GetArmature();
+		armatures[key] = pArmature;
+		return pArmature;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
-AssetDictionary::animation_clip_type* AssetDictionary::LoadAnimation(const string & key, const string & fileName)
+AssetDictionary::animation_clip_type* AssetDictionary::LoadAnimation(const string & key, const string & fileName, const ParamArchive* aditionalOptions)
 {
 	using clip_type = AssetDictionary::animation_clip_type;
 	std::ifstream stream((animation_directory / fileName).wstring());
@@ -397,10 +422,19 @@ AssetDictionary::animation_clip_type* AssetDictionary::LoadAnimation(const strin
 	return animations[key];
 }
 
-BehavierSpace * AssetDictionary::LoadBehavierFbx(const string & key, const string & fileName)
+BehavierSpace * AssetDictionary::LoadBehavierFbx(const string & key, const string & fileName, const ParamArchive* aditionalOptions)
 {
-	FbxParser fbxparser;
-	auto result = fbxparser.ImportBehavier((mesh_directory / fileName).string());
+	FbxParser fbxparser(aditionalOptions);
+
+	path filepath;
+	bool result = false;
+	filepath = animation_directory / fileName;
+	if (!exists(filepath))
+		filepath = mesh_directory / fileName;
+
+	if (exists(filepath))
+		result = fbxparser.ImportBehavier(filepath.string());
+
 	BehavierSpace* behavier = nullptr;
 	if (result)
 	{
@@ -410,10 +444,16 @@ BehavierSpace * AssetDictionary::LoadBehavierFbx(const string & key, const strin
 	return behavier;
 }
 
-AssetDictionary::behavier_type * AssetDictionary::LoadBehavierFbxs(const string & key, const string & armature, list<std::pair<string, string>>& animations)
+AssetDictionary::behavier_type * AssetDictionary::LoadBehavierFbxs(const string & key, const string & armature, list<std::pair<string, string>>& animations, const ParamArchive* aditionalOptions)
 {
-	FbxParser fbxparser;
-	auto result = fbxparser.ImportArmature((mesh_directory / armature).string());
+	FbxParser fbxparser(aditionalOptions);
+
+	auto result = false;
+	path filepath = animation_directory / armature;
+	if (!exists(filepath))
+		filepath = mesh_directory / armature;
+	if (exists(filepath))
+		result = fbxparser.ImportArmature(filepath.string());
 	BehavierSpace* behavier = nullptr;
 	if (result)
 	{
@@ -450,11 +490,11 @@ AssetDictionary::audio_clip_type* AssetDictionary::GetAudio(const string & key)
 	return nullptr;// GetAsset<audio_clip_type>(key);
 }
 
-sptr<AssetDictionary::material_type> Causality::AssetDictionary::GetMaterial(const string & key) const
+sptr<AssetDictionary::material_type> AssetDictionary::GetMaterial(const string & key)
 {
 	auto itr = materials.find(key);
 	if (itr != materials.end())
-		*itr;
+		return itr->second;
 	else
 		return default_material;
 }
@@ -523,7 +563,7 @@ void AssetDictionary::SetMeshDirectory(const path & dir)
 void AssetDictionary::SetAssetDirectory(const path & dir)
 {
 	asset_directory = dir;
-	mesh_directory = asset_directory / "Models";
+	mesh_directory = asset_directory / "Meshes";
 	texture_directory = asset_directory / "Textures";
 	animation_directory = asset_directory / "Animations";
 

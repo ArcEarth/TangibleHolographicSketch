@@ -14,19 +14,27 @@
   <scene.content>
     <grid name="root">
 
+      <!--<light name="sun_light" primary="false" color="#FFCCBBAA" position="5,25,25" near="8" far="60" focus="0,0,0" up="0,0,-1" hfov="30" wfov="30" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />-->
+
+
       <light name="sun_light" primary="false" color="#FF808080" position="2,5,2" near="4" far="8" focus="0,0,0" up="0,0,-1" hfov="1.75" wfov="1.75" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
 
-      <hmd_camera name="camera" primary="true" background="#FFFFFFFF" position="0,0,0" focus="0,0,-1" up="0,1,0" ipd="0.065" fov="23" perspective="true">
+      <!--<shadow_camera name="primary_camera" primary="true" background="#FFFFFFFF" position="0,1.7,5.0" focus="0,1.78,0" up="0,1,0" far="100">
+        <first_person_keyboard_mouse_control />
+      </shadow_camera>-->
+
+      <hmd_camera name="camera" primary="true" background="#FFFFFFFF" position="0,0,0" focus="0,0,-1" up="0,1,0" ipd="0.065" fov="23" far="100" perspective="true">
         <first_person_keyboard_mouse_control />
         <tracked_object name="camera_tracker" index="0"  translation="( 0.007, 0.036,-0.060)" rotation="{-0.705, 0.091, 0.092,-0.697}"/>
       </hmd_camera>
 
-      <!--<skydome name="sky" background="Sunny_01B.dds"/>-->
+      <skydome name="sky" background="Sunny_01B.dds"/>
 
       <coordinate_axis max="3" zx="true"/>
 
       <object name="ground" position="0,-1.0,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
       <object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>
+
       <!--<object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
         <coordinate_axis max="2"/>
       </object>>-->

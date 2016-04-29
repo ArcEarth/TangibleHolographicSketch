@@ -12,8 +12,6 @@ namespace Causality
 
 		~TrackedPen();
 
-		void OnParentChanged(SceneObject* oldParent) override;
-
 		void Update(const time_seconds& time_delta) override;
 
 		bool UpdateFromLeapFinger(double dt);
@@ -34,6 +32,7 @@ namespace Causality
 		float m_erasingStr;
 		float m_dragingStr;
 
+		scoped_connection m_con_pc;
 		const KeyboardMouseFirstPersonControl*
 			m_mouse;
 	};

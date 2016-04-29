@@ -2,12 +2,12 @@
 #include "BCL.h"
 #include <filesystem>
 #include "RenderSystemDecl.h"
-#include <boost\range\adaptor\map.hpp>
+//#include <boost\range\adaptor\map.hpp>
 
 //#include <ppltasks.h>
 #include <typeindex>
 #include <unordered_map>
-#include <boost\any.hpp>
+//#include <boost\any.hpp>
 #include "Serialization.h"
 
 
@@ -20,7 +20,7 @@
 namespace Causality
 {
 	class AssetDictionary;
-	namespace adaptors = boost::adaptors;
+	//namespace adaptors = boost::adaptors;
 	//using concurrency::task;
 
 	class ArmatureFrameAnimation;
@@ -32,7 +32,7 @@ namespace Causality
 	{
 	public:
 		using path = std::tr2::sys::path;
-		using any = boost::any;
+		//using any = boost::any;
 
 		using mesh_type = IModelNode;
 		using texture_type = Texture;
@@ -42,7 +42,7 @@ namespace Causality
 		using armature_type = StaticArmature;
 		using effect_type = IEffect;
 		using material_type = IMaterial;
-		using any_type = any;
+		//using any_type = any;
 
 		AssetDictionary();
 		~AssetDictionary();
@@ -58,14 +58,14 @@ namespace Causality
 		animation_clip_type* ParseAnimation(const ParamArchive* store);
 		behavier_type*		 ParseBehavier(const ParamArchive* store);
 
-		mesh_type*		     LoadObjMesh(const string & key, const string& fileName, bool flipNormal = false);
-		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, const std::shared_ptr<material_type> &pMaterial = nullptr);
-		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, bool importMaterial);
+		mesh_type*		     LoadObjMesh(const string & key, const string& fileName, bool flipNormal = false, const ParamArchive* aditionalOptions = nullptr);
+		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, const std::shared_ptr<material_type> &pMaterial = nullptr, const ParamArchive* aditionalOptions = nullptr);
+		mesh_type*		     LoadFbxMesh(const string & key, const string& fileName, bool importMaterial, const ParamArchive* aditionalOptions = nullptr);
 		texture_type*	     LoadTexture(const string & key, const string& fileName);
-		armature_type*	     LoadArmature(const string & key, const string& fileName);
-		animation_clip_type* LoadAnimation(const string& key, const string& fileName);
-		behavier_type*		 LoadBehavierFbx(const string & key, const string & fileName);
-		behavier_type*		 LoadBehavierFbxs(const string & key, const string& armature, list<std::pair<string, string>>& animations);
+		armature_type*	     LoadArmature(const string & key, const string& fileName, const ParamArchive* aditionalOptions = nullptr);
+		animation_clip_type* LoadAnimation(const string& key, const string& fileName, const ParamArchive* aditionalOptions = nullptr);
+		behavier_type*		 LoadBehavierFbx(const string & key, const string & fileName, const ParamArchive* aditionalOptions = nullptr);
+		behavier_type*		 LoadBehavierFbxs(const string & key, const string& armature, list<std::pair<string, string>>& animations, const ParamArchive* aditionalOptions = nullptr);
 
 		// Async loading methods
 /*		task<mesh_type*>&			LoadMeshAsync(const string & key, const string& fileName);
@@ -112,8 +112,12 @@ namespace Causality
 		{
 			return effects[key];
 		}
+		armature_type*				GetArmature(const string& key)
+		{
+			return armatures[key];
+		}
 
-		sptr<material_type>			GetMaterial(const string& key) const;
+		sptr<material_type>			GetMaterial(const string& key);
 
 		template<typename VertexType>
 		const cptr<ID3D11InputLayout>& GetInputLayout(IEffect* pEffct = nullptr);
@@ -131,6 +135,17 @@ namespace Causality
 		{
 			materials[key] = pMaterial;
 			return pMaterial.get();
+		}
+
+		bool AddEffect(const string& key, effect_type* pEffect)
+		{
+			auto itr = effects.find(key);
+			if (itr != effects.end())
+			{
+				return false;
+			}
+			effects[key] = pEffect;
+			return true;
 		}
 
 		//template<typename TAsset>
@@ -171,7 +186,8 @@ namespace Causality
 		map<string, audio_clip_type*>		audios;
 		map<string, effect_type*>			effects;
 		map<string, behavier_type*>			behaviers;
-		mutable map<string, sptr<material_type>>	materials;
+		map<string, armature_type*>			armatures;
+		map<string, sptr<material_type>>	materials;
 
 		sptr<IEffect>				default_effect;
 		sptr<IEffect>				default_skinned_effect;
@@ -182,13 +198,13 @@ namespace Causality
 		map<std::type_index, cptr<ID3D11InputLayout>> layouts;
 
 		// other assets
-		map<string, any_type>		m_assets;
+		//map<string, any_type>		m_assets;
 
 	public:
 
 		auto GetEffects()
 		{
-			return adaptors::values(effects);
+			return effects;
 		}
 	};
 

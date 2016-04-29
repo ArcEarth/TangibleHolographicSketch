@@ -1,9 +1,10 @@
 #include "pch_bcl.h"
+
+#include <Causality\Vicon.h>
+#include <Causality\LeapMotion.h>
+#include <Leap.h>
+
 #include "TrackedObjectControl.h"
-#include "LeapMotion.h"
-
-#include "Vicon.h"
-
 
 using namespace Causality;
 using namespace Causality::Devices;
@@ -90,7 +91,12 @@ TrackedObjectControl::TrackedObjectControl()
 	:m_intrinsic(m_Transform.LocalTransform())
 {
 	m_pRigid = nullptr;
-	m_pLeap = LeapMotion::GetForCurrentView();
+
+	m_parentChangedConnection = this->OnParentChanged.connect([this](SceneObject* _this, SceneObject* oldParent) {
+		m_pRigid = this->Parent();
+	});
+
+	m_pLeap = LeapSensor::GetForCurrentView();
 	m_pVicon = IViconClient::GetFroCurrentView();
 
 	if (m_pVicon && !m_pVicon->IsStreaming())
@@ -152,11 +158,6 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 	m_posFilter.SetCutoffFrequency(tvcap);
 	GetParam(archive, "rvcap", rvcap);
 	m_rotFilter.SetCutoffFrequency(rvcap);
-}
-
-void TrackedObjectControl::OnParentChanged(SceneObject * oldParent)
-{
-	m_pRigid = parent();
 }
 
 void TrackedObjectControl::Update(time_seconds const & time_delta)

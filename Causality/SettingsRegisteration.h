@@ -1,9 +1,11 @@
 SETTING_REGISTERATION(int, PartAssignmentTransform, PAT_RST)
+SETTING_REGISTERATION(int, HandleTransformAnisometricMin, 0.2)
+SETTING_REGISTERATION(int, HandleTransformAnisometricMax, 1.2)
 SETTING_REGISTERATION(bool, UsePersudoPhysicsWalk, false)
 SETTING_REGISTERATION(int, PhaseMatchingInterval, 1)
 
 SETTING_REGISTERATION(float, MaxCharacterSpeed, 0.5)
-SETTING_REGISTERATION(bool, EnableDebugLogging, true)
+SETTING_REGISTERATION(int, EnableDebugLogging, 1)
 SETTING_REGISTERATION(bool, EnableRecordLogging, false)
 
 SETTING_REGISTERATION(bool, StepFrame, false)
@@ -25,6 +27,10 @@ SETTING_REGISTERATION(float, PlayerSubactiveEnergy, 0.03f)
 SETTING_REGISTERATION(float, BlendWeight, 0.8f)
 
 SETTING_REGISTERATION(float, AssignWeight, 1.0f)
+SETTING_REGISTERATION(double, CharacterSelectionLikilihoodThreshold, 0.6f)
+
+SETTING_REGISTERATION(double, PlayerGesturePeriodMin, 0.5)
+SETTING_REGISTERATION(double, PlayerGesturePeriodMax, 3)
 
 SETTING_REGISTERATION(float, MatchAccepetanceThreshold, 0.2f)
 
@@ -52,16 +58,36 @@ SETTING_REGISTERATION(bool, UseJointLengthWeight, false)
 
 SETTING_REGISTERATION(bool, UseStylizedIK, true)
 SETTING_REGISTERATION(bool, UseVelocity, false)
+SETTING_REGISTERATION(bool, NormalizeVelocity, false)
 SETTING_REGISTERATION(float, VelocityNormalizeThreshold, 0.01)
+SETTING_REGISTERATION(double, IKLimitMultiplier, 1.0)
 
 
 SETTING_REGISTERATION(bool, ForceRemappingAlwaysOn, false)
+
+SETTING_REGISTERATION(bool,  AutomaticLoopClosing, true)
+SETTING_REGISTERATION(float, RevampPendingTime, 3.0f)
+SETTING_REGISTERATION(bool,  AllowsRevampInUniqueSelection, false)
+SETTING_REGISTERATION(bool,  AllowsRevampInMultipleSelection, true)
 SETTING_REGISTERATION(float, RevampLikilyhoodThreshold, 0.05f)
 SETTING_REGISTERATION(float, RevampLikilyhoodTimeThreshold, 1.0f)
 SETTING_REGISTERATION(float, RevampActiveSupportThreshold, 0.65f)
+SETTING_REGISTERATION(float, RevampStaticEnergyThreshold, .0f)
+SETTING_REGISTERATION(float, PlayerTrackingWhiteNoiseEnergy, .0f)
+SETTING_REGISTERATION(bool,  PeriodAnalyzeAggreateWithMax, false)
+SETTING_REGISTERATION(float, InputSmoothStrength, 8.8f)
+SETTING_REGISTERATION(int,	 InputSmoothIteration, 4)
+SETTING_REGISTERATION(bool,  RedirectRootRotationYawOnly, true)
+SETTING_REGISTERATION(bool,  RedirectRootRotationRemovesRoll, false)
+SETTING_REGISTERATION(bool,  RedirectRootRotation, true)
 
+
+
+SETTING_REGISTERATION(float, PartAssignmentQuadraticTermWeight, 0.5f)
+SETTING_REGISTERATION(float, DynamicTermWeight, 0.5f)
 SETTING_REGISTERATION(float, StructrualSymtricBonus, 0.2f)
 SETTING_REGISTERATION(float, StructrualDisSymtricPenalty, -0.2f)
+SETTING_REGISTERATION(float, StructtualAntiAncestorPenalty, -0.5f)
 SETTING_REGISTERATION(float, MaxiumTimeDelta, 1.0 / 30.0)
 
 SETTING_REGISTERATION(float, DynamicTraderKeyEnergy, 0.2f)
@@ -70,6 +96,13 @@ SETTING_REGISTERATION(double, DynamicTraderSpeedFilterCutoffFrequency, 1.0)
 SETTING_REGISTERATION(double, CharacterJointFilterCutoffFrequency, 1.0)
 
 SETTING_REGISTERATION(float, DefaultTrackerCovierence, 1000000000)
+SETTING_REGISTERATION(double, TrackerNormalizedVelocityVariance, 0.517*0.517)
+
+SETTING_REGISTERATION(double, TrackerRestConfident, 1e-7)
+
+SETTING_REGISTERATION(bool, TrackerGpuAcceleration, true)
+SETTING_REGISTERATION(bool, TrackerUseVelocity, false)
+
 SETTING_REGISTERATION(int, TrackerTopK, 30)
 SETTING_REGISTERATION(int, TrackerSubStep, 5)
 SETTING_REGISTERATION(int, TrackerVtSubdivide, 1)
@@ -78,6 +111,8 @@ SETTING_REGISTERATION(double, TrackerTimeSubdivide, 1.0)
 SETTING_REGISTERATION(double, TrackerStDevVt, 0.3)
 SETTING_REGISTERATION(double, TrackerStDevScale, 0.3)
 SETTING_REGISTERATION(double, TrackerVtProgationStep, 0.1)
+SETTING_REGISTERATION(double, TrackerVtThreshold, 1.5)
+SETTING_REGISTERATION(double, TrackerScaleThreshold, 0.15)
 SETTING_REGISTERATION(double, TrackerScaleProgationStep, 0.1)
 SETTING_REGISTERATION(double, TrackerSwitchCondifidentThreshold, 0.5)
 SETTING_REGISTERATION(double, TrackerSwitchTimeThreshold, 1.0)

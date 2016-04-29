@@ -66,6 +66,8 @@ void XM_CALLCONV Causality::DrawGeometryOutline(const BoundingGeometry& geometry
 }
 
 
+void VisualObject::ShowBoundingGeometry(bool show) { m_showBoundingBox = show; /*m_boundingBoxColor = color;*/ }
+
 IModelNode * VisualObject::RenderModel(int LoD)
 {
 	return m_pRenderModel;
@@ -95,10 +97,16 @@ void VisualObject::Render(IRenderContext * pContext, IEffect* pEffect)
 		m_pRenderModel->Render(pContext, GlobalTransformMatrix(), pEffect);
 	}
 
-	if (g_ShowCharacterMesh && g_DebugView && m_pRenderModel)
+	if ((g_ShowCharacterMesh && g_DebugView || m_showBoundingBox) && m_pRenderModel)
 	{
 		BoundingGeometry geo(m_pRenderModel->GetBoundingBox());
-		geo.Transform(geo, GlobalTransformMatrix());
+		auto world = this->GlobalTransformMatrix();
+		//geo.Transform(geo, GlobalTransformMatrix());
+		Color color = Colors::Orange.v;
+		if (m_showBoundingBox)
+			color = m_boundingBoxColor;
+
+		drawer.SetWorld(world);
 		drawer.Begin();
 		DrawGeometryOutline(geo, Colors::Orange);
 		drawer.End();
@@ -114,6 +122,8 @@ VisualObject::VisualObject()
 	m_isVisable = true;
 	m_opticity = 1.0f;
 	m_isFocuesd = false;
+	m_boundingBoxColor = Colors::LimeGreen.v;
+	m_showBoundingBox = false;
 }
 
 Causality::VisualObject::~VisualObject()
@@ -143,7 +153,7 @@ void VisualObject::Parse(const ParamArchive* store)
 	}
 	else
 	{
-		auto nMesh = GetFirstChildArchive(store,"object.mesh");
+		auto nMesh = GetFirstChildArchive(store, "object.mesh");
 		if (nMesh)
 		{
 			nMesh = GetFirstChildArchive(nMesh);
@@ -158,7 +168,7 @@ bool VisualObject::IsVisible(const BoundingGeometry & viewFrustum) const
 	if (!m_isVisable || m_pRenderModel == nullptr) return false;
 	auto box = m_pRenderModel->GetOrientedBoundingBox();
 	box.Transform(box, this->GlobalTransformMatrix());
-	return true;// viewFrustum.Contains(box) != ContainmentType::DISJOINT;
+	return viewFrustum.Contains(box) != ContainmentType::DISJOINT;
 }
 
 
@@ -267,10 +277,7 @@ bool GlowingBorder::IsVisible(const BoundingGeometry & viewFrustum) const
 {
 	if (!IsEnabled()) return false;
 	auto pVisual = this->FirstAncesterOfType<VisualObject>();
-	if (pVisual)
-	{
-		return pVisual->IsVisible(viewFrustum);
-	}
+	return pVisual && pVisual->IsVisible(viewFrustum);
 }
 
 RenderFlags GlowingBorder::GetRenderFlags() const

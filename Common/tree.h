@@ -1,14 +1,30 @@
+// Copyright (c) by Yupeng Zhang. All Rights Reserved.  -*- C++ -*-
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
+#ifndef STDX_TREE_H
+#define STDX_TREE_H
 #include <utility>
 #include <vector>
 #include <queue>
 #include <stack>
 #include <cassert>
-#include <boost\range\iterator_range.hpp>
+#include "iterator_range.h"
 
 namespace stdx
 {
-	using boost::iterator_range;
+	using std::iterator_range;
 
 	struct tree_node_relation_descants_ownership {};
 	struct tree_node_relation_no_decants_ownership {};
@@ -70,25 +86,49 @@ namespace stdx
 			_parent = nullptr;
 #endif
 		}
-
-		foward_tree_node& operator = (foward_tree_node&& rhs)
+	protected:
+	protected:
+		foward_tree_node(const foward_tree_node&)
+			: _sibling(nullptr), _child(nullptr), _parent(nullptr)
 		{
+		}
+		foward_tree_node(foward_tree_node&& rhs)
+		{
+			*this = std::move(rhs);
+		}
+
+		// None-copyable, this should only use as pointer or reference
+		foward_tree_node& operator= (const foward_tree_node&)
+		{
+			//assert(!_prev_sibling && !_next_sibling && !_parent && !_first_child && _last_child
+			//	&& "the destination tree node must be fully empty to be copy to");
+			return *this;
+			//_prev_sibling = nullptr;
+			//_next_sibling = nullptr;
+			//_parent = nullptr;
+			//_first_child = nullptr;
+			//_last_child = nullptr;
+		}
+		foward_tree_node& operator= (foward_tree_node&& rhs)
+		{
+			assert(!this->_parent && !this->_sibling && !this->_child);
 			// fixup parent/child pointers
-			if (rhs->_parent)
-				if (rhs->_parent->_child == &rhs)
-					rhs->_parent->_child = this;
+			if (rhs._parent)
+				if (rhs._parent->_child == &rhs)
+					rhs._parent->_child = this;
 				else
-					rhs->_parent->_sibling = this;
-			if (rhs->_child)
-				rhs->_child->_parent = this;
-			if (rhs->_sibling)
-				rhs->_sibling->_parent = this;
+					rhs._parent->_sibling = this;
+			if (rhs._child)
+				rhs._child->_parent = this;
+			if (rhs._sibling)
+				rhs._sibling->_parent = this;
 
 			this->_parent = rhs._parent;
 			this->_sibling = rhs._sibling;
 			this->_child = rhs._child;
 		}
 
+	public:
 		// Logical Parent for this node
 		const_pointer parent() const {
 			const_pointer p = static_cast<const_pointer>(this);
@@ -126,21 +166,69 @@ namespace stdx
 			else
 				return nullptr;
 		}
-
+		pointer first_child()
+		{
+			return _child;
+		}
+		const_pointer first_child() const
+		{
+			return _child;
+		}
+		pointer last_child()
+		{
+			pointer p = _child;
+			if (!p) return p;
+			while (p->_sibling)
+				p = p->_sibling;
+			return p;
+		}
+		const_pointer last_child() const
+		{
+			const_pointer p = _child;
+			if (!p) return p;
+			while (p->_sibling)
+				p = p->_sibling;
+			return p;
+		}
 		// check if the node is a LOGICAL root node of a tree
 		bool has_child() const { return _child; }
+		bool has_sibling() const {
+			return _sibling || (_parent && _parent->_sibling == this);
+		}
 		bool is_leaf() const { return !_child; }
+		// get the ultimate logical root of this tree-node
+		// Time is O(h) , where h is this node's height
+		pointer root()
+		{
+			pointer node = static_cast<pointer>(this);
+			pointer parent = node->parent();
+			while (parent)
+			{
+				node = parent;
+				parent = node->parent();
+			}
+			return node;
+		}
+
+		// get the ultimate logical root of this tree-node
+		// Time is O(h) , where h is this node's height
+		const_pointer root() const
+		{
+			return const_cast<pointer>(static_cast<const_pointer>(this))->root();
+		}
+
 		// if this node is Logical Root
 		bool is_root() const {
 			return (!this->parent());
 		}
-		bool is_tree_root() const
+		bool is_physical_root() const
 		{
 			return !_parent && !_sibling;
 		}
-		bool is_forest_root() const
+		// should only query on root nodes
+		bool is_forest() const
 		{
-			return !_parent && _sibling;
+			return is_root() && has_sibling();
 		}
 
 		// Iterators and Ranges
@@ -768,7 +856,8 @@ namespace stdx
 			}
 		}
 
-		inline void insert_as_siblings_after(pointer node)
+		// Inset the forest node as next siblings
+		inline void insert_sibling_after(pointer node)
 		{
 			assert(node && !node->_parent);
 			node->_parent = this;
@@ -782,7 +871,8 @@ namespace stdx
 			this->_sibling = node;
 		}
 
-		inline void insert_as_siblings_before(pointer node)
+		// Inset the forest node as prev siblings
+		inline void insert_sibling_before(pointer node)
 		{
 			assert(node && !node->_parent);
 			auto rptr = node;
@@ -812,6 +902,7 @@ namespace stdx
 	class tree_node
 	{
 	public:
+		friend typename _Ty;
 		//typedef tree_node<_Ty, _DescendabtsOwnership> self_type;
 		//static_assert(std::is_base_of<self_type, _Ty>::value, "_Ty should be a derived type of tree_node");
 
@@ -871,17 +962,67 @@ namespace stdx
 #endif
 		}
 
-		// None-copyable, this should only use as pointer or reference
-		tree_node operator= (const tree_node&) = delete;
+	protected:
+		tree_node(const tree_node&)
+			: _prev_sibling(nullptr), _next_sibling(nullptr), _first_child(nullptr), _last_child(nullptr), _parent(nullptr)
+		{
+		}
+		tree_node(tree_node&& rhs)
+		{
+			*this = std::move(rhs);
+		}
 
-		//tree_node& operator = (tree_node&& rhs)
-		//{
-		//	this->_parent = rhs._parent;
-		//	this->_prev_sibling = rhs._prev_sibling;
-		//	this->_next_sibling = rhs._next_sibling;
-		//	this->_last_child = rhs._last_child;
-		//	this->_first_child = rhs._first_child;
-		//}
+		// None-copyable, this should only use as pointer or reference
+		tree_node& operator= (const tree_node&)
+		{
+			//assert(!_prev_sibling && !_next_sibling && !_parent && !_first_child && _last_child
+			//	&& "the destination tree node must be fully empty to be copy to");
+			return *this;
+			//_prev_sibling = nullptr;
+			//_next_sibling = nullptr;
+			//_parent = nullptr;
+			//_first_child = nullptr;
+			//_last_child = nullptr;
+		}
+
+		tree_node& operator= (tree_node&& rhs)
+		{
+			assert(!_prev_sibling && !_next_sibling && !_parent && !_first_child && _last_child
+				&& "the destination tree node must be fully empty to be move to");
+
+			if (rhs._parent && rhs._parent->_last_child == &rhs)
+				rhs._parent->_last_child = this;
+			if (rhs._parent && rhs._parent->_first_child == &rhs)
+				rhs._parent->_first_child = this;
+			if (rhs._prev_sibling)
+				rhs._prev_sibling->_next_sibling = this;
+			if (rhs._next_sibling)
+				rhs._next_sibling->_prev_sibling = this;
+
+			for (pointer node = rhs._first_child; node != nullptr; node = node->_next_sibling)
+				node->_parent = this;
+
+			this->_parent = rhs._parent;
+			this->_prev_sibling = rhs._prev_sibling;
+			this->_next_sibling = rhs._next_sibling;
+			this->_last_child = rhs._last_child;
+			this->_first_child = rhs._first_child;
+		}
+
+	public:
+		// clone this tree structure into a new storage
+		pointer clone() const
+		{
+			pointer newnode = new value_type(static_cast<const_reference>(*this));
+			const_pointer child = _first_child;
+			while (child != nullptr)
+			{
+				pointer newchild = child->clone();
+				newnode->append_children_back(newchild);
+				child = child->_next_sibling;
+			}
+			return newnode;
+		}
 
 		bool is_null() const
 		{
@@ -936,10 +1077,14 @@ namespace stdx
 
 		// check if the node is a LOGICAL root node of a tree
 		bool has_child() const { return _first_child; }
+		bool has_sibling() const { return _prev_sibling || _next_sibling; }
 		bool is_leaf() const { return !_first_child; }
 		// if this node is Logical Root
 		bool is_root() const {
 			return (!this->_parent);
+		}
+		bool is_forest() const {
+			return is_root() && has_sibling();
 		}
 
 		// get the ultimate root of this tree-node
@@ -965,17 +1110,14 @@ namespace stdx
 		// and remove it from the oringinal parent
 		// this method ensure the rest of tree structure is not affected
 		void isolate() {
-			if (!this->_parent)
-#ifdef _DEBUG
-				throw new std::exception("Can not separate the root tree_node.");
-#else
-				return;
-#endif
 
-			if (this->_parent->_first_child == this)
-				this->_parent->_first_child = this->_next_sibling;
-			if (this->_parent->_last_child == this)
-				this->_parent->_last_child = this->_prev_sibling;
+			if (this->_parent)
+			{
+				if (this->_parent->_first_child == this)
+					this->_parent->_first_child = this->_next_sibling;
+				if (this->_parent->_last_child == this)
+					this->_parent->_last_child = this->_prev_sibling;
+			}
 
 			if (this->_prev_sibling)
 				this->_prev_sibling->_next_sibling = this->_next_sibling;
@@ -1285,33 +1427,25 @@ namespace stdx
 			{}
 
 			// When ignore_root_sibling is set to True, the BFS-travel will ingore the siblings of current
-			explicit breadth_first_iterator(const pointer ptr, bool ignore_root_sibling = false)
-				: base_type(ptr), root(ptr)
+			explicit breadth_first_iterator(const pointer _current, const pointer _logic_root)
+				: base_type(_current), root(_logic_root)
 			{
-				node_queue.push(nullptr);
+			}
+
+			explicit breadth_first_iterator(const pointer _current)
+				: breadth_first_iterator(_current, _current)
+			{
 			}
 
 			// Copy and bfs-iterator is expensive!
-			breadth_first_iterator(const self_type& rhs)
-				: base_type(ptr), node_queue(rhs), root(rhs.root)
-			{}
+			breadth_first_iterator(const self_type& rhs) = default;
 
-			breadth_first_iterator(self_type&& rhs)
-				: base_type(ptr), node_queue(std::move(rhs)), root(rhs.root)
-			{}
+			breadth_first_iterator(self_type&& rhs) = default;
 
 			// Copy and bfs-iterator is expensive!
-			self_type& operator=(const self_type& rhs)
-			{
-				node_queue = rhs;
-				current = rhs.current;
-			}
+			self_type& operator=(const self_type& rhs) = default;
 
-			self_type& operator=(self_type&& rhs)
-			{
-				node_queue = std::move(rhs);
-				current = rhs.current;
-			}
+			self_type& operator=(self_type&& rhs) = default;
 
 			// Copy and bfs-iterator is expensive!
 			self_type operator ++(int) {
@@ -1333,10 +1467,11 @@ namespace stdx
 				}
 				else
 				{
+					if (current->_first_child)
+						node_queue.push(current->_first_child);
+
 					if (current->_next_sibling)
 					{
-						if (current->_first_child)
-							node_queue.push(current->_first_child);
 						current = current->_next_sibling;
 					}
 					else if (!node_queue.empty())
@@ -1478,11 +1613,11 @@ namespace stdx
 		}
 		// breadth_first_iterator can self determine if it has meet the end
 		const_breadth_first_iterator descendants_breadth_first_begin() const {
-			return const_breadth_first_iterator(static_cast<const_pointer>(this)->_first_child);
+			return const_breadth_first_iterator(static_cast<const_pointer>(this)->_first_child, static_cast<const_pointer>(this));
 		}
 		// just an null-iterator
-		const_sibling_iterator descendants_breadth_first_end() const {
-			return const_sibling_iterator(nullptr);
+		const_breadth_first_iterator descendants_breadth_first_end() const {
+			return const_breadth_first_iterator(nullptr);
 		}
 		// Depth first begin iterator to all nodes inside this sub-tree
 		const_depth_first_iterator nodes_begin() const {
@@ -1494,11 +1629,11 @@ namespace stdx
 		}
 		// breadth_first_iterator can self determine if it has meet the end, iterate through sub-tree
 		const_breadth_first_iterator nodes_breadth_first_begin() const {
-			return const_breadth_first_iterator(static_cast<const_pointer>(this), true);
+			return const_breadth_first_iterator(static_cast<const_pointer>(this), static_cast<const_pointer>(this));
 		}
 		// just an null-iterator
-		const_sibling_iterator nodes_breadth_first_end() const {
-			return const_sibling_iterator(nullptr);
+		const_breadth_first_iterator nodes_breadth_first_end() const {
+			return const_breadth_first_iterator(nullptr);
 		}
 
 		// Mutable ranges
@@ -1529,11 +1664,11 @@ namespace stdx
 		}
 		// Breadth first descendants iterator can self determine if it has meet the end
 		mutable_breadth_first_iterator descendants_breadth_first_begin() {
-			return mutable_breadth_first_iterator(static_cast<pointer>(this)->_first_child);
+			return mutable_breadth_first_iterator(static_cast<pointer>(this)->_first_child, static_cast<pointer>(this));
 		}
 		// just an null-iterator
-		mutable_sibling_iterator descendants_breadth_first_end() {
-			return mutable_sibling_iterator(nullptr);
+		mutable_breadth_first_iterator descendants_breadth_first_end() {
+			return mutable_breadth_first_iterator(nullptr);
 		}
 		// begin iterator to all nodes inside this sub-tree
 		mutable_depth_first_iterator nodes_begin() {
@@ -1545,11 +1680,11 @@ namespace stdx
 		}
 		// breadth_first_iterator can self determine if it has meet the end
 		mutable_breadth_first_iterator nodes_breadth_first_begin() {
-			return const_breadth_first_iterator(static_cast<pointer>(this), true);
+			return mutable_breadth_first_iterator(static_cast<pointer>(this), static_cast<pointer>(this));
 		}
 		// just an null-iterator
-		mutable_sibling_iterator nodes_breadth_first_end() {
-			return mutable_sibling_iterator(nullptr);
+		mutable_breadth_first_iterator nodes_breadth_first_end() {
+			return mutable_breadth_first_iterator(nullptr);
 		}
 
 		// Ranges
@@ -1569,15 +1704,15 @@ namespace stdx
 		{
 			return iterator_range<const_depth_first_iterator>(descendants_begin(), descendants_end());
 		}
-		iterator_range<const_depth_first_iterator>
+		iterator_range<const_breadth_first_iterator>
 			nodes_breadth_first() const
 		{
-			return iterator_range<const_depth_first_iterator>(nodes_breadth_first_begin(), nodes_breadth_first_end());
+			return iterator_range<const_breadth_first_iterator>(nodes_breadth_first_begin(), nodes_breadth_first_end());
 		}
-		iterator_range<const_depth_first_iterator>
+		iterator_range<const_breadth_first_iterator>
 			descendants_breadth_first() const
 		{
-			return iterator_range<const_depth_first_iterator>(descendants_breadth_first_begin(), descendants_breadth_first_end());
+			return iterator_range<const_breadth_first_iterator>(descendants_breadth_first_begin(), descendants_breadth_first_end());
 		}
 		iterator_range<mutable_sibling_iterator>
 			children()
@@ -1594,15 +1729,15 @@ namespace stdx
 		{
 			return iterator_range<mutable_depth_first_iterator>(descendants_begin(), descendants_end());
 		}
-		iterator_range<mutable_depth_first_iterator>
+		iterator_range<mutable_breadth_first_iterator>
 			nodes_breadth_first()
 		{
-			return iterator_range<mutable_depth_first_iterator>(nodes_breadth_first_begin(), nodes_breadth_first_end());
+			return iterator_range<mutable_breadth_first_iterator>(nodes_breadth_first_begin(), nodes_breadth_first_end());
 		}
-		iterator_range<mutable_depth_first_iterator>
+		iterator_range<mutable_breadth_first_iterator>
 			descendants_breadth_first()
 		{
-			return iterator_range<mutable_depth_first_iterator>(descendants_breadth_first_begin(), descendants_breadth_first_end());
+			return iterator_range<mutable_breadth_first_iterator>(descendants_breadth_first_begin(), descendants_breadth_first_end());
 		}
 	};
 
@@ -1648,3 +1783,12 @@ namespace stdx
 
 	};
 }
+
+#ifdef STDX_TREE_IMPORT_TO_STD
+namespace std
+{
+	using stdx::tree_node;
+	using stdx::foward_tree_node;
+}
+#endif
+#endif

@@ -1,10 +1,12 @@
 #include "pch_bcl.h"
 #include "TrackerdPen.h"
 #include "BasicKeyboardMouseControlLogic.h"
-#include "LeapMotion.h"
-#include "Vicon.h"
 #include "Scene.h"
 #include "CameraObject.h"
+
+#include "LeapMotion.h"
+#include <Leap.h>
+#include "Vicon.h"
 
 using namespace Causality;
 using namespace Math;
@@ -19,19 +21,18 @@ TrackedPen::TrackedPen()
 	m_inkingStr = 0;
 	m_dragingStr = 0;
 	m_erasingStr = 0;
+
+	m_con_pc = this->OnParentChanged += [this](SceneObject* _this, SceneObject *oldParent)
+	{
+		auto pCamera = dynamic_cast<SceneObject*>(this->Scene->PrimaryCamera());
+		if (pCamera)
+			setMouse(pCamera->FirstChildOfType<KeyboardMouseFirstPersonControl>());
+	};
 }
 
 TrackedPen::~TrackedPen()
 {
 
-}
-
-void TrackedPen::OnParentChanged(SceneObject * oldParent)
-{
-	TrackedObjectControl::OnParentChanged(oldParent);
-	auto pCamera = dynamic_cast<SceneObject*>(this->Scene->PrimaryCamera());
-	if (pCamera)
-		setMouse(pCamera->FirstChildOfType<KeyboardMouseFirstPersonControl>());
 }
 
 void TrackedPen::Update(const time_seconds & time_delta)

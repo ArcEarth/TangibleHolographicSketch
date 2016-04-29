@@ -32,9 +32,9 @@ namespace Causality
 		PenModeler(int objectIdx = 1);
 		~PenModeler() override;
 
-		void OnParentChanged(SceneObject* oldParent) override;
 		void ExtractMeshFromVisual(Causality::VisualObject * pVisual);
 		void CreateDeviceResources();
+		void DrawDefaultDecalGeometry();
 		void AddChild(SceneObject* child) override;
 		virtual void Parse(const ParamArchive* store) override;
 
@@ -82,6 +82,8 @@ namespace Causality
 		uptr<RenderableTexture2D>	m_decal;
 		// material for extrusion
 		sptr<IMaterial>				m_extruMat;
+
+		scoped_connection			m_con_pc;
 
 		TrackedPen*					m_pTracker;
 		MeshType*					m_target;

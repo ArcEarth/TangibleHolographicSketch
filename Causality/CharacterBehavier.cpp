@@ -43,7 +43,6 @@ BehavierSpace::animation_type & BehavierSpace::AddAnimationClip(const std::strin
 	m_AnimClips.emplace_back(name);
 	auto& anim = m_AnimClips.back();
 	anim.SetArmature(*m_pArmature);
-	anim.SetDefaultFrame(m_pArmature->default_frame());
 	return anim;
 }
 
@@ -56,10 +55,10 @@ bool Causality::BehavierSpace::Contains(const std::string & name) const
 	return false;
 }
 
-void Causality::BehavierSpace::UpdateArmatureParts()
-{
-	auto& armature = *m_pArmature;
-}
+//void Causality::BehavierSpace::UpdateArmatureParts()
+//{
+//	//auto& armature = *m_pArmature;
+//}
 
 const IArmature & BehavierSpace::Armature() const { return *m_pArmature; }
 
@@ -68,10 +67,10 @@ IArmature & BehavierSpace::Armature() { return *m_pArmature; }
 void BehavierSpace::SetArmature(IArmature & armature) {
 	assert(this->Clips().empty());
 	m_pArmature = &armature;
-	UpdateArmatureParts();
+	//UpdateArmatureParts();
 }
 
-const BehavierSpace::frame_type & BehavierSpace::RestFrame() const { return Armature().default_frame(); }
+BehavierSpace::frame_const_view BehavierSpace::RestFrame() const { return Armature().bind_frame(); }
 
 void BehavierSpace::UniformQuaternionsBetweenClips()
 {

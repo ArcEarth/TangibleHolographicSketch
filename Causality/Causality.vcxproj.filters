@@ -30,17 +30,17 @@
     <Filter Include="Platform Application Logic">
       <UniqueIdentifier>{b64aebbb-698d-4d0a-9fd0-86c726d4be67}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Dlls">
-      <UniqueIdentifier>{902576ed-1a7b-45ba-a4ff-5168de47f59d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="HUD">
       <UniqueIdentifier>{1f8cd33e-39cb-494e-9b7e-856d80ff79c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ArSketch Objects">
-      <UniqueIdentifier>{1ba06f40-366b-4381-8afb-6282dd7a5f57}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Serialization">
       <UniqueIdentifier>{3e944cf1-fadf-4432-a24f-fdafb822bdd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utility Foundation\stdx">
+      <UniqueIdentifier>{c3bfc488-1a07-4cc5-bf40-957c5f23e282}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PenModeler">
+      <UniqueIdentifier>{54c60379-ca9b-4c84-a35f-e7d5f8b0caef}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -51,9 +51,6 @@
       <Filter>Devices</Filter>
     </ClCompile>
     <ClCompile Include="LeapMotion.cpp">
-      <Filter>Devices</Filter>
-    </ClCompile>
-    <ClCompile Include="Kinect.cpp">
       <Filter>Devices</Filter>
     </ClCompile>
     <ClCompile Include="Animations.cpp">
@@ -107,14 +104,8 @@
     <ClCompile Include="CausalityApplication.cpp">
       <Filter>Platform Application Logic</Filter>
     </ClCompile>
-    <ClCompile Include="TrackedObjectControl.cpp">
-      <Filter>ArSketch Objects</Filter>
-    </ClCompile>
     <ClCompile Include="FloatHud.cpp">
       <Filter>HUD</Filter>
-    </ClCompile>
-    <ClCompile Include="PenModeler.cpp">
-      <Filter>ArSketch Objects</Filter>
     </ClCompile>
     <ClCompile Include="Serialization.cpp">
       <Filter>Serialization</Filter>
@@ -128,9 +119,83 @@
     <ClCompile Include="Vicon.cpp">
       <Filter>Devices</Filter>
     </ClCompile>
-    <ClCompile Include="StreamDevice.cpp" />
+    <ClCompile Include="StreamDevice.cpp">
+      <Filter>Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="CharacterObject.cpp">
+      <Filter>Scene Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="InverseKinematics.cpp">
+      <Filter>Armature Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackedArmature.cpp">
+      <Filter>Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="KinectSensor.cpp">
+      <Filter>Devices</Filter>
+    </ClCompile>
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="@(GroupAvatarControl)" />
+    <ClCompile Include="PenModeler.cpp">
+      <Filter>PenModeler</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackedObjectControl.cpp">
+      <Filter>PenModeler</Filter>
+    </ClCompile>
     <ClCompile Include="TrackerdPen.cpp">
-      <Filter>ArSketch Objects</Filter>
+      <Filter>PenModeler</Filter>
+    </ClCompile>
+    <ClCompile Include="Tests.cpp">
+      <Filter>Utility Foundation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,9 +209,6 @@
       <Filter>Devices</Filter>
     </ClInclude>
     <ClInclude Include="LeapMotion.h">
-      <Filter>Devices</Filter>
-    </ClInclude>
-    <ClInclude Include="Kinect.h">
       <Filter>Devices</Filter>
     </ClInclude>
     <ClInclude Include="Armature.h">
@@ -188,13 +250,7 @@
     <ClInclude Include="RenderSystemDecl.h">
       <Filter>Utility Foundation</Filter>
     </ClInclude>
-    <ClInclude Include="Common\Filter.h">
-      <Filter>Algorithms</Filter>
-    </ClInclude>
     <ClInclude Include="RenderFlags.h">
-      <Filter>Utility Foundation</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\CompositeFlag.h">
       <Filter>Utility Foundation</Filter>
     </ClInclude>
     <ClInclude Include="AnimationObject.h">
@@ -214,12 +270,6 @@
     </ClInclude>
     <ClInclude Include="SkyDome.h">
       <Filter>Scene Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\stride_range.h">
-      <Filter>Utility Foundation</Filter>
-    </ClInclude>
-    <ClInclude Include="Common\tree.h">
-      <Filter>Utility Foundation</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
       <Filter>Scene Objects</Filter>
@@ -257,12 +307,6 @@
     <ClInclude Include="FloatHud.h">
       <Filter>Scene Objects</Filter>
     </ClInclude>
-    <ClInclude Include="TrackedObjectControl.h">
-      <Filter>ArSketch Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="PenModeler.h">
-      <Filter>ArSketch Objects</Filter>
-    </ClInclude>
     <ClInclude Include="Serialization.h">
       <Filter>Serialization</Filter>
     </ClInclude>
@@ -281,14 +325,54 @@
     <ClInclude Include="StreamDevice.h">
       <Filter>Devices</Filter>
     </ClInclude>
-    <ClInclude Include="TrackerdPen.h">
-      <Filter>ArSketch Objects</Filter>
+    <ClInclude Include="..\Common\CompositeFlag.h">
+      <Filter>Utility Foundation\stdx</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="libfftw3f-3.dll">
-      <Filter>Dlls</Filter>
-    </None>
+    <ClInclude Include="..\Common\Filter.h">
+      <Filter>Utility Foundation\stdx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\iterator_range.h">
+      <Filter>Utility Foundation\stdx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\stride_range.h">
+      <Filter>Utility Foundation\stdx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\tree.h">
+      <Filter>Utility Foundation\stdx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\signal.hpp">
+      <Filter>Utility Foundation\stdx</Filter>
+    </ClInclude>
+    <ClInclude Include="CharacterObject.h">
+      <Filter>Scene Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="InverseKinematics.h">
+      <Filter>Armature Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackedArmature.h">
+      <Filter>Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="BufferedStreamViewer.h">
+      <Filter>Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="KinectSensor.h">
+      <Filter>Devices</Filter>
+    </ClInclude>
+    <ClInclude Include="ImportOption.h">
+      <Filter>Input Parsers Settings</Filter>
+    </ClInclude>
+    <ClInclude Include="Tests.h">
+      <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="PenModeler.h">
+      <Filter>PenModeler</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackerdPen.h">
+      <Filter>PenModeler</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackedObjectControl.h">
+      <Filter>PenModeler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

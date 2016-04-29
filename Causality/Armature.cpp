@@ -1,12 +1,9 @@
-#include "pch_bcl.h"
+﻿#include "pch_bcl.h"
 #include "Armature.h"
 #include "Animations.h"
-#include <boost\range\adaptor\transformed.hpp>
-#include <boost\range\algorithm\copy.hpp>
 #include <regex>
 //#include <boost\assign.hpp>
 #include <iostream>
-#include <Eigen\Eigen>
 
 using namespace DirectX;
 using namespace Causality;
@@ -22,8 +19,8 @@ void Bone::UpdateGlobalData(const Bone & reference)
 	XMVECTOR Q = XMQuaternionMultiply(XMLoadA(LclRotation), ParQ);
 	XMVECTOR ParS = XMLoadA(reference.GblScaling);
 	XMVECTOR S = ParS * XMLoadA(LclScaling);
-	XMStoreA(GblRotation,Q);
-	XMStoreA(GblScaling,S);
+	XMStoreA(GblRotation, Q);
+	XMStoreA(GblScaling, S);
 
 	//OriginPosition = reference.GblTranslation; // should be a constriant
 
@@ -38,7 +35,7 @@ void Bone::UpdateGlobalData(const Bone & reference)
 	V = XMVector3Rotate(V, ParQ);//ParQ
 	V = XMVectorAdd(V, XMLoadA(reference.GblTranslation));
 
-	XMStoreA(GblTranslation,V);
+	XMStoreA(GblTranslation, V);
 }
 
 // This will assuming LclTranslation is not changed
@@ -49,7 +46,7 @@ void Bone::UpdateLocalData(const Bone& reference)
 	InvParQ = XMQuaternionInverse(InvParQ); // PqInv
 	XMVECTOR Q = GblRotation;
 	Q = XMQuaternionMultiply(Q, InvParQ);
-	XMStoreA(LclRotation,Q);
+	XMStoreA(LclRotation, Q);
 
 	Q = (XMVECTOR)GblTranslation - (XMVECTOR)reference.GblTranslation;
 	//Q = XMVector3Length(Q);
@@ -136,17 +133,18 @@ ArmatureFrame::ArmatureFrame(size_t size)
 }
 
 ArmatureFrame::ArmatureFrame(const IArmature & armature)
-	: BaseType(armature.default_frame())
 {
 	assert(this->size() == armature.size());
+	auto df = armature.bind_frame();
+	BaseType::assign(df.begin(), df.end());
 }
 
-ArmatureFrame::ArmatureFrame(ArmatureFrameView frameView)
-	: BaseType(frameView.begin(), frameView.end())
-{
-}
+//ArmatureFrame::ArmatureFrame(ArmatureFrameView frameView)
+//	: BaseType(frameView.begin(), frameView.end())
+//{
+//}
 
-ArmatureFrame::ArmatureFrame(ArmatureFrameConstView frameView)
+ArmatureFrame::ArmatureFrame(const ArmatureFrameConstView &frameView)
 	: BaseType(frameView.begin(), frameView.end())
 {
 }
@@ -164,12 +162,12 @@ ArmatureFrame& ArmatureFrame::operator=(ArmatureFrame&& rhs)
 	BaseType::_Assign_rv(std::move(rhs));
 	return *this;
 }
-ArmatureFrame& ArmatureFrame::operator=(ArmatureFrameView frameView)
-{
-	BaseType::assign(frameView.begin(), frameView.end());
-	return *this;
-}
-ArmatureFrame& ArmatureFrame::operator=(ArmatureFrameConstView frameView)
+//ArmatureFrame& ArmatureFrame::operator=(ArmatureFrameView frameView)
+//{
+//	BaseType::assign(frameView.begin(), frameView.end());
+//	return *this;
+//}
+ArmatureFrame& ArmatureFrame::operator=(const ArmatureFrameConstView &frameView)
 {
 	BaseType::assign(frameView.begin(), frameView.end());
 	return *this;
@@ -218,7 +216,24 @@ namespace Causality
 		}
 	}
 
-	void FrameLerp(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float t, const IArmature& armature)
+	void FrameLerpEst(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float t, const IArmature& armature, bool rebuild)
+	{
+		//assert((Armature == lhs.pArmature) && (lhs.pArmature == rhs.pArmature));
+		XMVECTOR vt = XMVectorReplicate(t);
+		for (size_t i = 0; i < armature.size(); i++)
+		{
+			XMVECTOR Q = DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclRotation), XMLoadA(rhs[i].LclRotation), vt);
+			Q = _DXMEXT XMVector4Normalize(Q);
+			XMStoreA(out[i].LclRotation, Q);
+			XMStoreA(out[i].LclScaling, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclScaling), XMLoadA(rhs[i].LclScaling), vt));
+			XMStoreA(out[i].LclTranslation, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclTranslation), XMLoadA(rhs[i].LclTranslation), vt));
+		}
+		if (rebuild)
+			FrameRebuildGlobal(armature, out);
+	}
+
+
+	void FrameLerp(ArmatureFrameView out, ArmatureFrameConstView lhs, ArmatureFrameConstView rhs, float t, const IArmature& armature, bool rebuild)
 	{
 		//assert((Armature == lhs.pArmature) && (lhs.pArmature == rhs.pArmature));
 		XMVECTOR vt = XMVectorReplicate(t);
@@ -228,7 +243,8 @@ namespace Causality
 			XMStoreA(out[i].LclScaling, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclScaling), XMLoadA(rhs[i].LclScaling), vt));
 			XMStoreA(out[i].LclTranslation, DirectX::XMVectorLerpV(XMLoadA(lhs[i].LclTranslation), XMLoadA(rhs[i].LclTranslation), vt));
 		}
-		FrameRebuildGlobal(armature, out);
+		if (rebuild)
+			FrameRebuildGlobal(armature, out);
 	}
 
 	void FrameDifference(ArmatureFrameView out, ArmatureFrameConstView from, ArmatureFrameConstView to)
@@ -257,6 +273,21 @@ namespace Causality
 			auto& lt = out[i];
 			lt.LocalTransform() = from[i].LocalTransform();
 			lt.LocalTransform() *= deformation[i].LocalTransform();
+		}
+	}
+
+	void FrameScaleEst(_Inout_ ArmatureFrameView frame, _In_ ArmatureFrameConstView  ref, float scale)
+	{
+		auto n = std::min(frame.size(), ref.size());
+		XMVECTOR sv = XMVectorReplicate(scale);
+		for (size_t i = 0; i < n; i++)
+		{
+			auto& t1 = frame[i].LocalTransform();
+			auto& t0 = ref[i].LocalTransform();
+			auto& out = t1;
+			out.Scale = XMVectorLerpV(XMLoadA(t0.Scale), XMLoadA(t1.Scale), sv);
+			out.Translation = XMVectorLerpV(XMLoadA(t0.Translation), XMLoadA(t1.Translation), sv);
+			out.Rotation = XMQuaternionSlerpFastV(XMLoadA(t0.Rotation), XMLoadA(t1.Rotation), sv);
 		}
 	}
 
@@ -304,30 +335,70 @@ namespace Causality
 			XMStoreFloat4x4(pOut + i, mat);
 		}
 	}
-}
+	Joint::Joint()
+	{
+		JointBasicData::ID = nullid;
+		JointBasicData::ParentID = nullid;
+		MirrorJoint = nullptr;
+	}
+	Joint::Joint(int id)
+	{
+		JointBasicData::ID = id;
+		JointBasicData::ParentID = nullid;
+		MirrorJoint = nullptr;
+	}
+	Joint::Joint(const JointBasicData & data)
+		: JointBasicData(data)
+	{
+		MirrorJoint = nullptr;
+	}
+	Joint::Joint(const Joint & rhs)
+		: JointBasicData(rhs)
+	{
+		MirrorJoint = nullptr;
+	}
+	Joint::~Joint()
+	{
 
+	}
+	inline int Joint::reindex(int baseid)
+	{
+		int id = baseid;
+		for (auto& node : this->nodes())
+		{
+			node.ID = id++;
+			auto parent = node.parent();
+			node.ParentID = parent ? parent->ID : nullid;
+		}
+		return id;
+	}
+}
 
 StaticArmature::StaticArmature(array_view<JointBasicData> data)
 {
 	size_t jointCount = data.size();
-	Joints.resize(jointCount);
+	m_joints.resize(jointCount);
 
 	for (size_t i = 0; i < jointCount; i++)
 	{
-		Joints[i].SetID(i);
+		m_joints[i].SetID(i);
 
 		int parentID = data[i].ParentID;
 		if (parentID != i &&parentID >= 0)
 		{
-			Joints[parentID].append_children_back(&Joints[i]);
+			m_joints[parentID].append_children_back(&m_joints[i]);
 		}
 		else
 		{
-			RootIdx = i;
+			m_rootIdx = i;
 		}
 	}
 
 	CaculateTopologyOrder();
+}
+
+StaticArmature::StaticArmature()
+{
 }
 
 StaticArmature::StaticArmature(std::istream & file)
@@ -335,25 +406,25 @@ StaticArmature::StaticArmature(std::istream & file)
 	size_t jointCount;
 	file >> jointCount;
 
-	Joints.resize(jointCount);
-	DefaultFrame.reset(new ArmatureFrame(jointCount));
+	m_joints.resize(jointCount);
+	m_defaultFrame.resize(jointCount);
 
 	// Joint line format: 
 	// Hip(Name) -1(ParentID)
 	// 1.5(Pitch) 2.0(Yaw) 0(Roll) 0.5(BoneLength)
 	for (size_t idx = 0; idx < jointCount; idx++)
 	{
-		auto& joint = Joints[idx];
-		auto& bone = default_frame()[idx];
+		auto& joint = m_joints[idx];
+		auto& bone = bind_frame()[idx];
 		((JointBasicData&)joint).ID = idx;
 		file >> ((JointBasicData&)joint).Name >> ((JointBasicData&)joint).ParentID;
 		if (joint.ParentID != idx && joint.ParentID >= 0)
 		{
-			Joints[joint.ParentID].append_children_back(&joint);
+			m_joints[joint.ParentID].append_children_back(&joint);
 		}
 		else
 		{
-			RootIdx = idx;
+			m_rootIdx = idx;
 		}
 
 		Vector4 vec;
@@ -363,25 +434,25 @@ StaticArmature::StaticArmature(std::istream & file)
 	}
 
 	CaculateTopologyOrder();
-	FrameRebuildGlobal(*this, default_frame());
+	FrameRebuildGlobal(*this, bind_frame());
 }
 
 StaticArmature::StaticArmature(size_t JointCount, int * Parents, const char* const* Names)
-	: Joints(JointCount)
+	: m_joints(JointCount)
 {
-	DefaultFrame.reset(new ArmatureFrame(JointCount));
+	m_defaultFrame.resize(JointCount);
 	for (size_t i = 0; i < JointCount; i++)
 	{
-		Joints[i].SetID(i);
-		Joints[i].SetName(Names[i]);
-		((JointBasicData&)Joints[i]).ParentID = Parents[i];
+		m_joints[i].SetID(i);
+		m_joints[i].SetName(Names[i]);
+		((JointBasicData&)m_joints[i]).ParentID = Parents[i];
 		if (Parents[i] != i && Parents[i] >= 0)
 		{
-			Joints[Parents[i]].append_children_back(&Joints[i]);
+			m_joints[Parents[i]].append_children_back(&m_joints[i]);
 		}
 		else
 		{
-			RootIdx = i;
+			m_rootIdx = i;
 		}
 	}
 	CaculateTopologyOrder();
@@ -389,55 +460,117 @@ StaticArmature::StaticArmature(size_t JointCount, int * Parents, const char* con
 
 StaticArmature::~StaticArmature()
 {
-
+	// so that the destructor won't tries to delete multiple times
+	for (auto& joint : m_joints)
+	{
+		joint.isolate();
+	}
 }
+
+StaticArmature::StaticArmature(const IArmature & rhs)
+{
+	clone_from(rhs);
+}
+
+//StaticArmature::StaticArmature(const self_type & rhs)
+//{
+//	clone_from(rhs);
+//}
 
 StaticArmature::StaticArmature(self_type && rhs)
 {
 	*this = std::move(rhs);
 }
 
+StaticArmature& StaticArmature::operator=(const self_type & rhs)
+{
+	clone_from(rhs);
+	return *this;
+}
+
 StaticArmature::self_type & StaticArmature::operator=(self_type && rhs)
 {
 	using std::move;
-	RootIdx = rhs.RootIdx;
-	Joints = move(rhs.Joints);
-	TopologyOrder = move(rhs.TopologyOrder);
-	DefaultFrame = move(rhs.DefaultFrame);
+	m_rootIdx = rhs.m_rootIdx;
+	m_joints = move(rhs.m_joints);
+	m_order = move(rhs.m_order);
+	m_defaultFrame = move(rhs.m_defaultFrame);
 	return *this;
+}
+
+//void StaticArmature::clone_from(const self_type & rhs)
+//{
+//	this->m_joints.resize(rhs.m_joints.size());
+//	for (int i = 0; i < m_joints.size(); i++)
+//	{
+//		this->m_joints[i] = rhs.m_joints[i];
+//	}
+//	this->m_order = rhs.m_order;
+//	this->m_rootIdx = rhs.m_rootIdx;
+//	this->m_defaultFrame = make_unique<ArmatureFrame>(*rhs.m_defaultFrame);
+//
+//	// Re-construct the tree structure
+//	for (int i : this->m_order)
+//	{
+//		if (m_joints[i].ParentID >= 0 && m_joints[i].ParentID != i)
+//		{
+//			m_joints[m_joints[i].ParentID].append_children_back(&m_joints[i]);
+//		}
+//	}
+//}
+
+void StaticArmature::clone_from(const IArmature & rhs)
+{
+	for (auto& j : rhs.joints())
+		m_order.push_back(j.ID);
+
+	this->m_joints.resize(m_order.size());
+	this->m_rootIdx = rhs.root()->ID;
+	this->m_defaultFrame = rhs.bind_frame();
+
+	// Copy Joint meta-data
+	for (auto& j : rhs.joints())
+		m_joints[j.ID] = j;
+
+	// rebuild structure
+	for (int i : this->m_order)
+	{
+		if (m_joints[i].ParentID >= 0 && m_joints[i].ParentID != i)
+		{
+			m_joints[m_joints[i].ParentID].append_children_back(&m_joints[i]);
+		}
+	}
 }
 
 //void GetBlendMatrices(_Out_ XMFLOAT4X4* pOut);
 
 Joint * StaticArmature::at(int index) {
-	return &Joints[index];
+	return &m_joints[index];
 }
 
 Joint * StaticArmature::root()
 {
-	return &Joints[RootIdx];
+	return &m_joints[m_rootIdx];
 }
 
 size_t StaticArmature::size() const
 {
-	return Joints.size();
+	return m_joints.size();
 }
 
-const IArmature::frame_type & StaticArmature::default_frame() const
+StaticArmature::frame_const_view StaticArmature::bind_frame() const
 {
-	return *DefaultFrame;
+	return m_defaultFrame;
 	// TODO: insert return statement here
 }
 
-void Causality::StaticArmature::set_default_frame(uptr<frame_type> && frame) { DefaultFrame = std::move(frame); }
+void StaticArmature::set_default_frame(frame_type && frame) { m_defaultFrame = std::move(frame); }
 
 void StaticArmature::CaculateTopologyOrder()
 {
-	using namespace boost;
-	using namespace boost::adaptors;
-	TopologyOrder.resize(size());
-	copy(root()->nodes() | transformed([](const Joint& joint) {return joint.ID; }), TopologyOrder.begin());
-
+	m_order.reserve(size());
+	for (auto& j : root()->nodes())
+		m_order.push_back(j.ID);
 }
 
 // Lerp the local-rotation and scaling, "interpolate in Time"
@@ -496,11 +629,6 @@ void StaticArmature::CaculateTopologyOrder()
 //	return this->Semantic;
 //}
 
-const Bone & Causality::IArmature::default_bone(int index) const
-{
-	return default_frame()[at(index)->ID];
-}
-
 // check if two tree node is "structural-similar"
 template <class Derived, bool ownnersip>
 bool is_similar(_In_ const stdx::tree_node<Derived, ownnersip> *p, _In_ const stdx::tree_node<Derived, ownnersip> *q)
@@ -525,10 +653,31 @@ bool is_similar(_In_ const stdx::tree_node<Derived, ownnersip> *p, _In_ const st
 	return pc == nullptr && qc == nullptr;
 }
 
-void Causality::BuildJointMirrorRelation(Joint* root, ArmatureFrameConstView frame)
+bool is_mirror(const Joint* j0, const Joint* j1)
 {
+}
+
+template <class Derived, bool ownnersip>
+int child_index(_In_ const stdx::tree_node<Derived, ownnersip> *child)
+{
+	auto parent = child->parent();
+	auto p = parent->first_child();
+	int idx = 0;
+	while (p != nullptr && p != child)
+	{
+		++idx;
+		p = p->next_sibling();
+	}
+	return idx;
+}
+
+void Causality::BuildJointMirrorRelation(IArmature& armature)
+{
+	Joint* root = armature.root();
+	ArmatureFrameConstView frame = armature.bind_frame();
+
 	float epsilon = 1.00f;
-	auto _children = root->descendants();
+	auto _children = root->descendants_breadth_first();
 	std::vector<std::reference_wrapper<Joint>> children(_children.begin(), _children.end());
 	std::vector<Joint*> &joints = reinterpret_cast<std::vector<Joint*> &>(children);
 
@@ -536,16 +685,187 @@ void Causality::BuildJointMirrorRelation(Joint* root, ArmatureFrameConstView fra
 	{
 		auto& bonei = frame[joints[i]->ID];
 		auto& ti = bonei.GblTranslation;
+		auto ji = joints[i];
+
 		for (int j = i + 1; j < children.size(); j++)
 		{
 			auto& bonej = frame[joints[j]->ID];
 			auto& tj = bonej.GblTranslation;
 
-			if (joints[i]->parent() == joints[j]->parent() && is_similar(joints[i], joints[j]))
+			auto jj = joints[j];
+			
+			auto pi = joints[i]->parent();
+			auto pj = joints[j]->parent();
+
+			if (((pi == pj && pi->MirrorJoint == nullptr) || pi->MirrorJoint == pj || pj->MirrorJoint == pi) && is_similar(ji, jj))
 			{
-				joints[i]->MirrorJoint = joints[j];
-				joints[j]->MirrorJoint = joints[i];
+				if (pi != pj && child_index(ji) != child_index(jj))
+					continue;
+
+				ji->MirrorJoint = jj;
+				jj->MirrorJoint = ji;
 			}
 		}
 	}
+
+#ifdef _DEBUG
+	for (int i = 0; i < children.size(); i++)
+	{
+		std::cout << joints[i]->Name;
+		if (joints[i]->MirrorJoint)
+			std::cout << " <==> " <<  joints[i]->MirrorJoint->Name;
+		std::cout << std::endl;
+	}
+#endif
 }
+
+DynamicArmature::DynamicArmature(DynamicArmature && rhs) = default;
+
+DynamicArmature::~DynamicArmature()
+{
+}
+
+DynamicArmature::DynamicArmature(std::unique_ptr<joint_type>&& root, frame_type && defaultframe)
+{
+	m_root = move(root);
+	m_defaultFrame = move(defaultframe);
+
+	// build the reverse index
+	for (auto& joint : m_root->nodes())
+	{
+		auto rib = m_index.try_emplace(joint.ID, &joint);
+		assert(rib.second);
+	}
+}
+DynamicArmature::joint_type * DynamicArmature::at(int index)
+{
+	auto itr = m_index.find(index);
+	if (itr != m_index.end())
+		return itr->second;
+	else
+		return nullptr;
+}
+DynamicArmature::joint_type * DynamicArmature::root()
+{
+	return m_root.get();
+}
+size_t DynamicArmature::size() const
+{
+	return m_index.size();
+}
+DynamicArmature::frame_const_view DynamicArmature::bind_frame() const { return m_defaultFrame; }
+DynamicArmature::frame_type & DynamicArmature::bind_frame() { return m_defaultFrame; }
+void DynamicArmature::set_default_frame(frame_type && frame) { m_defaultFrame = std::move(frame); }
+//	void DynamicArmature::clone_from(const IArmature & rhs)
+//	{
+//	}
+void DynamicArmature::clone_from(const joint_type & root)
+{
+	m_root.reset(root.clone());
+	reindex();
+}
+//	void DynamicArmature::reroot(joint_type * pNewRoot)
+//	{
+//	}
+//	void DynamicArmature::remove(unsigned int jointID)
+//	{
+//		auto itr = m_index.find(jointID);
+//		assert(itr != m_index.end() && itr->second);
+//		auto subtree = itr->second;
+//		subtree->isolate();
+//		for (auto& joint : subtree->nodes())
+//			m_index.erase(joint.ID);
+//		delete subtree;
+//	}
+//
+//	void DynamicArmature::remove(joint_type * pJoint)
+//	{
+//		pJoint->isolate();
+//		for (auto& joint : pJoint->nodes())
+//		{
+//			m_index.erase(joint.ID);
+//		}
+//		delete pJoint;
+//	}
+//	void DynamicArmature::append(joint_type * pTargetJoint, joint_type * pSrcJoint)
+//	{
+//		pTargetJoint->append_children_back(pSrcJoint);
+//		reindex();
+//	}
+//	std::map<int, int> DynamicArmature::append(joint_type * pTargetJoint, DynamicArmature * pSkeleton, bool IsCoordinateRelative)
+//	{
+//		std::map<int, int> mapper;
+//		if (pSkeleton == nullptr)
+//			return mapper;
+//
+//		if (pTargetJoint != nullptr && !this->contains(pTargetJoint))
+//		{
+//			std::cout << "Error : pTargetJoint don't belong to the skeleton." << std::endl;
+//			return mapper;
+//		}
+//
+//		unsigned int Key = 0;
+//
+//		// Copy the sub-skeleton
+//		Joint* pRoot = new Joint(*pSrcSubSkeleton);
+//
+//		if (this->empty())
+//		{
+//			this->m_root = pRoot;
+//		}
+//
+//		// If don't give the append target , somehow, find one instead
+//		bool DefaultInvalidFlag = false;
+//		if (!pTargetJoint)
+//		{
+//			cout << "Warning : Don't get a specific binding bone , find it instead." << endl;
+//			// We can't give a relative coordinate if we don't know it , right?
+//			IsRelativeCoordinate = false;
+//			pTargetJoint = this->FindClosestJoint(pRoot->Entity[Current].Position, Current);
+//			DefaultInvalidFlag = true;
+//		}
+//
+//		pTargetJoint->Children_Add(pRoot);
+//
+//		pRoot->for_all_in_sub_skeleton([&](Joint* pJoint) {
+//			// Fix the ID
+//			while (containtsKey(Key))
+//				Key++;
+//			mapper->insert(pair<unsigned int, unsigned int>(pJoint->ID, Key));
+//			pJoint->ID = Key;
+//			this->Index.insert(Kinematics::IndexedSkeleton::Index_Item(Key, pJoint));
+//
+//			// Deduce the hierarchical data if needed
+//			if (!IsRelativeCoordinate) {
+//				pJoint->Deduce_Hierarchical_from_Global(Current);
+//				// If default skeleton is invalid , so , use current instead.
+//				if (!DefaultInvalidFlag) {
+//					pJoint->Deduce_Hierarchical_from_Global(Default);
+//				}
+//				else {
+//					pJoint->Snap_Default_to_Current();
+//				}
+//
+//
+//			}
+//		});
+//
+//		pTargetJoint->ReBuildSubSkeleton_Global_from_Hierarchical(Current);
+//		pTargetJoint->ReBuildSubSkeleton_Global_from_Hierarchical(Default);
+//		return mapper;
+//		return std::map<int, int>();
+//	}
+std::map<int, int> DynamicArmature::reindex()
+{
+	std::map<int, int> mapper;
+	int idx = 0;
+	for (auto& joint : m_root->nodes())
+	{
+		mapper.try_emplace(joint.ID, idx);
+		joint.ID = idx++;
+		if (joint.parent())
+			joint.ParentID = joint.parent()->ID;
+	}
+	return mapper;
+}
+//}

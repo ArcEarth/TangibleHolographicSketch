@@ -7,7 +7,7 @@ namespace Causality
 {
 	namespace Devices
 	{
-		class LeapMotion;
+		class LeapSensor;
 		class IViconClient;
 	}
 
@@ -22,8 +22,6 @@ namespace Causality
 
 		void Parse(const ParamArchive* archive) override;
 
-		void OnParentChanged(SceneObject* oldParent) override;
-
 		void Update(time_seconds const& time_delta) override;
 		
 		bool UpdateFromVicon(double time_delta);
@@ -37,8 +35,10 @@ namespace Causality
 		SceneObject*		m_pRigid;
 		string				m_internalName;
 		IsometricTransform&	m_intrinsic;
-		sptr<Devices::LeapMotion>	m_pLeap;
+		sptr<Devices::LeapSensor>	m_pLeap;
 		sptr<Devices::IViconClient>	m_pVicon;
 		int					m_idx;
+
+		scoped_connection	m_parentChangedConnection;
 	};
 }

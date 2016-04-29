@@ -1,11 +1,15 @@
 <application>
 	<kinect enable="false"></kinect>
-	<leap enable="false"></leap>
-	<vicon sever_ip="172.21.12.17" enable="true" verbose="false" scale="0.001"></vicon>
+  <leap enable="true" asynchronize="true" fixed="true" scale="-0.01,0.01,0.01"></leap>
+
+  <vicon sever_ip="172.21.12.17" enable="false" verbose="false" scale="0.001"></vicon>
 
 	<assets path="..\Assets\"></assets>
 	<scenes path="ArSketch.xml"></scenes>
+  
+  <title>Tangible Holographic Sketch</title>
+  <run_test>0</run_test>
 
-	<window width="1920" height="1080" fullscreen="false"></window>
-	<console width="640" height="720"></console>
+  <window width="1920" height="1080" left="0" top="0" fullscreen="false"></window>
+  <console width="640" height="720"></console>
 </application>

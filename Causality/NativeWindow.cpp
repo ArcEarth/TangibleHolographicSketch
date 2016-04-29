@@ -32,6 +32,11 @@ namespace Causality
 	void NativeWindow::EnterFullScreen() {}
 	void NativeWindow::ExitFullScreen() {}
 
+	bool NativeWindow::Move(int x, int y)
+	{
+		return MoveWindow(m_hWnd, x, y, m_Boundary.Width(), m_Boundary.Height(),TRUE);
+	}
+
 	void NativeWindow::OnMouseMove(int x, int y)
 	{
 		auto current = Vector2((float)x, (float)y);
@@ -131,7 +136,7 @@ namespace Causality
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = m_hInstance;
-		wc.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_ICON1));
+		wc.hIcon = LoadIcon(m_hInstance, MAKEINTRESOURCE(IDI_ICON1));
 		wc.hIconSm = wc.hIcon;
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
@@ -411,6 +416,13 @@ void DebugConsole::OnKeyUp(unsigned char key)
 
 void DebugConsole::OnResize(size_t width, size_t height)
 {
+}
+
+bool DebugConsole::Move(int x, int y)
+{
+	RECT rect;
+	GetWindowRect(hWnd, &rect);
+	return MoveWindow(hWnd, x, y, rect.right - rect.left, rect.bottom - rect.top, TRUE);
 }
 
 }

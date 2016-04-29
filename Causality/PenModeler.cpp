@@ -47,6 +47,17 @@ PenModeler::PenModeler(int objectIdx)
 	m_patches.reserve(100);
 	m_extrusions.reserve(100);
 	m_extruBuffers.reserve(100);
+	m_con_pc = this->OnParentChanged += [this](auto _this, auto oldParent)
+	{
+		if (oldParent != Parent())
+		{
+			auto pVisual = dynamic_cast<VisualObject*>(Parent());
+			if (pVisual)
+			{
+				ExtractMeshFromVisual(pVisual);
+			}
+		}
+	};
 }
 
 PenModeler::~PenModeler()
@@ -70,19 +81,6 @@ void PenModeler::Parse(const ParamArchive * store)
 	m_extruMat = this->Scene->Assets().GetMaterial("default");
 	m_p2DFactory = this->Scene->Get2DFactory();
 	m_p2DContex = this->Scene->Get2DContext();
-}
-
-void PenModeler::OnParentChanged(SceneObject * oldParent)
-{
-	if (oldParent != parent())
-	{
-		auto pVisual = dynamic_cast<VisualObject*>(parent());
-		if (pVisual)
-		{
-			ExtractMeshFromVisual(pVisual);
-		}
-	}
-
 }
 
 void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
@@ -127,27 +125,37 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 
 void PenModeler::CreateDeviceResources()
 {
-	if (m_meshBuffer) return;
-
-	m_meshBuffer.reset(new DynamicMeshBuffer);
-	m_meshBuffer->CreateDeviceResources<VertexType, IndexType>(m_pDevice, g_MeshBufferVertexCap, g_MeshBufferIndexCap);
+	if (!m_meshBuffer)
+	{
+		m_meshBuffer.reset(new DynamicMeshBuffer);
+		m_meshBuffer->CreateDeviceResources<VertexType, IndexType>(m_pDevice, g_MeshBufferVertexCap, g_MeshBufferIndexCap);
+	}
 
 	auto context = this->Scene->GetRenderContext();
 
 	// Update our mesh with same geometry as the target
-	m_meshBuffer->UpdateVertexBuffer(context,
-		reinterpret_cast<VertexType*>(m_target->vertices.data()),
-		m_target->vertices.size());
-	m_meshBuffer->UpdateIndexBuffer(context, m_target->indices.data(), m_target->indices.size());
+	if (m_target)
+	{
+		m_meshBuffer->UpdateVertexBuffer(context,
+			reinterpret_cast<VertexType*>(m_target->vertices.data()),
+			m_target->vertices.size());
+		m_meshBuffer->UpdateIndexBuffer(context, m_target->indices.data(), m_target->indices.size());
+	}
 
+	if (!m_decal)
+	{
+		m_decal.reset(new RenderableTexture2D(m_pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true));
+		m_decal->CreateD2DBitmapView(m_p2DContex);
 
-	m_decal.reset(new RenderableTexture2D(m_pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true));
-	m_decal->CreateD2DBitmapView(m_p2DContex);
+		m_decalMat.reset(new PhongMaterial());
+		m_decalMat->DiffuseMap = m_decal->ShaderResourceView();
+	}
 
-	m_decalMat.reset(new PhongMaterial());
-	m_decalMat->DiffuseMap = m_decal->ShaderResourceView();
-	//m_decalMat->CreateDeviceResources(m_pDevice, true);
+	DrawDefaultDecalGeometry();
+}
 
+void Causality::PenModeler::DrawDefaultDecalGeometry()
+{
 	ThrowIfFailed(m_p2DFactory->CreatePathGeometry(&m_patchGeos));
 	cptr<ID2D1GeometrySink> pSink;
 	ThrowIfFailed(m_patchGeos->Open(&pSink));
@@ -155,7 +163,7 @@ void PenModeler::CreateDeviceResources()
 	pSink->BeginFigure(
 		D2D1::Point2F(346, 255),
 		D2D1_FIGURE_BEGIN_FILLED
-		);
+	);
 	D2D1_POINT_2F points[5] = {
 		D2D1::Point2F(267, 177),
 		D2D1::Point2F(236, 192),
@@ -186,17 +194,22 @@ void PenModeler::CreateDeviceResources()
 
 void PenModeler::SurfaceSketchBegin()
 {
-	m_patches.emplace_back();
-	m_patches.back().setSurface(m_target);
-	m_state = Inking;
+	if (m_target)
+	{
+		m_patches.emplace_back();
+		m_patches.back().setSurface(m_target);
+		m_state = Inking;
+	}
 }
 
 void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 {
+	if (!m_target) return;
+
 	bool touching = false;
 	// Find closest point on mesh using pen direction
 	vector<Geometrics::MeshRayIntersectionInfo> interInfos;
-	pos -= dir * TrackedPen::TipLength * 0.5f / parent()->GetScale().x;
+	pos -= dir * TrackedPen::TipLength * 0.5f / Parent()->GetScale().x;
 	m_target->intersect(pos, dir, &interInfos);
 
 	if (interInfos.size() == 0) {
@@ -463,7 +476,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	auto pEM = dynamic_cast<IEffectMatrices*>(pEffect);
 	if (pEM)
 	{
-		pEM->SetWorld(this->parent()->GetGlobalTransform().TransformMatrix());
+		pEM->SetWorld(this->Parent()->GetGlobalTransform().TransformMatrix());
 	}
 
 	m_decalMat->SetupEffect(pEffect);
@@ -488,7 +501,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 	if (m_patches.empty())
 		return;
-	g_PrimitiveDrawer.SetWorld(parent()->GetGlobalTransform().TransformMatrix());
+	g_PrimitiveDrawer.SetWorld(Parent()->GetGlobalTransform().TransformMatrix());
 	g_PrimitiveDrawer.Begin();
 	for (auto& patch : m_patches)
 	{

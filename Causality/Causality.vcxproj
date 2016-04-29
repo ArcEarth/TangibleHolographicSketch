@@ -22,16 +22,17 @@
     <ProjectGuid>{BFB8F213-CF2C-4DB3-B94F-BC40B35DA49D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Causality</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros">
     <TinyXml2Dir>..\tinyxml2</TinyXml2Dir>
     <DirectXTKDir>..\DirectXTK</DirectXTKDir>
     <Bullet3Dir>..\bullet3</Bullet3Dir>
     <DirectXHelperDir>..\DirectX</DirectXHelperDir>
-    <DLibDir>..\dlib-18.17\</DLibDir>
+    <DLibDir>..\dlib\</DLibDir>
     <EigenDir>..\Eigen\</EigenDir>
-    <FftwDir>..\fftw-dll64-3.3.4</FftwDir>
+    <FftwDir>..\fftw</FftwDir>
+    <AmpDir>..\amp</AmpDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -79,220 +80,178 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath)</LibraryPath>
-    <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+  <PropertyGroup>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\Inc;$(TinyXml2Dir)\;$(DLibDir);$(EigenDir);$(FftwDir);$(SolutionDir)\DirectX\Inc\;$(SolutionDir)\GSL\include;$(SolutionDir)\;$(SolutionDir)\Common\;$(AmpDir)\ampalgorithms\inc\;$(AmpDir)\amprng\inc\;$(AmpDir)\amphlsl\inc\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(FftwDir);$(LibraryPath)</LibraryPath>
     <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-    <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(FftwDir);$(PATH);</ExecutablePath>
+    <CodeAnalysisRuleSet>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(BOOST_ROOT);$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\\Inc;$(TinyXml2Dir)\;..\DirectX\Inc\;$(DLibDir);$(EigenDir);$(FftwDir);..\GSL\include;..\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(BOOST_ROOT)\stage\$(PlatformToolset)\$(PlatformTarget)\lib;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(LibraryPath);$(FftwDir);</LibraryPath>
     <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    <ExecutablePath>$(VC_ExecutablePath_x64);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(FxCopDir);$(PATH);$(FftwDir);</ExecutablePath>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <AdditionalUsingDirectories>
-      </AdditionalUsingDirectories>
-      <AdditionalOptions>/D_SCL_SECURE_NO_WARNINGS /Zm200 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile>pch_bcl.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</Command>
+      <Command>
+        copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
+        copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"
+      </Command>
     </PostBuildEvent>
-    <Manifest />
-    <Manifest />
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
     </Manifest>
-    <Bscmake />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalUsingDirectories>
-      </AdditionalUsingDirectories>
-      <AdditionalOptions>/D_SCL_SECURE_NO_WARNINGS /Zm200 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
-      <PrecompiledHeaderFile>pch_bcl.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
-      <DisableSpecificWarnings>4267</DisableSpecificWarnings>
+      <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</Command>
-    </PostBuildEvent>
-    <Manifest />
-    <Manifest />
-    <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalUsingDirectories>
-      </AdditionalUsingDirectories>
-      <AdditionalOptions>/D_SCL_SECURE_NO_WARNINGS /Zm200 %(AdditionalOptions)</AdditionalOptions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4_1__;__SSE4_2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PrecompiledHeaderFile>pch_bcl.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
-      <UndefinePreprocessorDefinitions>__AVX__</UndefinePreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
-    </PostBuildEvent>
-    <Manifest />
-    <Manifest />
-    <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalUsingDirectories>
-      </AdditionalUsingDirectories>
-      <AdditionalOptions>/D_SCL_SECURE_NO_WARNINGS /Zm200 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4_1__;__SSE4_2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PrecompiledHeaderFile>pch_bcl.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
-      <UndefinePreprocessorDefinitions>__AVX__</UndefinePreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>dxgi.lib;d3d11.lib;d2d1.lib;dwrite.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
-    </PostBuildEvent>
-    <Manifest />
-    <Manifest />
-    <Manifest>
-      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BasicKeyboardMouseControlLogic.cpp" />
-    <ClCompile Include="CameraObject.cpp" />
-    <ClCompile Include="CharacterBehavier.cpp" />
-    <ClCompile Include="FloatHud.cpp" />
-    <ClCompile Include="LightObject.cpp" />
-    <ClCompile Include="MatrixVisualizer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="pch_bcl.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch_bcl.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)bcl.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="Settings.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="CharacterBehavier.cpp" />
+    <ClCompile Include="BasicKeyboardMouseControlLogic.cpp" />
+    <ClCompile Include="CameraObject.cpp" />
+    <ClCompile Include="CharacterObject.cpp" />
+    <ClCompile Include="FloatHud.cpp" />
+    <ClCompile Include="InverseKinematics.cpp" />
+    <ClCompile Include="LightObject.cpp" />
+    <ClCompile Include="MatrixVisualizer.cpp" />
     <ClCompile Include="Animations.cpp" />
     <ClCompile Include="AssetDictionary.cpp" />
     <ClCompile Include="CausalityApplication.cpp" />
     <ClCompile Include="FbxParser.cpp" />
-    <ClCompile Include="Kinect.cpp" />
+    <ClCompile Include="KinectSensor.cpp" />
     <ClCompile Include="LeapMotion.cpp" />
     <ClCompile Include="NativeWindow.cpp" />
-    <ClCompile Include="OculusRift.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PenModeler.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Armature.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="SceneParser.cpp" />
     <ClCompile Include="Serialization.cpp" />
-    <ClCompile Include="Settings.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="SkinningModelFromFbx.cpp" />
     <ClCompile Include="SkyDome.cpp" />
     <ClCompile Include="StreamDevice.cpp" />
-    <ClCompile Include="TrackedObjectControl.cpp" />
-    <ClCompile Include="TrackerdPen.cpp" />
+    <ClCompile Include="Tests.cpp" />
+    <ClCompile Include="TrackedArmature.cpp" />
     <ClCompile Include="Vicon.cpp" />
     <ClCompile Include="VisualObject.cpp" />
+    <ClCompile Include="OculusRift.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="TrackedObjectControl.h" />
+    <ClInclude Include="TrackerdPen.h" />
+    <ClInclude Include="PenModeler.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TrackedObjectControl.cpp" />
+    <ClCompile Include="TrackerdPen.cpp" />
+    <ClCompile Include="PenModeler.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Common\CompositeFlag.h" />
+    <ClInclude Include="..\Common\Filter.h" />
+    <ClInclude Include="..\Common\iterator_range.h" />
+    <ClInclude Include="..\Common\signal.hpp" />
+    <ClInclude Include="..\Common\stride_range.h" />
+    <ClInclude Include="..\Common\tree.h" />
     <ClInclude Include="AnimationObject.h" />
     <ClInclude Include="Asset.h" />
     <ClInclude Include="BasicKeyboardMouseControlLogic.h" />
     <ClInclude Include="BCL.h" />
     <ClInclude Include="Animations.h" />
     <ClInclude Include="AssetDictionary.h" />
+    <ClInclude Include="BufferedStreamViewer.h" />
     <ClInclude Include="CausalityApplication.h" />
     <ClInclude Include="CharacterBehavier.h" />
-    <ClInclude Include="Common\CompositeFlag.h" />
-    <ClInclude Include="Common\Filter.h" />
-    <ClInclude Include="Common\stride_range.h" />
-    <ClInclude Include="Common\tree.h" />
+    <ClInclude Include="CharacterObject.h" />
     <ClInclude Include="Content\OculusDisortionRenderer.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="FbxParser.h" />
@@ -302,20 +261,21 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <ClInclude Include="GSL\gsl.h" />
     <ClInclude Include="GSL\string_view.h" />
     <ClInclude Include="Interactive.h" />
-    <ClInclude Include="Kinect.h" />
+    <ClInclude Include="InverseKinematics.h" />
+    <ClInclude Include="KinectSensor.h" />
     <ClInclude Include="LeapMotion.h" />
     <ClInclude Include="LightObject.h" />
     <ClInclude Include="MatrixVisualizer.h" />
+    <ClInclude Include="ImportOption.h" />
     <ClInclude Include="NativeWindow.h" />
-    <ClInclude Include="PenModeler.h" />
     <ClInclude Include="Serialization.h" />
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="Math3D.h" />
     <ClInclude Include="SmartPointers.h" />
     <ClInclude Include="StreamDevice.h" />
     <ClInclude Include="String.h" />
-    <ClInclude Include="TrackedObjectControl.h" />
-    <ClInclude Include="TrackerdPen.h" />
+    <ClInclude Include="Tests.h" />
+    <ClInclude Include="TrackedArmature.h" />
     <ClInclude Include="Vicon.h" />
     <ClInclude Include="VisualObject.h" />
     <ClInclude Include="OculusRift.h" />
@@ -333,26 +293,13 @@ copy $(LeapSDK_Root)\lib\$(PlatformTarget)\Leap.dll "$(OutDir)"</Command>
     <ClInclude Include="SettingsRegisteration.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="libfftw3f-3.dll">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="icon1.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="Causality.rc" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\Assets\ArSketch.xml" />
     <Xml Include="App.xml">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <DeploymentContent>true</DeploymentContent>
     </Xml>
     <Xml Include="manifest.xml" />
   </ItemGroup>
