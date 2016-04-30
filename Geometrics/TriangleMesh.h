@@ -1,10 +1,12 @@
 #pragma once
 
-#include <DirectXMathExtend.h>
+#include <utility>
+#include <array>
 #include <vector>
+#include <unordered_map>
+#include <DirectXMathExtend.h>
 #include <gsl.h>
 #include <VertexTraits.h>
-#include <unordered_map>
 
 namespace Geometrics
 {
@@ -12,7 +14,23 @@ namespace Geometrics
 	struct Triangle
 	{
 		static constexpr size_t VertexCount = 3;
-		IndexType v[VertexCount];
+		typedef std::array<IndexType, VertexCount> container_type;
+		container_type v;
+
+		typedef IndexType value_type;
+		typedef size_t size_type;
+		typedef ptrdiff_t difference_type;
+		typedef IndexType *pointer;
+		typedef const IndexType *const_pointer;
+		typedef IndexType& reference;
+		typedef const IndexType& const_reference;
+
+		typedef typename container_type::iterator iterator;
+		typedef typename container_type::const_iterator const_iterator;
+
+		typedef typename container_type::reverse_iterator reverse_iterator;
+		typedef typename container_type::const_reverse_iterator const_reverse_iterator;
+
 		Triangle() {}
 		Triangle(const IndexType &v0, const IndexType &v1, const IndexType &v2)
 		{
@@ -41,6 +59,19 @@ namespace Geometrics
 				(v[1] == v_) ? 1 :
 				(v[2] == v_) ? 2 : -1;
 		}
+
+		// contrainer access
+		auto begin() { return v.begin(); }
+		auto end() { return v.end(); }
+		auto begin() const { return v.begin(); }
+		auto end() const { return v.end(); }
+
+		auto rbegin() { return v.rbegin(); }
+		auto rend() { return v.rend(); }
+		auto rbegin() const { return v.rbegin(); }
+		auto rend() const { return v.rend(); }
+
+		size_t size() const { return VertexCount; }
 	};
 
 	template <typename _VertexType, typename _IndexType = uint16_t, typename _FaceType = Triangle<_IndexType>>
@@ -72,6 +103,18 @@ namespace Geometrics
 		{
 			return reinterpret_cast<FaceType&>(indices[idx * FaceType::VertexCount]);
 		}
+
+		void add_facet(const FaceType& new_facet)
+		{
+			indices.insert(indices.end(), new_facet.begin(), new_facet.end());
+		}
+
+		template <class... _TIndecies>
+		std::enable_if_t<sizeof...(_TIndecies) == FaceType::VertexCount> add_facet(_TIndecies... _indices)
+		{
+			indices.insert(indices.end(), { _indices... });
+		}
+
 
 		auto facets() {
 			return gsl::span<FaceType>(

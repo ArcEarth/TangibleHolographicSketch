@@ -653,9 +653,9 @@ bool is_similar(_In_ const stdx::tree_node<Derived, ownnersip> *p, _In_ const st
 	return pc == nullptr && qc == nullptr;
 }
 
-bool is_mirror(const Joint* j0, const Joint* j1)
-{
-}
+//bool is_mirror(const Joint* j0, const Joint* j1)
+//{
+//}
 
 template <class Derived, bool ownnersip>
 int child_index(_In_ const stdx::tree_node<Derived, ownnersip> *child)

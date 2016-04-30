@@ -316,7 +316,12 @@ namespace Geometrics
 			typedef BezierClipping<ValueType,Order> ClippingType;
 
 		protected:
-			const static Internal::Combine<Order> Combination;
+			//const static Internal::Combine<Order> Combination;
+			static constexpr size_t Combination(size_t d)
+			{
+				return Internal::Combination(d, Order);
+			}
+
 		public:
 			const ValueType* data() const
 			{
@@ -347,7 +352,7 @@ namespace Geometrics
 					_Ty value = (*this)[i][0] * Q[Order];
 					for (size_t j = 1; j <= Order; j++)
 					{
-						value += P[j] * Q[Order - j] * Combination[j] * (*this)[i][j];
+						value += P[j] * Q[Order - j] * Combination(j) * (*this)[i][j];
 					}
 					clipping[i] = value;
 				}
@@ -374,7 +379,7 @@ namespace Geometrics
 					_Ty value = (*this)[0][i] * Q[Order];
 					for (size_t j = 1; j <= Order; j++)
 					{
-						value += P[j] * Q[Order - j] * Combination[j] * (*this)[j][i];
+						value += P[j] * Q[Order - j] * Combination(j) * (*this)[j][i];
 					}
 					clipping[i] = value;
 				}

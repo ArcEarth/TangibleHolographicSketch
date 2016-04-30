@@ -87,6 +87,7 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 {
 	using DirectX::Scene::DefaultStaticModel;
 	using DirectX::Scene::DefaultSkinningModel;
+	using namespace DirectX::VertexTraits;
 
 	if (m_target)
 	{
@@ -106,9 +107,7 @@ void PenModeler::ExtractMeshFromVisual(Causality::VisualObject * pVisual)
 			//static_assert(sizeof(MeshType::VertexType) == sizeof(DefaultStaticModel::VertexType));
 			for (auto& v : pModel->Vertices)
 			{
-				vt.position = v.position;
-				vt.normal = v.normal;
-				vt.uv = v.textureCoordinate;
+				convert_vertex(v, vt);
 				vertics.push_back(vt);
 			}
 			for (auto& f : pModel->Facets)

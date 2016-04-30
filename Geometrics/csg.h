@@ -25,9 +25,11 @@
 
 namespace Geometrics
 {
+	using DirectX::Vector4;
 	using DirectX::Vector3;
 	using DirectX::Color;
 	using DirectX::Vector2;
+	using DirectX::Matrix4x4;
 
 	struct Vertex
 	{
