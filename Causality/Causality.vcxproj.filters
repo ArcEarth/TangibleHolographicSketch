@@ -197,6 +197,9 @@
     <ClCompile Include="Tests.cpp">
       <Filter>Utility Foundation</Filter>
     </ClCompile>
+    <ClCompile Include="ParametericPatch.cpp">
+      <Filter>PenModeler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -371,6 +374,9 @@
       <Filter>PenModeler</Filter>
     </ClInclude>
     <ClInclude Include="TrackedObjectControl.h">
+      <Filter>PenModeler</Filter>
+    </ClInclude>
+    <ClInclude Include="ParametericPatch.h">
       <Filter>PenModeler</Filter>
     </ClInclude>
   </ItemGroup>

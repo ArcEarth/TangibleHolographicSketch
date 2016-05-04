@@ -38,7 +38,7 @@ namespace DirectX
 		XM_HAS_MEMBER(textureCoordinate, has_tex);
 		XM_HAS_MEMBER(uv, has_uv);
 		XM_HAS_MEMBER(color, has_color);
-		XM_HAS_MEMBER(tanget, has_tanget);
+		XM_HAS_MEMBER(tangent, has_tangent);
 		XM_HAS_MEMBER(weights, has_weights);
 
 		XMGLOBALCONST
@@ -126,27 +126,27 @@ namespace DirectX
 		}
 
 		template <class TVertex>
-		std::enable_if_t<has_tanget<TVertex>::value>
+		std::enable_if_t<has_tangent<TVertex>::value>
 			XM_CALLCONV set_tangent(TVertex& vertex, FXMVECTOR tangent)
 		{
 			XMStore(vertex.tangent, tangent);
 		}
 
 		template <class TVertex>
-		std::enable_if_t<!has_tanget<TVertex>::value>
+		std::enable_if_t<!has_tangent<TVertex>::value>
 			XM_CALLCONV set_tangent(TVertex& vertex, FXMVECTOR tangent)
 		{
 		}
 
 		template <class TVertex>
-		std::enable_if_t<has_tanget<TVertex>::value, XMVECTOR>
+		std::enable_if_t<has_tangent<TVertex>::value, XMVECTOR>
 			XM_CALLCONV get_tangent(const TVertex& vertex, FXMVECTOR default_value = g_XMZero.v)
 		{
 			return XMLoad(vertex.tangent);
 		}
 
 		template <class TVertex>
-		std::enable_if_t<!has_tanget<TVertex>::value, XMVECTOR>
+		std::enable_if_t<!has_tangent<TVertex>::value, XMVECTOR>
 			XM_CALLCONV get_tangent(const TVertex& vertex, FXMVECTOR default_value = g_XMZero.v)
 		{
 			return default_value;
@@ -208,7 +208,7 @@ namespace DirectX
 		}
 
 		template <class TVertex>
-		std::enable_if_t<!has_uv<TVertex>::value>
+		std::enable_if_t<!has_uv<TVertex>::value && !has_tex<TVertex>::value>
 			XM_CALLCONV set_uv(TVertex& vertex, float u, float v)
 		{
 		}

@@ -18,7 +18,7 @@ namespace Geometrics
 			class Combine
 			{
 			protected:
-				std::array<int,N+1> D;
+				std::array<int, N + 1> D;
 
 			public:
 				Combine()
@@ -26,10 +26,10 @@ namespace Geometrics
 					D[0] = 1;
 					for (int i = 0; i < N; i++)
 					{
-						D[i+1] = 1;
-						for (int j = i; j >= 1 ; j--)
+						D[i + 1] = 1;
+						for (int j = i; j >= 1; j--)
 						{
-							D[j] += D[j-1];
+							D[j] += D[j - 1];
 						}
 					}
 				}
@@ -51,14 +51,14 @@ namespace Geometrics
 			//const static size_t C63 = Combination(3, 6);
 		}
 
-		template <typename _Ty , size_t _Order>
+		template <typename _Ty, size_t _Order>
 		struct BezierClipping
-			: public std::array< _Ty,_Order+1>
+			: public std::array< _Ty, _Order + 1>
 		{
 		public:
 			static const size_t Order = _Order;
 			typedef _Ty ValueType;
-			typedef std::array< _Ty,Order+1> Collection;
+			typedef std::array< _Ty, Order + 1> Collection;
 			typedef Internal::Combine<Order> CombinationType;
 			typedef BezierClipping SelfType;
 		protected:
@@ -111,10 +111,10 @@ namespace Geometrics
 			/// <param name="r">The subdivide ratio r.</param>
 			/// <param name="SubClip0">The SubClip 0.</param>
 			/// <param name="SubClip1">The SubClip 1.</param>
-			void divide(_In_ const float r , _Out_ BezierClipping& FrontClipping , _Out_ BezierClipping& BackClipping) const
+			void divide(_In_ const float r, _Out_ BezierClipping& FrontClipping, _Out_ BezierClipping& BackClipping) const
 			{
-				assert(0<=r && r<=1);
-				const float q = 1-r;
+				assert(0 <= r && r <= 1);
+				const float q = 1 - r;
 				BezierClipping& C = BackClipping;
 				C = *this;
 
@@ -123,9 +123,9 @@ namespace Geometrics
 				{
 					for (size_t j = 0; j < i; ++j)
 					{
-						C[j] = (q*C[j]) + (r*C[j+1]);
+						C[j] = (q*C[j]) + (r*C[j + 1]);
 					}
-					FrontClipping[Order-i] = C[0];
+					FrontClipping[Order - i] = C[0];
 				}
 			}
 
@@ -134,54 +134,54 @@ namespace Geometrics
 			/// </summary>
 			/// <param name="r">The r.</param>
 			/// <param name="BackClipping">The back clipping.</param>
-			void divide(_In_ const float r , _Out_ BezierClipping& BackClipping)
+			void divide(_In_ const float r, _Out_ BezierClipping& BackClipping)
 			{
-				assert(0<=r && r<=1);
-				const float q = 1-r;
+				assert(0 <= r && r <= 1);
+				const float q = 1 - r;
 				auto& Front = *this;
 
 				BackClipping[Order] = Front[Order];
 				for (size_t i = Order; i > 0; --i)
 				{
-					for (size_t j = Order; j > Order-i; --j)
+					for (size_t j = Order; j > Order - i; --j)
 					{
-						Front[j] = (q*Front[j-1]) + (r*Front[j]);
+						Front[j] = (q*Front[j - 1]) + (r*Front[j]);
 					}
-					BackClipping[i-1] = Front[Order];
+					BackClipping[i - 1] = Front[Order];
 				}
 			}
 
 			void crop_front(float r)
 			{
-				assert(0<=r && r<=1);
-				const float q = 1-r;
+				assert(0 <= r && r <= 1);
+				const float q = 1 - r;
 
 				for (size_t i = Order; i > 0; --i)
 				{
 					for (size_t j = 0; j < i; ++j)
 					{
-						(*this)[j] = (q*(*this)[j]) + (r*(*this)[j+1]);
+						(*this)[j] = (q*(*this)[j]) + (r*(*this)[j + 1]);
 					}
 				}
 			}
 
 			void crop_back(float r)
 			{
-				assert(0<=r && r<=1);
-				const float q = 1-r;
+				assert(0 <= r && r <= 1);
+				const float q = 1 - r;
 
 				for (size_t i = Order; i > 0; --i)
 				{
-					for (size_t j = Order; j > Order-i; --j)
+					for (size_t j = Order; j > Order - i; --j)
 					{
-						(*this)[j] = (q*(*this)[j-1]) + (r*(*this)[j]);
+						(*this)[j] = (q*(*this)[j - 1]) + (r*(*this)[j]);
 					}
 				}
 			}
 
-			void crop(float s , float t)
+			void crop(float s, float t)
 			{
-				if (s==t)
+				if (s == t)
 				{
 					float value = (*this)(s);
 					this->fill(value);
@@ -189,7 +189,7 @@ namespace Geometrics
 				}
 
 				crop_front(s);
-				t = (t-s)/(1-s);
+				t = (t - s) / (1 - s);
 				crop_back(t);
 			}
 
@@ -207,32 +207,34 @@ namespace Geometrics
 
 			BezierClipping subclip(float s, float t) const
 			{
-				assert (s < t);
+				assert(s < t);
 				BezierClipping clip;
 				if (s == 0.0f)
 				{
 					clip.crop_back(t);
-				}else if (t == 1.0f)
+				}
+				else if (t == 1.0f)
 				{
 					clip.crop_front(s);
-				} else
+				}
+				else
 				{
 					clip.crop_front(s);
-					clip.crop_back((t-s)/(1-s));
+					clip.crop_back((t - s) / (1 - s));
 				}
 				return clip;
 			}
 
-			ValueType eval(float t) const{	
-				assert(0<=t && t<=1);
+			ValueType eval(float t) const {
+				assert(0 <= t && t <= 1);
 
-				float q = 1-t;
-				std::array<float,Order+1> P,Q;
+				float q = 1 - t;
+				std::array<float, Order + 1> P, Q;
 				P[0] = 1.0f; Q[0] = 1.0f;
 				for (size_t i = 0; i < Order; i++)
 				{
-					P[i+1] = P[i] * t;
-					Q[i+1] = Q[i] * q;
+					P[i + 1] = P[i] * t;
+					Q[i + 1] = Q[i] * q;
 				}
 
 				_Ty value = (*this)[0] * Q[Order];
@@ -245,30 +247,30 @@ namespace Geometrics
 			}
 
 			ValueType tangent(float t) const
-			{	
-				assert(0<=t && t<=1);
+			{
+				assert(0 <= t && t <= 1);
 
-				float q = 1-t;
-				std::array<float,Order+1> P,Q;
+				float q = 1 - t;
+				std::array<float, Order + 1> P, Q;
 				P[0] = 1.0f; Q[0] = 1.0f;
 				for (size_t i = 0; i < Order; i++)
 				{
-					P[i+1] = P[i] * t;
-					Q[i+1] = Q[i] * q;
+					P[i + 1] = P[i] * t;
+					Q[i + 1] = Q[i] * q;
 				}
 
-				_Ty value = (1 - Order) * (*this)[0] * Q[Order-1]; // i == 0
-				value += (Order - 1) * (*this)[Order] *P[Order-1]; // i==Order
+				_Ty value = (1 - Order) * (*this)[0] * Q[Order - 1]; // i == 0
+				value += (Order - 1) * (*this)[Order] * P[Order - 1]; // i==Order
 				for (int i = 1; i < Order; i++)
 				{
-					float cof = i - Order*t;
-					value += cof * P[i-1] * Q[Order - i - 1] * Combination(i) * (*this)[i];
+					float cof = i - Order * t;
+					value += cof * P[i - 1] * Q[Order - i - 1] * Combination(i) * (*this)[i];
 				}
 
 				return value;
 			}
 
-			inline ValueType operator()(float t) const{	
+			inline ValueType operator()(float t) const {
 				return eval(t);
 			}
 
@@ -303,17 +305,18 @@ namespace Geometrics
 			//Collection D;
 		};
 
-		template <typename _Ty , size_t _Order>
+		template <typename _Ty, size_t _Order>
 		struct BezierPatch
-			: public std::array<std::array<_Ty,_Order+1>,_Order+1>
+			: public std::array<_Ty, (_Order + 1) * (_Order + 1)>
 		{
 		public:
-			static const size_t Order = _Order;
+			static constexpr size_t Order = _Order;
+			static constexpr size_t ClippingSize = _Order + 1;
 			typedef _Ty ValueType;
-			typedef std::array<std::array<_Ty,_Order+1>,_Order+1> BaseType;
-			typedef std::array< _Ty,Order+1> Collection;
+			typedef std::array<_Ty, (_Order + 1) * (_Order + 1)> BaseType;
+			typedef BaseType Collection;
 			typedef Internal::Combine<Order> CombinationType;
-			typedef BezierClipping<ValueType,Order> ClippingType;
+			typedef BezierClipping<ValueType, Order> ClippingType;
 
 		protected:
 			//const static Internal::Combine<Order> Combination;
@@ -323,36 +326,35 @@ namespace Geometrics
 			}
 
 		public:
-			const ValueType* data() const
-			{
-				return BaseType::front().data();
-			}
+			using BaseType::data;
+			using BaseType::size;
 
-			ValueType* data() 
-			{
-				return BaseType::front().data();
-			}
+			inline _CONST_FUN _Ty control_point(int iu, int iv) const { return BaseType::at(iu * ClippingSize + iv); };
+			inline _CONST_FUN _Ty control_point(int idx) const { return BaseType::at(idx) };
+			inline _Ty& control_point(int iu, int iv) { return BaseType::at(iu * ClippingSize + iv); };
+			inline _Ty& control_point(int idx) { return BaseType::at(idx) };
+
 
 			ClippingType row_clipping(float s) const
 			{
-				assert(0<=s && s<=1);
+				assert(0 <= s && s <= 1);
 				ClippingType clipping;
 
-				float q = 1-s;
-				std::array<float,Order+1> P,Q;
+				float q = 1 - s;
+				std::array<float, Order + 1> P, Q;
 				P[0] = 1.0f; Q[0] = 1.0f;
 				for (size_t i = 0; i < Order; i++)
 				{
-					P[i+1] = P[i] * s;
-					Q[i+1] = Q[i] * q;
+					P[i + 1] = P[i] * s;
+					Q[i + 1] = Q[i] * q;
 				}
 
 				for (size_t i = 0; i <= Order; i++)
 				{
-					_Ty value = (*this)[i][0] * Q[Order];
+					_Ty value = control_point(i,0) * Q[Order];
 					for (size_t j = 1; j <= Order; j++)
 					{
-						value += P[j] * Q[Order - j] * Combination(j) * (*this)[i][j];
+						value += P[j] * Q[Order - j] * Combination(j) * control_point(i,j);
 					}
 					clipping[i] = value;
 				}
@@ -362,24 +364,24 @@ namespace Geometrics
 
 			ClippingType col_clipping(float t) const
 			{
-				assert(0<=t && t<=1);
+				assert(0 <= t && t <= 1);
 				ClippingType clipping;
 
-				float q = 1-t;
-				std::array<float,Order+1> P,Q;
+				float q = 1 - t;
+				std::array<float, Order + 1> P, Q;
 				P[0] = 1.0f; Q[0] = 1.0f;
 				for (size_t i = 0; i < Order; i++)
 				{
-					P[i+1] = P[i] * t;
-					Q[i+1] = Q[i] * q;
+					P[i + 1] = P[i] * t;
+					Q[i + 1] = Q[i] * q;
 				}
 
 				for (size_t i = 0; i <= Order; i++)
 				{
-					_Ty value = (*this)[0][i] * Q[Order];
+					_Ty value = control_point(0,i) * Q[Order];
 					for (size_t j = 1; j <= Order; j++)
 					{
-						value += P[j] * Q[Order - j] * Combination(j) * (*this)[j][i];
+						value += P[j] * Q[Order - j] * Combination(j) * control_point(j,i);
 					}
 					clipping[i] = value;
 				}
@@ -387,17 +389,17 @@ namespace Geometrics
 				return clipping;
 			}
 
-			ValueType eval(float s , float t) const
+			ValueType eval(float s, float t) const
 			{
-				assert(0<=s && s<=1);
-				assert(0<=t && t<=1);
+				assert(0 <= s && s <= 1);
+				assert(0 <= t && t <= 1);
 				ClippingType clipping = row_clipping(s);
 				return clipping.eval(t);
 			}
 
-			inline ValueType operator()(float s , float t) const
+			inline ValueType operator()(float s, float t) const
 			{
-				return eval(s,t);
+				return eval(s, t);
 			}
 
 			const ClippingType& top() const
@@ -415,7 +417,7 @@ namespace Geometrics
 				ClippingType clipping;
 				for (size_t i = 0; i < Order; i++)
 				{
-					clipping[i] = (*this)[i][0];
+					clipping[i] = control_point(i,0);
 				}
 				return clipping;
 			}
@@ -425,49 +427,49 @@ namespace Geometrics
 				ClippingType clipping;
 				for (size_t i = 0; i < Order; i++)
 				{
-					clipping[i] = (*this)[i][Order];
+					clipping[i] = control_point(i,Order);
 				}
 				return clipping;
 			}
 
 			void crop_top(float s)
 			{
-				assert(0<=s && s<=1);
+				assert(0 <= s && s <= 1);
 				ClippingType clipping;
 				for (size_t i = 0; i < Order; i++)
 				{
 					for (size_t j = 0; j < Order; j++)
 					{
-						clipping[j] = (*this)[j][i];
+						clipping[j] = control_point(j,i);
 					}
 					clipping.crop_front(s);
 					for (size_t j = 0; j < Order; j++)
 					{
-						(*this)[j][i] = clipping[j];
+						control_point(j,i) = clipping[j];
 					}
 				}
 			}
 
 			void crop_bottom(float s)
 			{
-				assert(0<=s && s<=1);
+				assert(0 <= s && s <= 1);
 				ClippingType clipping;
 				for (size_t i = 0; i < Order; i++)
 				{
 					for (size_t j = 0; j < Order; j++)
 					{
-						clipping[j] = (*this)[j][i];
+						clipping[j] = control_point(j,i);
 					}
 					clipping.crop_back(s);
 					for (size_t j = 0; j < Order; j++)
 					{
-						(*this)[j][i] = clipping[j];
+						control_point(j,i) = clipping[j];
 					}
 				}
 			}
 			void crop_left(float t)
 			{
-				assert(0<=t && t<=1);
+				assert(0 <= t && t <= 1);
 				for (size_t i = 0; i < Order; i++)
 				{
 					ClippingType& clipping = static_cast<ClippingType&>((*this)[i]);
@@ -477,7 +479,7 @@ namespace Geometrics
 
 			void crop_right(float t)
 			{
-				assert(0<=t && t<=1);
+				assert(0 <= t && t <= 1);
 				for (size_t i = 0; i < Order; i++)
 				{
 					ClippingType& clipping = static_cast<ClippingType&>((*this)[i]);
@@ -485,44 +487,44 @@ namespace Geometrics
 				}
 			}
 
-			void crop(float top,float bottom,float left,float right)
+			void crop(float top, float bottom, float left, float right)
 			{
-				assert(0<=top && top<=bottom && bottom<=1);
-				assert(0<=left && left<=right && right<=1);
+				assert(0 <= top && top <= bottom && bottom <= 1);
+				assert(0 <= left && left <= right && right <= 1);
 
 				ClippingType clipping;
 				for (size_t i = 0; i < Order; i++)
 				{
 					for (size_t j = 0; j < Order; j++)
 					{
-						clipping[j] = (*this)[j][i];
+						clipping[j] = control_point(j,i);
 					}
-					clipping.crop(top,bottom);
+					clipping.crop(top, bottom);
 					for (size_t j = 0; j < Order; j++)
 					{
-						(*this)[j][i] = clipping[j];
+						control_point(j,i) = clipping[j];
 					}
 				}
 
 				for (size_t i = 0; i < Order; i++)
 				{
 					ClippingType& clipping = static_cast<ClippingType&>((*this)[i]);
-					clipping.crop(left,right);
+					clipping.crop(left, right);
 				}
 			}
 
 		};
 
-		namespace Internal{	
+		namespace Internal {
 			template <size_t Order>
-			bool if_have_root(BezierClipping<float,Order> &clipping)
+			bool if_have_root(BezierClipping<float, Order> &clipping)
 			{
 				const unsigned int MaxIteration = 5;
 				const float delta = 1.0f / (float)Order;
 				auto& D = clipping;
 				unsigned int C = 0;
 
-				float begin = 0.0f , end = 1.0f;
+				float begin = 0.0f, end = 1.0f;
 
 				do
 				{
@@ -531,7 +533,7 @@ namespace Geometrics
 					int m = 0;
 					for (int i = 0; i < Order; i++)
 					{
-						if (D[i] * D[i+1] < 0)
+						if (D[i] * D[i + 1] < 0)
 							++m;
 					}
 
@@ -543,17 +545,17 @@ namespace Geometrics
 
 
 					{
-						float dis = end-begin;
+						float dis = end - begin;
 						begin += dis*tmin;
-						end -= dis*(1-tmax);
-						D.crop(tmin,tmax);
+						end -= dis*(1 - tmax);
+						D.crop(tmin, tmax);
 						if (D[0] * D[Order] < 0) return true;
 					}
 
-					if (m > 1 || (tmax-tmin) > 0.5f)
+					if (m > 1 || (tmax - tmin) > 0.5f)
 					{
-						BezierClipping<float,Order> back;
-						D.divide(0.5f,back);
+						BezierClipping<float, Order> back;
+						D.divide(0.5f, back);
 						return if_have_root(D) || if_have_root(back);
 					}
 				} while (C++ < MaxIteration);
@@ -561,7 +563,7 @@ namespace Geometrics
 			}
 
 			template <size_t Order>
-			inline bool if_have_root(const BezierClipping<float,Order> &clipping)
+			inline bool if_have_root(const BezierClipping<float, Order> &clipping)
 			{
 				auto D = clipping;
 				return if_have_root(D);
@@ -569,25 +571,25 @@ namespace Geometrics
 			}
 
 			template <size_t Order>
-			inline bool if_have_root(BezierClipping<float,Order> &&clipping)
+			inline bool if_have_root(BezierClipping<float, Order> &&clipping)
 			{
 				return if_have_root(clipping);
 			}
 
 			template <size_t Order>
-			float min_value(const BezierClipping<float,Order> &clipping,float preciese,float known_min)
+			float min_value(const BezierClipping<float, Order> &clipping, float preciese, float known_min)
 			{
 				const auto& D = clipping;
 				unsigned int C = 0;
 
-				int m = 0; 
-				float min_t = 1.0f; 
+				int m = 0;
+				float min_t = 1.0f;
 				float min_v = D[Order];
 				for (int i = 0; i < Order; i++)
 				{
-					if (D[i] * D[i+1] < 0)
+					if (D[i] * D[i + 1] < 0)
 						++m;
-					if (D[i] < min_v) 
+					if (D[i] < min_v)
 					{
 						min_v = D[i];
 						min_t = static_cast<float>(i) / static_cast<float>(Order);
@@ -595,14 +597,14 @@ namespace Geometrics
 				}
 
 				if (!m || preciese > 1.0f) return min_v; // No root
-				if (min_v > known_min ) return known_min;
+				if (min_v > known_min) return known_min;
 
-				BezierClipping<float,Order> front,back;
-				clipping.divide(0.5f,front,back);
+				BezierClipping<float, Order> front, back;
+				clipping.divide(0.5f, front, back);
 				min_v = clipping.back();
 				float pcs = preciese * 2;
-				min_v = min_value(front,pcs,min_v);
-				min_v = min_value(back,pcs,min_v);
+				min_v = min_value(front, pcs, min_v);
+				min_v = min_value(back, pcs, min_v);
 				return min_v;
 			}
 
@@ -614,20 +616,20 @@ namespace Geometrics
 		/// <param name="D">The D.</param>
 		/// <returns>pair of (tmin,tmax)</returns>
 		template <size_t Order>
-		inline std::pair<float,float> convex_hull_intersection(const BezierClipping<float,Order> &D)
+		inline std::pair<float, float> convex_hull_intersection(const BezierClipping<float, Order> &D)
 		{
 			const float delta = 1.0f / (float)Order;
-			float tmin , tmax;
-			int l ,k ,r;
+			float tmin, tmax;
+			int l, k, r;
 
-			if (D[0] == 0) return std::make_pair(.0f,.0f);
-			if (D[Order] == 0) return std::make_pair(1.0f,1.0f);
+			if (D[0] == 0) return std::make_pair(.0f, .0f);
+			if (D[Order] == 0) return std::make_pair(1.0f, 1.0f);
 
 			// Caculate tmin
 			float dx = delta;
 			float cSlope = 0;
 			k = 0;
-			for (int i = 1; i <= Order; ++i,dx+=delta)
+			for (int i = 1; i <= Order; ++i, dx += delta)
 			{
 				if (D[0] * D[i] < 0)
 				{
@@ -647,7 +649,7 @@ namespace Geometrics
 			dx = delta;
 			l = k;
 
-			for (int i = k-1; i >= 0; --i,dx+=delta)
+			for (int i = k - 1; i >= 0; --i, dx += delta)
 			{
 				if (D[i] * D[k] < 0)
 				{
@@ -663,13 +665,13 @@ namespace Geometrics
 
 			tmin = std::abs(D[l]);
 			tmin /= tmin + std::abs(D[k]);
-			tmin = (l*(1-tmin) + k*tmin)*delta; 
+			tmin = (l*(1 - tmin) + k*tmin)*delta;
 
 			//Caculate tmax
 			dx = delta;
 			cSlope = 0;
 			k = Order;
-			for (int i = Order-1; i >= 0 ; --i,dx+=delta)
+			for (int i = Order - 1; i >= 0; --i, dx += delta)
 			{
 				if (D[Order] * D[i] < 0)
 				{
@@ -688,7 +690,7 @@ namespace Geometrics
 			dx = delta;
 			r = k;
 
-			for (int i = k+1; i <= Order; i++,dx+=delta)
+			for (int i = k + 1; i <= Order; i++, dx += delta)
 			{
 				if (D[i] * D[k] < 0)
 				{
@@ -704,11 +706,11 @@ namespace Geometrics
 
 			tmax = std::abs(D[k]);
 			tmax /= tmax + std::abs(D[r]);
-			tmax = (k*(1-tmax) + r*tmax)*delta; 
+			tmax = (k*(1 - tmax) + r*tmax)*delta;
 			// Finish Find the convex-hull t-axis intersection (tmin,tmax)
 
-			assert(tmin<=tmax);
-			return std::make_pair(tmin,tmax);
+			assert(tmin <= tmax);
+			return std::make_pair(tmin, tmax);
 		}
 
 
@@ -721,7 +723,7 @@ namespace Geometrics
 		/// <param name="preciese">The preciese.</param>
 		/// <returns> The valid return value will always in [0,1]</returns>
 		template <size_t Order>
-		float solove_first_root(BezierClipping<float,Order> clipping,float T,float preciese)
+		float solove_first_root(BezierClipping<float, Order> clipping, float T, float preciese)
 		{
 			unsigned int N = 0;
 			const float delta = 1.0f / (float)Order;
@@ -729,21 +731,21 @@ namespace Geometrics
 			unsigned int C = 0;
 			const unsigned int MaxIteration = 5;
 
-			if (T!=0.0f){
+			if (T != 0.0f) {
 				for (auto& obj : clipping)
 				{
 					obj -= T;
 				}
 			}
 
-			float begin = 0.0f , end = 1.0f;
+			float begin = 0.0f, end = 1.0f;
 
 			do
 			{
 				int m = 0;
 				for (int i = 0; i < Order; i++)
 				{
-					if (D[i] * D[i+1] < 0)
+					if (D[i] * D[i + 1] < 0)
 						++m;
 				}
 
@@ -754,22 +756,22 @@ namespace Geometrics
 				auto tmax = minmax.second;
 
 				{
-					float dis = end-begin;
+					float dis = end - begin;
 					begin += dis*tmin;
-					end -= dis*(1-tmax);
-					clipping.crop(tmin,tmax);
+					end -= dis*(1 - tmax);
+					clipping.crop(tmin, tmax);
 				}
-				if (m > 1 || (tmax-tmin) > 0.5f)
+				if (m > 1 || (tmax - tmin) > 0.5f)
 				{
-					BezierClipping<float,Order> back;
-					clipping.divide(0.5f,back);
-					float pcs = preciese * 2 / (end-begin);
-					float root = solove_first_root(clipping,0.0f,pcs);
+					BezierClipping<float, Order> back;
+					clipping.divide(0.5f, back);
+					float pcs = preciese * 2 / (end - begin);
+					float root = solove_first_root(clipping, 0.0f, pcs);
 					if (root >= 0.0f && root <= 1.0f)
-						return root * (end - begin)*0.5f +begin;
+						return root * (end - begin)*0.5f + begin;
 					else
 					{
-						root = solove_first_root(back,0.0f,pcs);
+						root = solove_first_root(back, 0.0f, pcs);
 						if (root >= 0.0f && root <= 1.0f)
 							return (0.5f*root + 0.5f)*(end - begin) + begin;
 						else return root;
@@ -780,9 +782,10 @@ namespace Geometrics
 			{
 				float root = std::abs(D[Order]);
 				root /= root + std::abs(D[0]);
-				root = (end-begin)*root + begin;
+				root = (end - begin)*root + begin;
 				return root;
-			} else
+			}
+			else
 			{
 				return -1.0f;
 			}
@@ -800,9 +803,9 @@ namespace Geometrics
 		/// <param name="preciese">The preciese.</param>
 		/// <returns> The valid return value will always in [0,1]</returns>
 		template <size_t Order>
-		inline bool if_have_root(BezierClipping<float,Order> clipping,float T)
+		inline bool if_have_root(BezierClipping<float, Order> clipping, float T)
 		{
-			if (T!=0.0f){
+			if (T != 0.0f) {
 				for (auto& obj : clipping)
 				{
 					obj -= T;
@@ -812,9 +815,9 @@ namespace Geometrics
 		}
 
 		template <size_t Order>
-		float min_value(const BezierClipping<float,Order> &clipping,float preciese)
+		float min_value(const BezierClipping<float, Order> &clipping, float preciese)
 		{
-			return Internal::min_value(clipping,preciese,std::numeric_limits<float>::infinity());
+			return Internal::min_value(clipping, preciese, std::numeric_limits<float>::infinity());
 		}
 
 	}

@@ -130,7 +130,7 @@ namespace Causality
 			std::list<TrackedHand>		 &GetTrackedHands();
 
 		private:
-			std::unique_ptr<Leap::Controller>
+			Leap::Controller*
 				pController;
 			std::unique_ptr<Internal::LeapListener>
 				pListener;

@@ -27,6 +27,60 @@ namespace Causality
 		bool GetVector3(const ParamArchive* archive, const char* name, Vector3& param);
 		bool GetVector4(const ParamArchive* archive, const char* name, Vector4& param);
 		bool GetColor(const ParamArchive* archive, const char* name, Color& param);
+
+		inline bool ParseValue(const char * str, size_t len, bool& value)
+		{
+			if (_stricmp(str, "true"))
+				value = true;
+			else if (_stricmp(str, "false"))
+				value = false;
+			else
+				value = atoi(str);
+			return true;
+		}
+		inline bool ParseValue(const char * str, size_t len, int& value)
+		{
+			value = atoi(str); return true;
+		}
+		inline bool ParseValue(const char * str, size_t len, unsigned& value)
+		{
+			value = (unsigned)atoi(str); return true;
+		}
+		inline bool ParseValue(const char * str, size_t len, float& value)
+		{
+			value = (float)atof(str); return true;
+		}
+		template <class _Ty>
+		inline int ParseArray(const char * str, size_t len, std::vector<_Ty>& values, const char * splitters = " \t\n\r,;[](){}/")
+		{
+			const char* s = str;
+			if (len && !str && !*str)
+				len = strlen(str);
+			const char* end = len + str;
+			_Ty v;
+			int count = 0;
+			while (s < end)
+			{
+				s += strspn(s, splitters); // advance multiple splitters
+				int n = strcspn(s, splitters); // find length of this value
+				if (ParseValue(s, n, v))
+				{
+					++count;
+					values.push_back(v);
+				}
+				s += n;
+			}
+			return count;
+		}
+	}
+
+	template <class _Ty>
+	inline int GetParamArray(const ParamArchive* archive, const char* name, std::vector<_Ty>& values, const char * splitters = "/ ,\t\n\r")
+	{
+		const char * valstr = nullptr;
+		bool succ =	Serialization::GetString(archive, name, valstr);
+		if (succ)
+			return Serialization::ParseArray(valstr, strlen(valstr), values, splitters);
 	}
 
 	inline bool GetParam(const ParamArchive* archive, const char* name, const char*(&param))

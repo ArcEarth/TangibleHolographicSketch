@@ -131,7 +131,7 @@ LeapSensor::LeapSensor()
 	m_started(false),
 	m_connected(false)
 {
-	pController.reset(new Leap::Controller());
+	pController = new Leap::Controller();
 	pListener.reset(new LeapListener(this));
 }
 
@@ -160,7 +160,7 @@ LeapSensor::~LeapSensor()
 	if (pListener && pController)
 		pController->removeListener(*pListener.get());
 	pListener.reset();
-	pController.reset();
+	//if (pController) delete pController;
 }
 
 Leap::Controller & LeapSensor::Controller() {

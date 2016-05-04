@@ -112,7 +112,7 @@ namespace Geometrics
 		template <class... _TIndecies>
 		std::enable_if_t<sizeof...(_TIndecies) == FaceType::VertexCount> add_facet(_TIndecies... _indices)
 		{
-			indices.insert(indices.end(), { _indices... });
+			indices.insert(indices.end(), { static_cast<IndexType>(_indices)... });
 		}
 
 

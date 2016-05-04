@@ -119,13 +119,13 @@ namespace DirectX{
 	{
 		auto center = 0.5f * XMVectorAdd(P1, P2);
 		auto dir = XMVectorSubtract(P1, P2);
+
+		if (XMVector4NearEqual(dir, g_XMZero, g_XMEpsilon))
+			return; // this cylinder is zero height, do not render
+
 		auto scale = XMVector3Length(dir);
 		scale = XMVectorSet(radius, XMVectorGetX(scale), radius, 1.0f);
-		XMVECTOR rot;
-		if (XMVector4Equal(dir, g_XMZero))
-			rot = XMQuaternionIdentity();
-		else
-			rot = XMQuaternionRotationVectorToVector(g_XMIdentityR1, dir);
+		XMVECTOR rot = XMQuaternionRotationVectorToVector(g_XMIdentityR1, dir, XMVectorReplicate(1e-3f));
 		XMMATRIX world = XMMatrixAffineTransformation(scale, g_XMZero, rot, center);
 
 		DrawGeometry(m_pCylinder.get(), world, Color);

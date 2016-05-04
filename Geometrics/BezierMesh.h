@@ -52,8 +52,8 @@ namespace Geometrics
 				// next half edge
 				HalfEdge* next;
 
-				Vertex* incident_vertex() const;
-				Vertex* incident_vertex() const;
+				const Vertex* incident_vertex() const { return nullptr; }
+				Vertex* incident_vertex() { return nullptr; }
 			};
 
 			struct Face
@@ -75,8 +75,8 @@ namespace Geometrics
 	typedef CubicBezierPatch::ClippingType CubicBezierCurve;
 
 
-	template <int _Order>
-	bool triangluate(const Bezier::BezierPatch<float, _Order>& patch, MeshType& mesh, int tessellation, const Vector4 &uvRect = Vector4(.0f,.0f,1.f,1.f))
+	template <typename _Ty, int _Order, typename MeshType>
+	bool triangluate(const Bezier::BezierPatch<_Ty, _Order>& patch, MeshType& mesh, int tessellation, const Vector4 &uvRect = Vector4(.0f,.0f,1.f,1.f))
 	{
 		using namespace DirectX::VertexTraits;
 		if (tessellation == 0)
@@ -96,37 +96,44 @@ namespace Geometrics
 			for (size_t j = 0; j <= tessellation; j++)
 			{
 				float v = (float)j / tessellation;
-				XMVECTOR position = latitude(v);
-				XMVECTOR binormal = latitude.tangent(v);
-
-				// storage the binormal info in normal field
+				XMVECTOR position = latitude.eval(v);
+				XMVECTOR tangent = latitude.tangent(v);
+				tangent = DirectX::XMVector3Normalize(tangent);
+				// storage the tangent info in normal field
 
 				set_position(d_vertex, position);
-				set_uv(d_vertex, u * uvRect.z = uvRect.x, v * uvRect.w + uvRect.y);
-				set_normal(d_vertex, binormal);
+				set_uv(d_vertex, u * uvRect.z + uvRect.x, v * uvRect.w + uvRect.y);
+				set_normal(d_vertex, tangent);
+				set_tangent(d_vertex, tangent);
 
 				mesh.vertices.push_back(d_vertex);
 			}
 		}
-		for (size_t j = 0; j <= tessellation; j++)
+
+		// Fix normals
+		if (has_normal<MeshType::VertexType>::value)
 		{
-			float v = (float)i / tessellation;
-
-			auto longitude = patch.col_clipping(v);
-
-			for (size_t i = 0; i <= tessellation; i++)
+			for (size_t j = 0; j <= tessellation; j++)
 			{
-				float u = (float)j / tessellation;
-				XMVECTOR tangent = longitude.tangent(u);
+				float v = (float)j / (float)tessellation;
 
-				int idx = offset + i * stride + j;
-				auto& vertex = mesh.vertices[idx];
+				auto longitude = patch.col_clipping(v);
 
-				XMVECTOR binormal = get_normal(vertex);
+				for (size_t i = 0; i <= tessellation; i++)
+				{
+					float u = (float)i / (float)tessellation;
+					XMVECTOR binormal = longitude.tangent(u);
 
-				XMVECTOR normal = DirectX::XMVector3Cross(tangent, binormal);
+					int idx = offset + i * stride + j;
+					auto& vertex = mesh.vertices[idx];
 
-				set_normal(vertex, normal);
+					XMVECTOR tangent = get_normal(vertex);
+
+					XMVECTOR normal = DirectX::XMVector3Cross(tangent, binormal);
+					normal = DirectX::XMVector3Normalize(normal);
+
+					set_normal(vertex, normal);
+				}
 			}
 		}
 

@@ -645,12 +645,11 @@ namespace DirectX
 	}
 
 	// Caculate the rotation quaternion base on v1 and v2 (shortest rotation geo-distance in sphere surface)
-	inline XMVECTOR XM_CALLCONV XMQuaternionRotationVectorToVector(FXMVECTOR v1, FXMVECTOR v2) {
+	inline XMVECTOR XM_CALLCONV XMQuaternionRotationVectorToVector(FXMVECTOR v1, FXMVECTOR v2, FXMVECTOR epsilon = g_XMEpsilon) {
 		assert(!XMVector3Equal(v1, XMVectorZero()));
 		assert(!XMVector3Equal(v2, XMVectorZero()));
 		XMVECTOR n1 = XMVector3Normalize(v1);
 		XMVECTOR n2 = XMVector3Normalize(v2);
-		XMVECTOR epsilon = g_XMEpsilon.v;
 
 		if (XMVector4NearEqual(n1, n2, epsilon))
 		{

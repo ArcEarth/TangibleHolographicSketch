@@ -94,7 +94,7 @@ namespace Causality
 			string str(attrval);
 			if (str.find_first_of(',') != string::npos)
 			{
-				stringstream ss(str);
+				stringstream ss(str, ios::in);
 				char ch;
 				ss >> param.x >> ch >> param.y;
 				return true;
@@ -106,13 +106,33 @@ namespace Causality
 			}
 		}
 
+
+		//bool ParseVector3(gsl::string_span<> attrval, Vector3 & param)
+		//{
+		//	if (attrval.empty()) return false;
+		//	string str(attrval.data(), attrval.size());
+		//	if (str.find_first_of(',') != string::npos)
+		//	{
+		//		stringstream ss(str.begin(),ios);
+		//		char ch;
+		//		ss >> param.x >> ch >> param.y >> ch >> param.z;
+		//		return true;
+		//	}
+		//	else
+		//	{
+		//		param.x = param.y = param.z = (float)atof(attrval.data()); // replicate
+		//		return true;
+		//	}
+		//}
+
+
 		bool ParseVector3(const char* attrval, Vector3 & param)
 		{
 			if (attrval == nullptr) return false;
 			string str(attrval);
 			if (str.find_first_of(',') != string::npos)
 			{
-				stringstream ss(str);
+				stringstream ss(str, ios::in);
 				char ch;
 				ss >> param.x >> ch >> param.y >> ch >> param.z;
 				return true;
@@ -130,7 +150,7 @@ namespace Causality
 			string str(attrval);
 			if (str.find_first_of(',') != string::npos)
 			{
-				stringstream ss(str);
+				stringstream ss(str,ios::in);
 				char ch;
 				ss >> param.x >> ch >> param.y >> ch >> param.z >> ch >> param.w;
 				return true;
