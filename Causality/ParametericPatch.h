@@ -14,7 +14,9 @@ namespace Causality
 		virtual void Render(IRenderContext * pContext, IEffect* pEffect = nullptr) override;
 	private:
 		Geometrics::CubicBezierPatch m_patch;
-		Geometrics::TriangleMesh<DirectX::VertexPositionNormalColorTexture>	m_mesh;
+
+		using TriangleMeshType = Geometrics::TriangleMesh<DirectX::VertexPositionNormalTangentColorTexture>;
+		TriangleMeshType	m_mesh;
 		uptr<DirectX::Scene::IModelNode>
 			m_pModel;
 	};

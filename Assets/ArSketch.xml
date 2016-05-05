@@ -32,14 +32,14 @@
 
       <coordinate_axis max="3" zx="true"/>
 
-      <object name="ground" position="0,-1.0,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
+      <object name="ground" position="0,-0.01,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
       <!--<object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>-->
 
       <!--<object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <bezier_patch position="0,1.0,0" >
+      <bezier_patch position="0,0.35,0" >
       
       </bezier_patch>
       

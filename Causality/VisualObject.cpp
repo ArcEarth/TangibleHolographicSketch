@@ -91,9 +91,12 @@ RenderFlags VisualObject::GetRenderFlags() const
 void VisualObject::Render(IRenderContext * pContext, IEffect* pEffect)
 {
 	auto& drawer = g_PrimitiveDrawer;
-	if (g_ShowCharacterMesh && m_pRenderModel)
+	if (m_pRenderModel)
 	{
-		pContext->RSSetState(drawer.GetStates()->CullNone());
+		if (g_ShowCharacterMesh)
+			pContext->RSSetState(drawer.GetStates()->CullNone());
+		else
+			pContext->RSSetState(drawer.GetStates()->Wireframe());
 		m_pRenderModel->Render(pContext, GlobalTransformMatrix(), pEffect);
 	}
 

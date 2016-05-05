@@ -190,6 +190,10 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	const char* cpstr = nullptr;
 	std::vector<float> cps;
 
+	int tessellation = 9;
+	GetParam(archive,"tessellation", tessellation);
+	Color color = DirectX::Colors::White;
+	GetParam(archive, "color", color);
 	//GetParamArray(archive, "control_points", cps);
 
 	//if (cps.size() < 16 * 3)
@@ -203,11 +207,16 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		m_patch[i] = TeapotControlPoints[patch.indices[i]].v;
 	}
 
-	bool succ = Geometrics::triangluate(m_patch, m_mesh, 4);
+	bool succ = Geometrics::triangluate(m_patch, m_mesh, tessellation);
+
+	for (auto& v : m_mesh.vertices)
+	{
+		DirectX::VertexTraits::set_color(v, color);
+	}
+
+	m_mesh.flip();
 
 	auto pModel = new MonolithModel();
-
-	using VPnt = DirectX::VertexPositionNormalTexture;
 
 	pModel->pMesh = make_shared<MeshBuffer>();
 
@@ -219,7 +228,7 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		16, m_patch.data(), sizeof(decltype(m_patch)::ValueType));
 
 	pModel->pMesh->CreateDeviceResources(pDevice,
-		(const VPnt*)m_mesh.vertices.data(),
+		m_mesh.vertices.data(),
 		m_mesh.vertices.size(),
 		m_mesh.indices.data(),
 		m_mesh.indices.size());
@@ -238,45 +247,64 @@ void BezierPatchObject::Render(IRenderContext * pContext, IEffect * pEffect)
 {
 	VisualObject::Render(pContext, pEffect);
 
-	auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
-	auto world = this->GlobalTransformMatrix();
-	//geo.Transform(geo, GlobalTransformMatrix());
-	Color color = DirectX::Colors::LimeGreen.v;
-
-	drawer.SetWorld(world);
-	drawer.Begin();
-
-	for (int i = 0; i < 4; i++)
+	if (g_DebugView && pEffect)
 	{
-		drawer.DrawSphere(m_patch.control_point(i, 0), g_ControlPointsRaius, color);
-		drawer.DrawSphere(m_patch.control_point(i, 3), g_ControlPointsRaius, color);
-	}
+		auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
+		auto world = this->GlobalTransformMatrix();
+		//geo.Transform(geo, GlobalTransformMatrix());
+		Color color = DirectX::Colors::LimeGreen.v;
 
-	for (int i = 1; i < 3; i++)
-	{
-		drawer.DrawSphere(m_patch.control_point(0, i), g_ControlPointsRaius, color);
-		drawer.DrawSphere(m_patch.control_point(3, i), g_ControlPointsRaius, color);
-	}
+		drawer.SetWorld(world);
 
-	for (int i = 0; i < 3; i++)
-	{
-		drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point((i + 1) % 4, 0), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(i, 3), m_patch.control_point((i + 1) % 4, 3), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(0, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(3, i), m_patch.control_point(3, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
-	}
+		if (m_pModel)
+		{
+			drawer.Begin();
+			using namespace DirectX::VertexTraits;
+			for (auto& v : m_mesh.vertices)
+			{
+				XMVECTOR pv = get_position(v);
+				XMVECTOR pnv = get_normal(v);
+				pnv = pv + 0.01 * pnv;
+				drawer.DrawLine(pv, pnv, DirectX::Colors::Red.v);
 
-	color *= 1.2;
-	color.A(1.0f);
-	for (int i = 1; i < 3; i++)
-	{
-		drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point(i, 1), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(i, 1), m_patch.control_point(i, 2), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(i, 2), m_patch.control_point(i, 3), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(1, i), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(1, i), m_patch.control_point(2, i), g_ControlPointsConnectionRadius, color);
-		drawer.DrawCylinder(m_patch.control_point(2, i), m_patch.control_point(3, i), g_ControlPointsConnectionRadius, color);
-	}
+				pnv = get_tangent(v);
+				pnv = pv + 0.01 * pnv;
+				drawer.DrawLine(pv, pnv, color);
+			}
 
-	drawer.End();
+			drawer.End();
+		}
+
+		for (int i = 0; i < 4; i++)
+		{
+			drawer.DrawSphere(m_patch.control_point(i, 0), g_ControlPointsRaius, color);
+			drawer.DrawSphere(m_patch.control_point(i, 3), g_ControlPointsRaius, color);
+		}
+
+		for (int i = 1; i < 3; i++)
+		{
+			drawer.DrawSphere(m_patch.control_point(0, i), g_ControlPointsRaius, color);
+			drawer.DrawSphere(m_patch.control_point(3, i), g_ControlPointsRaius, color);
+		}
+
+		for (int i = 0; i < 3; i++)
+		{
+			drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point((i + 1) % 4, 0), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(i, 3), m_patch.control_point((i + 1) % 4, 3), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(0, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(3, i), m_patch.control_point(3, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
+		}
+
+		color *= 1.2;
+		color.A(1.0f);
+		for (int i = 1; i < 3; i++)
+		{
+			drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point(i, 1), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(i, 1), m_patch.control_point(i, 2), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(i, 2), m_patch.control_point(i, 3), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(1, i), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(1, i), m_patch.control_point(2, i), g_ControlPointsConnectionRadius, color);
+			drawer.DrawCylinder(m_patch.control_point(2, i), m_patch.control_point(3, i), g_ControlPointsConnectionRadius, color);
+		}
+	}
 }

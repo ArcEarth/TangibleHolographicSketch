@@ -259,12 +259,14 @@ namespace Geometrics
 					Q[i + 1] = Q[i] * q;
 				}
 
-				_Ty value = (1 - Order) * (*this)[0] * Q[Order - 1]; // i == 0
-				value += (Order - 1) * (*this)[Order] * P[Order - 1]; // i==Order
+				const Collection& anchors = (*this);
+
+				_Ty value = (-(float)Order * Q[Order - 1]) * anchors[0]; // i == 0
+				value += ((float)Order * P[Order - 1]) * anchors[Order] ; // i == Order
 				for (int i = 1; i < Order; i++)
 				{
-					float cof = i - Order * t;
-					value += cof * P[i - 1] * Q[Order - i - 1] * Combination(i) * (*this)[i];
+					float cof = (i * q - (Order-i) * t) * P[i - 1] * Q[Order - i - 1] * Combination(i);
+					value += cof * (*this)[i];
 				}
 
 				return value;

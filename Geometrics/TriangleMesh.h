@@ -130,12 +130,23 @@ namespace Geometrics
 
 		const VertexType& vertex(int facet, int vidx) const
 		{
-			return this->vertices[facet * VertexCount + vidx];
+			return this->vertices[facet * FaceType::VertexCount + vidx];
 		}
 
 		VertexType& vertex(int facet, int vidx)
 		{
-			return this->vertices[facet * VertexCount + vidx];
+			return this->vertices[facet * FaceType::VertexCount + vidx];
+		}
+
+		void flip()
+		{
+			using namespace DirectX::VertexTraits;
+			for (auto& v : vertices)
+				set_normal(v, -get_normal(v));
+
+			static constexpr int vc = FaceType::VertexCount;
+			for (int i = 0; i < indices.size() / vc; i++)
+				std::reverse(indices.begin() + i * vc, indices.begin() + (i + 1)* vc);
 		}
 
 		std::vector<VertexType> vertices;

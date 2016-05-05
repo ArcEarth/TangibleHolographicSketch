@@ -89,16 +89,16 @@ namespace Geometrics
 
 		for (size_t i = 0; i <= tessellation; i++)
 		{
-			float u = (float)i / tessellation;
+			float u = (float)i / (float)tessellation;
 
 			auto latitude = patch.row_clipping(u);
 
 			for (size_t j = 0; j <= tessellation; j++)
 			{
-				float v = (float)j / tessellation;
+				float v = (float)j / (float)tessellation;
 				XMVECTOR position = latitude.eval(v);
 				XMVECTOR tangent = latitude.tangent(v);
-				tangent = DirectX::XMVector3Normalize(tangent);
+				//tangent = DirectX::XMVector3Normalize(tangent);
 				// storage the tangent info in normal field
 
 				set_position(d_vertex, position);

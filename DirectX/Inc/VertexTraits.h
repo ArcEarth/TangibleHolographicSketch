@@ -99,10 +99,20 @@ namespace DirectX
 		}
 
 		template <class TVertex>
-		std::enable_if_t<has_color<TVertex>::value>
+		std::enable_if_t<has_color<TVertex>::value && std::is_base_of<DirectX::XMFLOAT4, decltype(TVertex::color)>::value>
 			XM_CALLCONV set_color(TVertex& vertex, FXMVECTOR color)
 		{
 			XMStore(vertex.color, color);
+		}
+
+		template <class TVertex>
+		std::enable_if_t<has_color<TVertex>::value && std::is_same<decltype(TVertex::color), uint32_t>::value>
+			XM_CALLCONV set_color(TVertex& vertex, FXMVECTOR color)
+		{
+			using namespace ::DirectX::PackedVector;
+			XMUBYTEN4 rgba;
+			XMStoreUByteN4(&rgba, color);
+			vertex.color = rgba.v;
 		}
 
 		template <class TVertex>
