@@ -49,6 +49,15 @@ namespace DirectX
 		}
 
 		using Microsoft::WRL::ComPtr;
+
+		enum class MeshSidingEnum
+		{
+			Automatic = 0,
+			DoubleSided = 1,
+			RightHandSided = 2,
+			LeftHandSided = 3,
+		};
+
 		// Example
 		//{ "SV_Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		//{ "NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -95,7 +104,7 @@ namespace DirectX
 		struct MeshBuffer
 		{
 		public:
-			typedef std::vector<std::unique_ptr<MeshBuffer>> Collection;
+			typedef std::vector<std::unique_ptr<MeshBuffer>>		Collection;
 
 			uint32_t                                                IndexCount;
 			uint32_t												VertexCount;
@@ -104,14 +113,30 @@ namespace DirectX
 			uint32_t                                                VertexStride;
 			D3D_PRIMITIVE_TOPOLOGY                                  PrimitiveType;
 			DXGI_FORMAT                                             IndexFormat;
+			MeshSidingEnum											Siding;
+
 			UINT													InputElementCount; // Vertex Description info
 			const D3D11_INPUT_ELEMENT_DESC*							pInputElements; // Vertex Description info
 
-			ComPtr<ID3D11InputLayout>               pInputLayout;
-			ComPtr<ID3D11Buffer>                    pIndexBuffer;
-			ComPtr<ID3D11Buffer>                    pVertexBuffer;
+			ComPtr<ID3D11InputLayout>								pInputLayout;
+			ComPtr<ID3D11Buffer>									pIndexBuffer;
+			ComPtr<ID3D11Buffer>									pVertexBuffer;
 
 		public:
+			MeshBuffer() 
+			{ 
+				IndexCount = 0;
+				VertexCount = 0;
+				StartIndex = 0;
+				VertexOffset = 0;
+				VertexStride = 0;
+				PrimitiveType = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+				IndexFormat = DXGI_FORMAT_UNKNOWN;
+				Siding = MeshSidingEnum::Automatic;
+				InputElementCount = 0;
+				pInputElements = nullptr;
+			}
+
 			~MeshBuffer() {}
 
 			static ComPtr<ID3D11InputLayout>& LookupInputLayout(const D3D11_INPUT_ELEMENT_DESC* pInputElements, IEffect * pEffect);

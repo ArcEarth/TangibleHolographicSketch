@@ -189,7 +189,7 @@ const DirectX::XMVECTORF32 TeapotControlPoints[] =
 
 template <typename _VertexType, typename _IndexType>
 inline std::shared_ptr<MeshBuffer> CreateMeshBuffer(IRenderDevice* pDevice,
-const Geometrics::TriangleMesh<_VertexType, _IndexType>& mesh)
+	const Geometrics::TriangleMesh<_VertexType, _IndexType>& mesh)
 {
 	auto pMesh = make_shared<MeshBuffer>();
 	pMesh->CreateDeviceResources(pDevice, mesh.vertices.data(), mesh.vertices.size(), mesh.indices.data(), mesh.indices.size());
@@ -204,8 +204,9 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	const char* cpstr = nullptr;
 	std::vector<float> cps;
 
+	m_isReady = false;
 	int tessellation = 9;
-	GetParam(archive,"tessellation", tessellation);
+	GetParam(archive, "tessellation", tessellation);
 	Color color = DirectX::Colors::White;
 	GetParam(archive, "color", color);
 	float patchSize = 0.1f, margin = 0.001f, z_tolerence = 0.01;
@@ -229,13 +230,21 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 
 	bool succ = Geometrics::triangluate(m_patch, m_mesh, tessellation);
 
+	for (auto& cp : m_patch) { cp.x = -cp.x; cp.z = -cp.z; }
+	succ = Geometrics::triangluate(m_patch, m_mesh, tessellation);
+
+	for (auto& cp : m_patch) cp.x = -cp.x;
+	succ = Geometrics::triangluate(m_patch, m_mesh, tessellation, true);
+
+	for (auto& cp : m_patch) { cp.x = -cp.x; cp.z = -cp.z; }
+	succ = Geometrics::triangluate(m_patch, m_mesh, tessellation, true);
+
 	for (auto& v : m_mesh.vertices)
 	{
 		DirectX::VertexTraits::set_color(v, color);
 	}
 
 	m_mesh.flip();
-	m_mesh.build();
 
 	BoundingBox bb;
 	BoundingOrientedBox obb;
@@ -243,50 +252,10 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	using TVertex = decltype(m_mesh.vertices[0]);
 	using TIndex = decltype(m_mesh.indices[0]);
 	// the BoundingOrientedBox is computed from an 3x3 svd, (pca of the vertices)
-	CreateBoundingBoxesFromPoints(	bb,	obb,
+	CreateBoundingBoxesFromPoints(bb, obb,
 		m_mesh.vertices.size(), &m_mesh.vertices[0].position, sizeof(TVertex));
 	XMVECTOR quat = XMLoad(obb.Orientation);
 	quat = XMQuaternionConjugate(quat); // inverse rotation of this obb
-	
-	int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
-	int ysize = (int)ceilf(obb.Extents.y * 2.0f / patchSize);
-
-	using Geometrics::csg::BSPNode;
-	auto meshNode = BSPNode::create(m_mesh);
-
-	Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
-	DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
-
-	float zoffset = bb.Center.y;
-	XMVECTOR sclFactor = XMVectorSet(0.5f * patchSize, 2.0 * z_tolerence, 0.5f *  patchSize, 1.0f);
-	for (int i = 0; i < xsize; i++)
-	for (int j = 0; i < ysize; i++)
-	{
-		float xoffset = (i + 0.5f) * patchSize;
-		float yoffset = (j + 0.5f) * patchSize;
-
-		XMMATRIX M = XMMatrixAffineTransformation(
-			sclFactor, XMVectorZero(),XMQuaternionIdentity(),
-			XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
-
-		cubeMesh.transform(M);
-		// the area of interest for this index
-		auto cubeNode = BSPNode::create(cubeMesh);
-
-		uptr<BSPNode> nodeRet(Geometrics::csg::nodeIntersect(meshNode.get(), cubeNode.get()));
-
-		// the segmented mesh
-		m_fracorizedMeshes.emplace_back();
-		nodeRet->convertToMesh(m_fracorizedMeshes.back());
-	}
-
-	//m_projMesh = m_mesh; // copy the mesh
-	//for (auto& v : m_projMesh.vertices)
-	//{
-	//	XMVECTOR p = get_position(v);
-	//	p = XMVector3Rotate(p,quat);
-	//	set_position(v, p);
-	//}
 
 	{
 		auto pModel = new MonolithModel();
@@ -295,23 +264,92 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		pModel->BoundBox = bb;
 		pModel->BoundOrientedBox = obb;
 		m_pModel.reset(pModel);
+		VisualObject::m_pRenderModel = pModel;
 	}
-	{
-		auto pModel = new CompositionModel();
-		auto& parts = pModel->Parts;
-		for (auto& mesh : m_fracorizedMeshes)
+
+	concurrency::create_task([this, obb, bb, patchSize, z_tolerence, pDevice]() {
+		m_mesh.build();
+
+		int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
+		int ysize = (int)ceilf(obb.Extents.y * 2.0f / patchSize);
+
+		//m_mesh.transform(XMMatrixTranslationFromVector(-XMLoad(bb.Center)));
+
+		using Geometrics::csg::BSPNode;
+
+		std::cout << "Building mesh BSP tree..." << std::endl;
+		auto meshNode = BSPNode::create(m_mesh);
+
+		Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
+		DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
+
+		float zoffset = bb.Center.y;
+		XMVECTOR sclFactor = XMVectorSet(0.5f * patchSize, 5.0 * z_tolerence, 0.5f *  patchSize, 1.0f);
+		for (int i = 0; i < xsize; i++)
 		{
-			parts.emplace_back();
-			auto& part = parts.back();
-			part.pMesh = CreateMeshBuffer(pDevice, mesh);
-			part.Name = "factorized_patch";
-			CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
-				mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
+			for (int j = 0; j < ysize; j++)
+			{
+				float xoffset = bb.Center.x - bb.Extents.x + (i + 0.5f) * patchSize;
+				float yoffset = bb.Center.z - bb.Extents.z + (j + 0.5f) * patchSize;
+
+				XMMATRIX M = XMMatrixAffineTransformation(
+					sclFactor, XMVectorZero(), XMQuaternionIdentity(),
+					XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
+
+				cubeMesh.transform(M);
+				// the area of interest for this index
+				auto cubeNode = BSPNode::create(cubeMesh);
+
+				XMVECTOR det;
+				M = XMMatrixInverse(&det, M);
+				cubeMesh.transform(M); // transform back
+
+				std::cout << "Computing mesh insection (" << i << ',' << j << ')' << std::endl;
+				uptr<BSPNode> nodeRet(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
+
+				// the segmented mesh
+				m_fracorizedMeshes.emplace_back();
+				nodeRet->convertToMesh(m_fracorizedMeshes.back());
+			}
 		}
 
-		VisualObject::m_pRenderModel = pModel;
+		//m_projMesh = m_mesh; // copy the mesh
+		//for (auto& v : m_projMesh.vertices)
+		//{
+		//	XMVECTOR p = get_position(v);
+		//	p = XMVector3Rotate(p,quat);
+		//	set_position(v, p);
+		//}
 
-	}
+		{
+			auto pModel = new CompositionModel();
+			auto& parts = pModel->Parts;
+			for (auto& mesh : m_fracorizedMeshes)
+			{
+				parts.emplace_back();
+				auto& part = parts.back();
+				part.pMesh = CreateMeshBuffer(pDevice, mesh);
+				part.Name = "factorized_patch";
+				CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
+					mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
+			}
+
+			this->m_factorizeModel.reset(pModel);
+
+			auto pVisual = new VisualObject();
+			pVisual->Scene = this->Scene;
+			pVisual->SetRenderModel(pModel);
+
+			{
+				this->AddChild(pVisual);
+				std::lock_guard<std::mutex>(this->Scene->ContentMutex());
+				this->Scene->SignalCameraCache();
+			}
+			//VisualObject::m_pRenderModel = pModel;
+		}
+
+		m_isReady = true;
+	});
 }
 
 BezierPatchObject::~BezierPatchObject()

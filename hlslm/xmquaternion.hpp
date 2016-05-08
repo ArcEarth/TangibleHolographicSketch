@@ -19,7 +19,7 @@ namespace DirectX
 			using base_type = xmvector<_T, 4>;
 			using this_type = xmquaternion<_T>;
 
-			static_assert(std::is_same<_T, float>, "xmquaternion only supports float right now");
+			static_assert(std::is_same<_T, float>::value, "xmquaternion only supports float right now");
 
 			inline static XMVECTOR XM_CALLCONV qmul(FXMVECTOR lhs, FXMVECTOR rhs)
 			{

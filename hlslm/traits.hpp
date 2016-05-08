@@ -24,7 +24,19 @@ namespace DirectX
 		template <typename _T, size_t _Size>
 		struct xmvector;
 
-		template <typename _T, size_t _Rows, size_t _Cols>
+		enum MatrixMajorEnum
+		{
+			RowMajor = 0,
+			ColumnMajor = 1,
+		};
+
+#if(_HLSLM_MATRIX_DEFAULT_COLUMN_MAJOR)
+		static constexpr MatrixMajorEnum DefaultMajor = ColumnMajor;
+#else
+		static constexpr MatrixMajorEnum DefaultMajor = RowMajor;
+#endif
+
+		template <typename _T, size_t _Rows, size_t _Cols, MatrixMajorEnum _Major = DefaultMajor>
 		struct xmmatrix;
 
 		// All wrappers must contains two methods : eval() and assign(Ty)
@@ -178,8 +190,8 @@ namespace DirectX
 			using get_xm_type =
 				conditional_t < rows*cols == 0, void,
 				conditional_t < rows*cols == 1, xmscalar<scalar_type>,
-				conditional_t < rows == 1, xmvector<scalar_type, cols>,
-				xmmatrix < scalar_type, rows, cols >> >> ;
+				conditional_t < rows == 1,		xmvector<scalar_type, cols>,
+												xmmatrix < scalar_type, rows, cols >>>>;
 
 			template <typename lhs_t, typename rhs_t>
 			struct binary_operator_traits

@@ -301,12 +301,33 @@ namespace Geometrics
 		void BSPNode::build(const ConvexPolygonCollection & list)
 		{
 			if (!list.size()) return;
-			if (!this->plane.ok()) this->plane = list[0].plane;
+
+			int k = -1; // the splitter polygon
+
 			ConvexPolygonCollection list_front, list_back;
+
+			if (!this->plane.ok())
+			{
+				k = 0;
+				this->plane = list[k].plane;
+				this->plane.splitPolygon(list[k], this->polygons, this->polygons, list_front, list_back);
+
+				// When the polygon doesnot split itself properly, force it into Coplanner list
+				if (this->polygons.empty() && (list_front.empty() ^ list_back.empty()))
+				{
+					if (!list_front.empty())
+						polygons.swap(list_front);
+					else
+						polygons.swap(list_back);
+				}
+			}
+
 			for (size_t i = 0; i < list.size(); i++)
 			{
+				if (i == k) continue;
 				this->plane.splitPolygon(list[i], this->polygons, this->polygons, list_front, list_back);
 			}
+
 			if (list_front.size())
 			{
 				if (!this->front) this->front = new BSPNode;

@@ -119,13 +119,13 @@ namespace Geometrics
 		}
 
 
-		auto facets() {
+		gsl::span<FaceType> facets() {
 			return gsl::span<FaceType>(
 				reinterpret_cast<FaceType*>(indices.data()),
 				indices.size() / FaceType::VertexCount);
 		}
 
-		auto facets() const {
+		gsl::span<const FaceType> facets() const {
 			return gsl::span<const FaceType>(
 				reinterpret_cast<const FaceType*>(indices.data()),
 				indices.size() / FaceType::VertexCount);

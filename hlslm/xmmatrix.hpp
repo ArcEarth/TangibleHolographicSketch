@@ -10,18 +10,7 @@ namespace DirectX
 {
     namespace hlsl
     {
-		enum MatrixMajorEnum
-		{
-			RowMajor = 0,
-			ColumnMajor = 1,
-#if(_HLSLM_MATRIX_DEFAULT_COLUMN_MAJOR)
-			DefaultMajor = ColumnMajor,
-#else
-			DefaultMajor = RowMajor,
-#endif
-		};
-
-        template <typename _T, size_t _Rows, size_t _Cols, MatrixMajorEnum _Major = DefaultMajor>
+        template <typename _T, size_t _Rows, size_t _Cols, MatrixMajorEnum _Major>
         struct xmmatrix
         {
             static constexpr size_t Size = _Rows * _Cols;

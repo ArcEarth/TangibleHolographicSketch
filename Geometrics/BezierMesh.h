@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include "csg.h"
-//#include <CGAL\Polyhedron_3.h>
 
 namespace Geometrics
 {
@@ -71,8 +70,14 @@ namespace Geometrics
 		}
 	}
 
+	template <typename _Ty, int _Order>
+	bool is_curve_degreed(const Bezier::BezierClipping<_Ty, _Order>& latitude, float epsilon)
+	{
+		return ((latitude[0] - latitude[1]).Length() < epsilon) && ((latitude[1] - latitude[2]).Length() < epsilon) && ((latitude[2] - latitude[3]).Length() < epsilon);
+	}
+
 	template <typename _Ty, int _Order, typename MeshType>
-	bool triangluate(const Bezier::BezierPatch<_Ty, _Order>& patch, MeshType& mesh, int tessellation, const DirectX::Vector4 &uvRect = DirectX::Vector4(.0f,.0f,1.f,1.f))
+	bool triangluate(const Bezier::BezierPatch<_Ty, _Order>& patch, MeshType& mesh, int tessellation, bool flip = false, const DirectX::Vector4 &uvRect = DirectX::Vector4(.0f,.0f,1.f,1.f))
 	{
 		using namespace DirectX::VertexTraits;
 		if (tessellation == 0)
@@ -83,15 +88,21 @@ namespace Geometrics
 		MeshType::VertexType d_vertex;
 		using DirectX::XMVECTOR;
 
+		float delta = 1.0f / (float)tessellation;
+
+		static constexpr float epsilon = std::numeric_limits<float>::epsilon() * 100;
 		for (size_t i = 0; i <= tessellation; i++)
 		{
-			float u = (float)i / (float)tessellation;
+			float u = (float)i * delta;
 
 			auto latitude = patch.row_clipping(u);
 
+			if (is_curve_degreed(latitude,epsilon))
+				latitude = patch.row_clipping(u + copysignf(0.01f * delta, 0.5f - u));
+
 			for (size_t j = 0; j <= tessellation; j++)
 			{
-				float v = (float)j / (float)tessellation;
+				float v = (float)j  * delta;
 				XMVECTOR position = latitude.eval(v);
 				XMVECTOR tangent = latitude.tangent(v);
 				//tangent = DirectX::XMVector3Normalize(tangent);
@@ -111,13 +122,17 @@ namespace Geometrics
 		{
 			for (size_t j = 0; j <= tessellation; j++)
 			{
-				float v = (float)j / (float)tessellation;
+				float v = (float)j * delta;
 
 				auto longitude = patch.col_clipping(v);
 
+				if (is_curve_degreed(longitude, epsilon))
+					longitude = patch.col_clipping(v + copysignf(0.01f * delta, 0.5f - v));
+
+
 				for (size_t i = 0; i <= tessellation; i++)
 				{
-					float u = (float)i / (float)tessellation;
+					float u = (float)i  * delta;
 					XMVECTOR binormal = longitude.tangent(u);
 
 					int idx = offset + i * stride + j;
@@ -127,6 +142,9 @@ namespace Geometrics
 
 					XMVECTOR normal = DirectX::XMVector3Cross(tangent, binormal);
 					normal = DirectX::XMVector3Normalize(normal);
+
+					if (flip)
+						normal = -normal;
 
 					set_normal(vertex, normal);
 				}
@@ -146,6 +164,14 @@ namespace Geometrics
 					offset + i * stride + j,
 					offset + (i + 1) * stride + j + 1,
 					offset + i * stride + j + 1);
+
+				if (flip)
+				{
+					auto pIdices = &mesh.indices.back() - 5;
+					std::swap(pIdices[0], pIdices[2]);
+					std::swap(pIdices[3], pIdices[5]);
+				}
+
 			}
 		}
 

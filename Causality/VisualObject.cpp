@@ -94,7 +94,7 @@ void VisualObject::Render(IRenderContext * pContext, IEffect* pEffect)
 	if (m_pRenderModel)
 	{
 		if (g_ShowCharacterMesh)
-			pContext->RSSetState(drawer.GetStates()->CullNone());
+			pContext->RSSetState(drawer.GetStates()->CullCounterClockwise());
 		else
 			pContext->RSSetState(drawer.GetStates()->Wireframe());
 		m_pRenderModel->Render(pContext, GlobalTransformMatrix(), pEffect);
