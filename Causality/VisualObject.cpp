@@ -112,6 +112,8 @@ void VisualObject::Render(IRenderContext * pContext, IEffect* pEffect)
 		drawer.SetWorld(world);
 		drawer.Begin();
 		DrawGeometryOutline(geo, Colors::Orange);
+		geo = m_pRenderModel->GetOrientedBoundingBox();
+		DrawGeometryOutline(geo, Colors::Orange);
 		drawer.End();
 	}
 }

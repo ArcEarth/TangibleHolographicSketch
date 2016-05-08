@@ -73,7 +73,7 @@
     <EigenDir>..\Eigen</EigenDir>
   </PropertyGroup>
   <PropertyGroup>
-    <IncludePath>$(DirectXTKDir)\Inc;$(CGALDIR)\include;$(ProjectDir)..\DirectX\Inc;$(ProjectDir)..\GSL\include;$(EigenDir)\;$(ProjectDir)..\Common\;$(IncludePath)</IncludePath>
+    <IncludePath>$(DirectXTKDir)\Inc;$(CGALDIR)\include;$(SolutionDir)\DirectX\Inc;$(SolutionDir)\GSL\include;$(EigenDir)\;$(SolutionDir)\Common\;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

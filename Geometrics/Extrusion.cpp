@@ -130,6 +130,7 @@ std::enable_if_t<std::is_integral<IndexType>::value> pushTriangle(vector<IndexTy
 MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 {
 	using namespace DirectX;
+	using namespace DirectX::VertexTraits;
 	XMVECTOR stdAxis = g_XMIdentityR1.v;
 
 	bool useTop = m_top != nullptr;
@@ -224,10 +225,10 @@ MeshType & Extrusion::triangulate(int axisSubdiv, int polarSubdiv)
 			v += pt;
 			vt = XMVector3Rotate(vt, rt);
 
-			Vertex vtx;
-			vtx.position = v;
-			vtx.normal = XMVector3Cross(tt, vt);
-			vtx.uv = Vector2(polart, t);
+			DefaultVertex vtx;
+			set_position(vtx,v);
+			set_normal(vtx,XMVector3Cross(tt, vt));
+			set_uv(vtx, polart, t);
 
 			vertices.push_back(vtx);
 		}

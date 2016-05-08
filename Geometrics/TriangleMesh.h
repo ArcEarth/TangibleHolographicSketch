@@ -7,6 +7,7 @@
 #include <DirectXMathExtend.h>
 #include <gsl.h>
 #include <VertexTraits.h>
+#include <minmax>
 
 namespace Geometrics
 {
@@ -82,6 +83,8 @@ namespace Geometrics
 		typedef _IndexType	IndexType;
 		typedef _FaceType	FaceType;
 
+		static constexpr size_t PolygonVertex = FaceType::VertexCount;
+
 		PolygonSoup() {}
 
 		bool empty() const {
@@ -138,6 +141,7 @@ namespace Geometrics
 			return this->vertices[facet * FaceType::VertexCount + vidx];
 		}
 
+		// flip all the polygons' winding and vertices' normal 
 		void flip()
 		{
 			using namespace DirectX::VertexTraits;
@@ -149,23 +153,50 @@ namespace Geometrics
 				std::reverse(indices.begin() + i * vc, indices.begin() + (i + 1)* vc);
 		}
 
+		// applies an uniform transform to all vertices in the mesh 
+		void XM_CALLCONV transform(DirectX::FXMMATRIX M)
+		{
+			using namespace DirectX::VertexTraits;
+			for (auto& v : vertices)
+			{
+				XMVECTOR p = get_position(v);
+				p = _DXMEXT XMVector3TransformCoord(p, M);
+				set_position(v, p);
+
+				if (has_normal<VertexType>::value)
+				{
+					p = get_normal(v);
+					p = _DXMEXT XMVector3TransformNormal(p, M);
+					set_normal(v, p);
+
+					if (has_tangent<VertexType>::value)
+					{
+						p = get_tangent(v);
+						p = _DXMEXT XMVector3TransformNormal(p, M);
+						set_tangent(v, p);
+					}
+				}
+			}
+		}
+
 		std::vector<VertexType> vertices;
 		std::vector<IndexType>	indices;
 	};
 
 	template <class _VertexType, class _IndexType>
-	int intersect(const PolygonSoup<_VertexType, _IndexType, Triangle<_IndexType>> &Mesh, DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<float>* distances = nullptr)
+	int XM_CALLCONV intersect(const PolygonSoup<_VertexType, _IndexType, Triangle<_IndexType>> &Mesh, DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<float>* distances = nullptr)
 	{
 		using namespace DirectX;
+		using namespace DirectX::VertexTraits;
 		int count = 0;
 		XMVECTOR vDir = XMVector3Normalize(Direction);
 		for (const auto& tri : Mesh.facets())
 		{
 			float distance;
 
-			XMVECTOR v0 = XMLoadFloat3(&Mesh.vertices[tri[0]].position);
-			XMVECTOR v1 = XMLoadFloat3(&Mesh.vertices[tri[1]].position);
-			XMVECTOR v2 = XMLoadFloat3(&Mesh.vertices[tri[2]].position);
+			XMVECTOR v0 = get_position(&Mesh.vertices[tri[0]]);
+			XMVECTOR v1 = get_position(&Mesh.vertices[tri[1]]);
+			XMVECTOR v2 = get_position(&Mesh.vertices[tri[2]]);
 
 			bool hr = DirectX::TriangleTests::Intersects(Origin, vDir, v0, v1, v2, distance);
 			if (hr) {
@@ -225,15 +256,15 @@ namespace Geometrics
 			auto& tri = this->facet(facet);
 			switch (edge)
 			{
-			case 0 :
+			case 0:
 				e.v0 = tri[1];
 				e.v1 = tri[2];
 				break;
-			case 1 :
+			case 1:
 				e.v0 = tri[2];
 				e.v1 = tri[0];
 				break;
-			case 2 :
+			case 2:
 				e.v0 = tri[0];
 				e.v1 = tri[1];
 				break;
@@ -302,10 +333,11 @@ namespace Geometrics
 			}
 		}
 
-		int intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
+		int XM_CALLCONV intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
 		{
 			//assert(revedges.size() == indices.size());
 			using namespace DirectX;
+			using namespace DirectX::VertexTraits;
 			size_t count = 0;
 			XMVECTOR vDir = XMVector3Normalize(Direction);
 			auto fid = 0;
@@ -313,9 +345,9 @@ namespace Geometrics
 			{
 				float distance;
 
-				XMVECTOR v0 = XMLoadFloat3(&this->vertices[tri[0]].position);
-				XMVECTOR v1 = XMLoadFloat3(&this->vertices[tri[1]].position);
-				XMVECTOR v2 = XMLoadFloat3(&this->vertices[tri[2]].position);
+				XMVECTOR v0 = get_position(&this->vertices[tri[0]]);
+				XMVECTOR v1 = get_position(&this->vertices[tri[1]]);
+				XMVECTOR v2 = get_position(&this->vertices[tri[2]]);
 
 				bool hr = DirectX::TriangleTests::Intersects(Origin, vDir, v0, v1, v2, distance);
 				if (hr) {
@@ -338,7 +370,7 @@ namespace Geometrics
 				std::sort(output->begin(), output->end());
 			return count;
 		}
-	};
+			};
 
 	namespace Internal
 	{
@@ -365,7 +397,7 @@ namespace Geometrics
 	/// <param name="V1">The v1.</param>
 	/// <param name="V2">The v2.</param>
 	/// <returns></returns>
-	inline DirectX::XMVECTOR Projection(DirectX::FXMVECTOR P0, DirectX::FXMVECTOR V0, DirectX::FXMVECTOR V1, DirectX::GXMVECTOR V2)
+	inline DirectX::XMVECTOR XM_CALLCONV Projection(DirectX::FXMVECTOR P0, DirectX::FXMVECTOR V0, DirectX::FXMVECTOR V1, DirectX::GXMVECTOR V2)
 	{
 		using namespace DirectX;
 		using namespace Geometrics::Internal;
@@ -375,11 +407,11 @@ namespace Geometrics
 
 		//XMVectorBaryCentric();
 
-		float a = XMVectorGetX(XMVector3LengthSq(edge0));
-		float b = XMVectorGetX(XMVector3Dot(edge0, edge1));
-		float c = XMVectorGetX(XMVector3LengthSq(edge1));
-		float d = XMVectorGetX(XMVector3Dot(edge0, p0));
-		float e = XMVectorGetX(XMVector3Dot(edge1, p0));
+		float a = XMVectorGetX(_DXMEXT XMVector3LengthSq(edge0));
+		float b = XMVectorGetX(_DXMEXT XMVector3Dot(edge0, edge1));
+		float c = XMVectorGetX(_DXMEXT XMVector3LengthSq(edge1));
+		float d = XMVectorGetX(_DXMEXT XMVector3Dot(edge0, p0));
+		float e = XMVectorGetX(_DXMEXT XMVector3Dot(edge1, p0));
 
 		float det = a*c - b*b;
 		float s = b*e - c*d;
@@ -466,16 +498,16 @@ namespace Geometrics
 		return V0 + s * edge0 + t * edge1;
 	}
 
-	inline float Distance(DirectX::FXMVECTOR P0, DirectX::FXMVECTOR V0, DirectX::FXMVECTOR V1, DirectX::GXMVECTOR V2)
+	inline float XM_CALLCONV Distance(DirectX::FXMVECTOR P0, DirectX::FXMVECTOR V0, DirectX::FXMVECTOR V1, DirectX::GXMVECTOR V2)
 	{
 		using namespace DirectX;
 		XMVECTOR vProj = Projection(P0, V0, V1, V2);
 		vProj -= P0;
-		return XMVectorGetX(XMVector3Length(vProj));
+		return XMVectorGetX(_DXMEXT XMVector3Length(vProj));
 	}
 
 	template <typename _VertexType, typename _IndexType>
-	inline float Distance(const TriangleMesh<_VertexType, _IndexType> &Mesh, DirectX::FXMVECTOR Point)
+	inline float XM_CALLCONV Distance(const TriangleMesh<_VertexType, _IndexType> &Mesh, DirectX::FXMVECTOR Point)
 	{
 		using namespace DirectX;
 		float minDis = numeric_limits<float>::max();
@@ -509,17 +541,17 @@ namespace Geometrics
 
 
 	template <typename _VertexType, typename _IndexType>
-	bool Inside(const TriangleMesh<_VertexType, _IndexType> &Mesh, DirectX::FXMVECTOR Point)
+	bool XM_CALLCONV Inside(const TriangleMesh<_VertexType, _IndexType> &Mesh, DirectX::FXMVECTOR Point)
 	{
 		XMFLOAT3A Direction;
 		Direction.x = (float)std::rand() / (RAND_MAX + 1);
 		Direction.y = (float)std::rand() / (RAND_MAX + 1);
 		Direction.z = (float)std::rand() / (RAND_MAX + 1);
 		XMVECTOR vDir = XMLoadFloat3A(&Direction);
-		auto count = RayIntersection(Mesh, Point, vDir, nullptr);
+		auto count = intersect(Mesh, Point, vDir, nullptr);
 		return count & 1; //count % 2
 	}
 
 
 
-}
+		}

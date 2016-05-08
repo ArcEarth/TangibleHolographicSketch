@@ -308,21 +308,25 @@ namespace DirectX
 	{
 		Type = Geometry_AxisAlignedBox;
 		AxisAlignedBox = rhs;
+		return *this;
 	}
 	inline BoundingGeometry& BoundingGeometry::operator=(const BoundingOrientedBox& rhs)
 	{
 		Type = Geometry_OrientedBox;
 		OrientedBox = rhs;
+		return *this;
 	}
 	inline BoundingGeometry& BoundingGeometry::operator=(const BoundingFrustum& rhs)
 	{
 		Type = Geometry_Frustum;
 		Frustum = rhs;
+		return *this;
 	}
 	inline BoundingGeometry& BoundingGeometry::operator=(const BoundingSphere& rhs)
 	{
 		Type = Geometry_Sphere;
 		Sphere = rhs;
+		return *this;
 	}
 
 	inline BoundingGeometry::BoundingGeometry()

@@ -39,7 +39,7 @@
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <bezier_patch position="0,0.35,0" >
+      <bezier_patch position="0,0.35,0" tessellation="30">
       
       </bezier_patch>
       

@@ -81,7 +81,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(DirectXTKDir)\Inc;$(ProjectDir)Inc;$(ProjectDir)..\Common\;$(IncludePath)</IncludePath>
+    <IncludePath>$(DirectXTKDir)\Inc;$(ProjectDir)Inc;$(ProjectDir)..\Common\;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

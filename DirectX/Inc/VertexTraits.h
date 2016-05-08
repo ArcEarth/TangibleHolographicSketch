@@ -122,10 +122,20 @@ namespace DirectX
 		}
 
 		template <class TVertex>
-		std::enable_if_t<has_color<TVertex>::value, XMVECTOR>
+		std::enable_if_t<has_color<TVertex>::value && std::is_base_of<DirectX::XMFLOAT4, decltype(TVertex::color)>::value, XMVECTOR>
 			XM_CALLCONV get_color(const TVertex& vertex, FXMVECTOR default_value = g_XMZero.v)
 		{
 			return XMLoad(vertex.color);
+		}
+
+		template <class TVertex>
+		std::enable_if_t<has_color<TVertex>::value && std::is_same<decltype(TVertex::color), uint32_t>::value, XMVECTOR>
+			XM_CALLCONV get_color(const TVertex& vertex, FXMVECTOR default_value = g_XMZero.v)
+		{
+			using namespace ::DirectX::PackedVector;
+			XMUBYTEN4 rgba;
+			rgba.v = vertex.color;
+			return XMLoadUByteN4(&rgba);
 		}
 
 		template <class TVertex>

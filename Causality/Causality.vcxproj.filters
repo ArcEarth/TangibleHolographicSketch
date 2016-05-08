@@ -379,6 +379,9 @@
     <ClInclude Include="ParametericPatch.h">
       <Filter>PenModeler</Filter>
     </ClInclude>
+    <ClInclude Include="CCA.h">
+      <Filter>Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="icon1.ico">

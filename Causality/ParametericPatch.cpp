@@ -4,8 +4,13 @@
 #include <Models.h>
 #include <VertexTypes.h>
 #include <PrimitiveVisualizer.h>
+#include <Eigen\Core>
+#include "Cca.h"
+#include <Geometrics\csg.h>
+#include <GeometricPrimitive.h>
 using namespace Causality;
 using namespace DirectX::Scene;
+using namespace Causality::Math;
 
 REGISTER_SCENE_OBJECT_IN_PARSER(bezier_patch, BezierPatchObject);
 
@@ -182,9 +187,18 @@ const DirectX::XMVECTORF32 TeapotControlPoints[] =
 	{ -0.375f, -0.31125f, -0.21f },
 };
 
+template <typename _VertexType, typename _IndexType>
+inline std::shared_ptr<MeshBuffer> CreateMeshBuffer(IRenderDevice* pDevice,
+const Geometrics::TriangleMesh<_VertexType, _IndexType>& mesh)
+{
+	auto pMesh = make_shared<MeshBuffer>();
+	pMesh->CreateDeviceResources(pDevice, mesh.vertices.data(), mesh.vertices.size(), mesh.indices.data(), mesh.indices.size());
+	return pMesh;
+}
 
 void BezierPatchObject::Parse(const ParamArchive * archive)
 {
+	using namespace DirectX::VertexTraits;
 	SceneObject::Parse(archive);
 	auto pDevice = this->Scene->GetRenderDevice();
 	const char* cpstr = nullptr;
@@ -194,6 +208,12 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	GetParam(archive,"tessellation", tessellation);
 	Color color = DirectX::Colors::White;
 	GetParam(archive, "color", color);
+	float patchSize = 0.1f, margin = 0.001f, z_tolerence = 0.01;
+
+	GetParam(archive, "patch_size", patchSize);
+	GetParam(archive, "margin", margin);
+	GetParam(archive, "z_tolerence", z_tolerence);
+
 	//GetParamArray(archive, "control_points", cps);
 
 	//if (cps.size() < 16 * 3)
@@ -215,26 +235,83 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	}
 
 	m_mesh.flip();
+	m_mesh.build();
 
-	auto pModel = new MonolithModel();
+	BoundingBox bb;
+	BoundingOrientedBox obb;
 
-	pModel->pMesh = make_shared<MeshBuffer>();
+	using TVertex = decltype(m_mesh.vertices[0]);
+	using TIndex = decltype(m_mesh.indices[0]);
+	// the BoundingOrientedBox is computed from an 3x3 svd, (pca of the vertices)
+	CreateBoundingBoxesFromPoints(	bb,	obb,
+		m_mesh.vertices.size(), &m_mesh.vertices[0].position, sizeof(TVertex));
+	XMVECTOR quat = XMLoad(obb.Orientation);
+	quat = XMQuaternionConjugate(quat); // inverse rotation of this obb
+	
+	int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
+	int ysize = (int)ceilf(obb.Extents.y * 2.0f / patchSize);
 
-	pModel->SetName("bezier patch");
+	using Geometrics::csg::BSPNode;
+	auto meshNode = BSPNode::create(m_mesh);
 
-	DirectX::CreateBoundingBoxesFromPoints(
-		pModel->BoundBox,
-		pModel->BoundOrientedBox,
-		16, m_patch.data(), sizeof(decltype(m_patch)::ValueType));
+	Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
+	DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
 
-	pModel->pMesh->CreateDeviceResources(pDevice,
-		m_mesh.vertices.data(),
-		m_mesh.vertices.size(),
-		m_mesh.indices.data(),
-		m_mesh.indices.size());
+	float zoffset = bb.Center.y;
+	XMVECTOR sclFactor = XMVectorSet(0.5f * patchSize, 2.0 * z_tolerence, 0.5f *  patchSize, 1.0f);
+	for (int i = 0; i < xsize; i++)
+	for (int j = 0; i < ysize; i++)
+	{
+		float xoffset = (i + 0.5f) * patchSize;
+		float yoffset = (j + 0.5f) * patchSize;
 
-	m_pModel.reset(pModel);
-	VisualObject::m_pRenderModel = pModel;
+		XMMATRIX M = XMMatrixAffineTransformation(
+			sclFactor, XMVectorZero(),XMQuaternionIdentity(),
+			XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
+
+		cubeMesh.transform(M);
+		// the area of interest for this index
+		auto cubeNode = BSPNode::create(cubeMesh);
+
+		uptr<BSPNode> nodeRet(Geometrics::csg::nodeIntersect(meshNode.get(), cubeNode.get()));
+
+		// the segmented mesh
+		m_fracorizedMeshes.emplace_back();
+		nodeRet->convertToMesh(m_fracorizedMeshes.back());
+	}
+
+	//m_projMesh = m_mesh; // copy the mesh
+	//for (auto& v : m_projMesh.vertices)
+	//{
+	//	XMVECTOR p = get_position(v);
+	//	p = XMVector3Rotate(p,quat);
+	//	set_position(v, p);
+	//}
+
+	{
+		auto pModel = new MonolithModel();
+		pModel->pMesh = CreateMeshBuffer(pDevice, m_mesh);
+		pModel->SetName("whole_patch");
+		pModel->BoundBox = bb;
+		pModel->BoundOrientedBox = obb;
+		m_pModel.reset(pModel);
+	}
+	{
+		auto pModel = new CompositionModel();
+		auto& parts = pModel->Parts;
+		for (auto& mesh : m_fracorizedMeshes)
+		{
+			parts.emplace_back();
+			auto& part = parts.back();
+			part.pMesh = CreateMeshBuffer(pDevice, mesh);
+			part.Name = "factorized_patch";
+			CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
+				mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
+		}
+
+		VisualObject::m_pRenderModel = pModel;
+
+	}
 }
 
 BezierPatchObject::~BezierPatchObject()

@@ -354,6 +354,9 @@ namespace DirectX
 			const std::string& Name() const override { return _Name; }
 			void SetName(const std::string& name) { _Name = name; }
 
+			// Create bounding geometry from parts' bounding geometry
+			void CreateBoundingGeometry();
+
 			// Inherited via IModelNode
 			virtual BoundingBox GetBoundingBox() const override;
 			virtual BoundingOrientedBox GetOrientedBoundingBox() const override;

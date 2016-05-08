@@ -227,6 +227,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CCA.h" />
     <ClInclude Include="ParametericPatch.h" />
     <ClInclude Include="TrackedObjectControl.h" />
     <ClInclude Include="TrackerdPen.h" />

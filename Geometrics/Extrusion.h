@@ -6,16 +6,29 @@
 
 namespace Geometrics
 {
+	using DirectX::Vector2;
 	using DirectX::Vector3;
 	using DirectX::Ray;
 	using DirectX::FXMVECTOR;
 
 	using Curve = SpaceCurve;
 
+	struct DefaultVertex
+	{
+		Vector3 position;
+		Vector3 normal;
+		Vector2 uv;
+	};
+
+	using MeshType = TriangleMesh<DefaultVertex, uint16_t>;
+
 	// A Patch is a closed curve on a surface
 	// And the region within
 	class SurfacePatch
 	{
+		//typedef TriangleMesh<_VertexType, IndexType> MeshType;
+		//typedef _VertexType VertexType;
+		//typedef _IndexType IndexType;
 		MeshType*	m_surface;
 		Curve		m_uvCurve;
 

@@ -71,12 +71,8 @@ namespace Geometrics
 		}
 	}
 
-	typedef Bezier::BezierPatch<Vector3, 3U> CubicBezierPatch;
-	typedef CubicBezierPatch::ClippingType CubicBezierCurve;
-
-
 	template <typename _Ty, int _Order, typename MeshType>
-	bool triangluate(const Bezier::BezierPatch<_Ty, _Order>& patch, MeshType& mesh, int tessellation, const Vector4 &uvRect = Vector4(.0f,.0f,1.f,1.f))
+	bool triangluate(const Bezier::BezierPatch<_Ty, _Order>& patch, MeshType& mesh, int tessellation, const DirectX::Vector4 &uvRect = DirectX::Vector4(.0f,.0f,1.f,1.f))
 	{
 		using namespace DirectX::VertexTraits;
 		if (tessellation == 0)

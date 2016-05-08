@@ -5,6 +5,9 @@
 
 namespace Causality
 {
+	typedef Geometrics::Bezier::BezierPatch<Vector3, 3U> CubicBezierPatch;
+	typedef CubicBezierPatch::ClippingType CubicBezierCurve;
+
 	class BezierPatchObject : public VisualObject
 	{
 	public:
@@ -13,11 +16,12 @@ namespace Causality
 
 		virtual void Render(IRenderContext * pContext, IEffect* pEffect = nullptr) override;
 	private:
-		Geometrics::CubicBezierPatch m_patch;
+		CubicBezierPatch m_patch;
 
 		using TriangleMeshType = Geometrics::TriangleMesh<DirectX::VertexPositionNormalTangentColorTexture>;
 		TriangleMeshType	m_mesh;
-		uptr<DirectX::Scene::IModelNode>
-			m_pModel;
+		std::vector<TriangleMeshType> m_fracorizedMeshes;
+		uptr<DirectX::Scene::IModelNode> m_pModel;
+		uptr<DirectX::Scene::IModelNode> m_factorizeModel;
 	};
 }
