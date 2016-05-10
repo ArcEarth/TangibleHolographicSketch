@@ -43,6 +43,29 @@ namespace DirectX
 				ret.v = qmul(this->v, rhs.v);
 				return ret;
 			}
+			
+			inline void XM_CALLCONV conjugate(){
+				this->v = XMQuaternionConjugate(this->v);
+			}
+			
+			inline this_type XM_CALLCONV conjugated() const
+			{
+				this_type ret;
+				ret.v = XMQuaternionConjugate(this->v);
+				return ret;
+			}
+
+			inline void XM_CALLCONV inverse(){
+				this->v = XMQuaternionInverse(this->v);
+			}
+			
+			inline this_type XM_CALLCONV inversed() const
+			{
+				this_type ret;
+				ret.v = XMQuaternionInverse(this->v);
+				return ret;
+			}
+
 		};
 
 		using xmquaternionf = xmquaternion<float>;
