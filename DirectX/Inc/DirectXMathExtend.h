@@ -7,6 +7,11 @@
 #error Bullet physics can not be include before DirectX Math headers.
 #endif
 
+// Prevent Windows header's macro pollution
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 // Disable bullet to overload operators on _m128
 #ifndef BT_NO_SIMD_OPERATOR_OVERLOADS
 #define BT_NO_SIMD_OPERATOR_OVERLOADS

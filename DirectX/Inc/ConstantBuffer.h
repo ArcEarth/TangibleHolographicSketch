@@ -25,7 +25,7 @@ namespace DirectX
 	{
 	public:
 		// Constructor.
-		ConstantBuffer() DIRECTX_CTOR_DEFAULT
+		ConstantBuffer() = default;
 		
 		explicit ConstantBuffer(_In_ ID3D11Device* device)
 		{
@@ -79,7 +79,7 @@ namespace DirectX
 		Microsoft::WRL::ComPtr<ID3D11Buffer> m_ConstantBuffer;
 
 		// Prevent copying.
-		ConstantBuffer(ConstantBuffer const&) DIRECTX_CTOR_DELETE
-		ConstantBuffer& operator= (ConstantBuffer const&) DIRECTX_CTOR_DELETE
+		ConstantBuffer(ConstantBuffer const&) = default;
+		ConstantBuffer& operator= (ConstantBuffer const&) = delete;
 	};
 }

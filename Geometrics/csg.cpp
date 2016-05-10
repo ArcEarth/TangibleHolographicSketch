@@ -16,7 +16,6 @@
 
 #include "csg.h"
 using namespace DirectX;
-using namespace DirectX::SimpleMath;
 using namespace DirectX::hlsl;
 
 namespace Geometrics

@@ -5,7 +5,9 @@
 #include "CameraObject.h"
 
 #include "LeapMotion.h"
+#if HasLeap
 #include <Leap.h>
+#endif
 #include "Vicon.h"
 
 using namespace Causality;
@@ -48,6 +50,7 @@ bool TrackedPen::UpdateFromLeapFinger(double dt)
 {
 	auto object = m_pRigid;
 	if (!object) return false;
+#if HasLeap
 	auto frame = m_pLeap->Controller().frame();
 	XMMATRIX world = m_pLeap->ToWorldTransform();
 
@@ -85,6 +88,7 @@ bool TrackedPen::UpdateFromLeapFinger(double dt)
 			return true;
 		}
 	}
+#endif
 	return false;
 }
 

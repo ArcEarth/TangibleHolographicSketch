@@ -2,8 +2,9 @@
 
 #include <Causality\Vicon.h>
 #include <Causality\LeapMotion.h>
+#if HasLeap
 #include <Leap.h>
-
+#endif
 #include "TrackedObjectControl.h"
 
 using namespace Causality;
@@ -56,9 +57,10 @@ bool TrackedObjectControl::UpdateFromVicon(double dt)
 bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 {
 	if (!m_pRigid) return false;
+
+#if HasLeap
 	auto frame = m_pLeap->Controller().frame();
 	XMMATRIX world = m_pLeap->ToWorldTransform();
-
 	auto& hands = frame.hands();
 	for (auto& hand : hands)
 	{
@@ -84,11 +86,12 @@ bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 			return true;
 		}
 	}
+#endif
 	return false;
 }
 
 TrackedObjectControl::TrackedObjectControl()
-	:m_intrinsic(m_Transform.LocalTransform())
+	:m_intrinsic(m_Transform.LocalTransform()), m_pLeap(nullptr)
 {
 	m_pRigid = nullptr;
 
@@ -96,15 +99,19 @@ TrackedObjectControl::TrackedObjectControl()
 		m_pRigid = this->Parent();
 	});
 
+#if HasLeap
 	m_pLeap = LeapSensor::GetForCurrentView();
+#endif
+
 	m_pVicon = IViconClient::GetFroCurrentView();
 
 	if (m_pVicon && !m_pVicon->IsStreaming())
 		m_pVicon.reset();
 
 	XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
+#if HasLeap
 	m_pLeap->SetDeviceWorldCoord(world);
-
+#endif
 	m_posFilter.SetUpdateFrequency(&m_freq);
 	m_rotFilter.SetUpdateFrequency(&m_freq);
 }

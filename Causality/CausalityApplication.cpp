@@ -256,6 +256,7 @@ void App::SetupDevices(const ParamArchive* arch)
 		}
 	}
 
+#if HasLeap
 	setting = arch->FirstChildElement("leap");
 	GetParam(setting, "enable", enable);
 	if (setting && enable)
@@ -263,7 +264,9 @@ void App::SetupDevices(const ParamArchive* arch)
 		pLeap = Devices::LeapSensor::GetForCurrentView();
 		pLeap->Initialize(setting);
 	}
+#endif
 
+#if HasKinect
 	setting = arch->FirstChildElement("kinect");
 	GetParam(setting, "enable", enable);
 	if (setting && enable)
@@ -278,6 +281,7 @@ void App::SetupDevices(const ParamArchive* arch)
 			//pKinect->Start();
 		}
 	}
+#endif
 
 }
 

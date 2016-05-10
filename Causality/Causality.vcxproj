@@ -33,6 +33,7 @@
     <EigenDir>..\Eigen\</EigenDir>
     <FftwDir>..\fftw</FftwDir>
     <AmpDir>..\amp</AmpDir>
+    <FBX_SDK_ROOT>..\FbxSdk</FBX_SDK_ROOT>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -80,9 +81,57 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+
+  <Choose>
+    <When Condition="Exists('$(FBX_SDK_ROOT)')">
+      <PropertyGroup  Label="FbxConfiguration">
+        <HasFbx>true</HasFbx>
+        <FbxIncludePath>$(FBX_SDK_ROOT)\include</FbxIncludePath>
+        <FbxLibPath>$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\</FbxLibPath>
+        <FbxDllCopyCommand>copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"</FbxDllCopyCommand>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup Label="FbxConfiguration">
+        <HasFbx>false</HasFbx>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+  <Choose>
+    <When Condition="Exists('$(KINECTSDK20_DIR)')">
+      <PropertyGroup Label="KinectConfiguration">
+        <HasKinect>true</HasKinect>
+        <KinectIncludePath>$(KINECTSDK20_DIR)inc</KinectIncludePath>
+        <KinectLibPath>$(KINECTSDK20_DIR)lib\$(PlatformTarget)\</KinectLibPath>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup Label="KinectConfiguration">
+        <HasKinect>false</HasKinect>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <Choose>
+    <When Condition="Exists('$(LeapSDK_Root)')">
+      <PropertyGroup Label="LeapConfiguration">
+        <HasLeap>true</HasLeap>
+        <LeapIncludePath>$(LeapSDK_Root)\include</LeapIncludePath>
+        <LeapLibPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\</LeapLibPath>
+        <LeapDllCopyCommand>copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</LeapDllCopyCommand>
+      </PropertyGroup>
+
+    </When>
+    <Otherwise>
+      <PropertyGroup Label="LeapConfiguration">
+        <HasLeap>false</HasLeap>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
   <PropertyGroup>
-    <IncludePath>$(LibOvr_Root)\Include;$(LeapSDK_Root)\include;$(FBX_SDK_ROOT)\include;$(KINECTSDK20_DIR)inc;$(Bullet3Dir)\src;$(DirectXTKDir)\Inc;$(TinyXml2Dir)\;$(DLibDir);$(EigenDir);$(FftwDir);$(SolutionDir)\DirectX\Inc\;$(SolutionDir)\GSL\include;$(SolutionDir)\;$(SolutionDir)\Common\;$(AmpDir)\ampalgorithms\inc\;$(AmpDir)\amprng\inc\;$(AmpDir)\amphlsl\inc\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\;$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KINECTSDK20_DIR)lib\$(PlatformTarget)\;$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\;$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(LibOvr_Root)\Include;$(LeapIncludePath);$(FbxIncludePath);$(KinectIncludePath);$(Bullet3Dir)\src;$(DirectXTKDir)\Inc;$(TinyXml2Dir)\;$(DLibDir);$(EigenDir);$(FftwDir);$(SolutionDir)\DirectX\Inc\;$(SolutionDir)\GSL\include;$(SolutionDir)\;$(SolutionDir)\Common\;$(AmpDir)\ampalgorithms\inc\;$(AmpDir)\amprng\inc\;$(AmpDir)\amphlsl\inc\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LeapIibPath);$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KinectLibPath);$(FbxLibPath);$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -117,8 +166,8 @@
     </Link>
     <PostBuildEvent>
       <Command>
-        copy "$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\libfbxsdk.dll" "$(OutDir)"
-        copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"
+        $(FbxDllCopyCommand)
+        $(LeapDllCopyCommand)
       </Command>
     </PostBuildEvent>
     <Manifest>
@@ -205,9 +254,6 @@
     <ClCompile Include="Animations.cpp" />
     <ClCompile Include="AssetDictionary.cpp" />
     <ClCompile Include="CausalityApplication.cpp" />
-    <ClCompile Include="FbxParser.cpp" />
-    <ClCompile Include="KinectSensor.cpp" />
-    <ClCompile Include="LeapMotion.cpp" />
     <ClCompile Include="NativeWindow.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -222,6 +268,13 @@
     <ClCompile Include="TrackedArmature.cpp" />
     <ClCompile Include="Vicon.cpp" />
     <ClCompile Include="VisualObject.cpp" />
+    <ClCompile Include="FbxParser.cpp" />
+    <ClCompile Include="KinectSensor.cpp">
+      <ExcludedFromBuild Condition="'$(HasKinect)'=='false'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="LeapMotion.cpp">
+      <ExcludedFromBuild Condition="'$(HasLeap)'=='false'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="OculusRift.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
