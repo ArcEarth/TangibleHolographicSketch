@@ -256,7 +256,7 @@ void App::SetupDevices(const ParamArchive* arch)
 		}
 	}
 
-#if HasLeap
+#if defined(__HAS_LEAP__)
 	setting = arch->FirstChildElement("leap");
 	GetParam(setting, "enable", enable);
 	if (setting && enable)
@@ -266,7 +266,7 @@ void App::SetupDevices(const ParamArchive* arch)
 	}
 #endif
 
-#if HasKinect
+#if defined(__HAS_KINECT__)
 	setting = arch->FirstChildElement("kinect");
 	GetParam(setting, "enable", enable);
 	if (setting && enable)

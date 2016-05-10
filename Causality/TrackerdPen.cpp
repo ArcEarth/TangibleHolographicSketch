@@ -5,7 +5,7 @@
 #include "CameraObject.h"
 
 #include "LeapMotion.h"
-#if HasLeap
+#if defined(__HAS_LEAP__)
 #include <Leap.h>
 #endif
 #include "Vicon.h"
@@ -50,7 +50,7 @@ bool TrackedPen::UpdateFromLeapFinger(double dt)
 {
 	auto object = m_pRigid;
 	if (!object) return false;
-#if HasLeap
+#if defined(__HAS_LEAP__)
 	auto frame = m_pLeap->Controller().frame();
 	XMMATRIX world = m_pLeap->ToWorldTransform();
 

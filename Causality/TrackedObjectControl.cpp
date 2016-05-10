@@ -2,7 +2,7 @@
 
 #include <Causality\Vicon.h>
 #include <Causality\LeapMotion.h>
-#if HasLeap
+#if defined(__HAS_LEAP__)
 #include <Leap.h>
 #endif
 #include "TrackedObjectControl.h"
@@ -58,7 +58,7 @@ bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 {
 	if (!m_pRigid) return false;
 
-#if HasLeap
+#if defined(__HAS_LEAP__)
 	auto frame = m_pLeap->Controller().frame();
 	XMMATRIX world = m_pLeap->ToWorldTransform();
 	auto& hands = frame.hands();
@@ -99,7 +99,7 @@ TrackedObjectControl::TrackedObjectControl()
 		m_pRigid = this->Parent();
 	});
 
-#if HasLeap
+#if defined(__HAS_LEAP__)
 	m_pLeap = LeapSensor::GetForCurrentView();
 #endif
 
@@ -109,7 +109,7 @@ TrackedObjectControl::TrackedObjectControl()
 		m_pVicon.reset();
 
 	XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
-#if HasLeap
+#if defined(__HAS_LEAP__)
 	m_pLeap->SetDeviceWorldCoord(world);
 #endif
 	m_posFilter.SetUpdateFrequency(&m_freq);

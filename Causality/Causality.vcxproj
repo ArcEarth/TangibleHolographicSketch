@@ -101,6 +101,7 @@
     <When Condition="Exists('$(KINECTSDK20_DIR)')">
       <PropertyGroup Label="KinectConfiguration">
         <HasKinect>true</HasKinect>
+        <HasKinectMarco>__HAS_KINECT__</HasKinectMarco>
         <KinectIncludePath>$(KINECTSDK20_DIR)inc</KinectIncludePath>
         <KinectLibPath>$(KINECTSDK20_DIR)lib\$(PlatformTarget)\</KinectLibPath>
       </PropertyGroup>
@@ -108,6 +109,7 @@
     <Otherwise>
       <PropertyGroup Label="KinectConfiguration">
         <HasKinect>false</HasKinect>
+        <HasKinectMarco></HasKinectMarco>
       </PropertyGroup>
     </Otherwise>
   </Choose>
@@ -116,6 +118,7 @@
     <When Condition="Exists('$(LeapSDK_Root)')">
       <PropertyGroup Label="LeapConfiguration">
         <HasLeap>true</HasLeap>
+        <HasLeapMacro>__HAS_LEAP__</HasLeapMacro>
         <LeapIncludePath>$(LeapSDK_Root)\include</LeapIncludePath>
         <LeapLibPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\</LeapLibPath>
         <LeapDllCopyCommand>copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</LeapDllCopyCommand>
@@ -128,10 +131,13 @@
       </PropertyGroup>
     </Otherwise>
   </Choose>
+  <PropertyGroup>
+    <AvaiableTrackingDevices>$(HasLeapMacro);$(HasKinectMarco)</AvaiableTrackingDevices>
+  </PropertyGroup>
 
   <PropertyGroup>
     <IncludePath>$(LibOvr_Root)\Include;$(LeapIncludePath);$(FbxIncludePath);$(KinectIncludePath);$(Bullet3Dir)\src;$(DirectXTKDir)\Inc;$(TinyXml2Dir)\;$(DLibDir);$(EigenDir);$(FftwDir);$(SolutionDir)\DirectX\Inc\;$(SolutionDir)\GSL\include;$(SolutionDir)\;$(SolutionDir)\Common\;$(AmpDir)\ampalgorithms\inc\;$(AmpDir)\amprng\inc\;$(AmpDir)\amphlsl\inc\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LeapIibPath);$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KinectLibPath);$(FbxLibPath);$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LeapLibPath);$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KinectLibPath);$(FbxLibPath);$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -178,7 +184,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;$(AvaiableTrackingDevices);FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
@@ -190,7 +196,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <AdditionalOptions>/Zm200 %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;$(AvaiableTrackingDevices);FBXSDK_SHARED;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <Link>
@@ -203,7 +209,7 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;$(AvaiableTrackingDevices);FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
       <UndefinePreprocessorDefinitions>
@@ -220,7 +226,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;$(AvaiableTrackingDevices);FBXSDK_SHARED;__SSE3__;__SSE4__;__SSE4_1__;__SSE4_2__;__AVX__;__AVX2__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
