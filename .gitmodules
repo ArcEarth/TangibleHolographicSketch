@@ -1,0 +1,4 @@
+[submodule "DirectXTK"]
+	path = DirectXTK
+	url = https://github.com/ArcEarth/DirectXTK.git
+	branch = NoViewport
