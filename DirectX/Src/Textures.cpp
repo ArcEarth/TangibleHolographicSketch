@@ -135,7 +135,7 @@ void Texture2D::CopyFrom(ID3D11DeviceContext *pContext, const Texture2D* pSource
 ID2D1Bitmap1* RenderableTexture2D::CreateD2DBitmapView(ID2D1DeviceContext *pContext, float dpi)
 {
 	if (m_pD2dBitmap != nullptr)
-		return m_pD2dBitmap;
+		return m_pD2dBitmap.Get();
 
 	ID2D1Bitmap1* bitmap = nullptr;
 	// D2D requires BGRA color order
@@ -237,7 +237,7 @@ RenderableTexture2D::RenderableTexture2D(ID3D11Texture2D* pTexture, ID3D11Render
 {
 	assert(pRenderTargetView);
 	m_pRenderTargetView = pRenderTargetView;
-	m_pD2dBitmap = nullptr;
+	//m_pD2dBitmap = nullptr;
 }
 
 inline RenderableTexture2D::RenderableTexture2D(ID3D11RenderTargetView * pRenderTargetView)
@@ -246,33 +246,34 @@ inline RenderableTexture2D::RenderableTexture2D(ID3D11RenderTargetView * pRender
 	pRenderTargetView->GetResource(&m_pResource);
 	m_pResource.As(&m_pTexture);
 	m_pTexture->GetDesc(&m_Description);
-	m_pD2dBitmap = nullptr;
+	//m_pD2dBitmap = nullptr;
 }
 
 RenderableTexture2D::RenderableTexture2D()
 {
-	m_pD2dBitmap = nullptr;
+	//m_pD2dBitmap = nullptr;
 }
 
 RenderableTexture2D::RenderableTexture2D(RenderableTexture2D &&source)
 	: Texture2D(std::move(source)),
-	m_pRenderTargetView(std::move(source.m_pRenderTargetView))
+	m_pRenderTargetView(std::move(source.m_pRenderTargetView)),
+	m_pD2dBitmap(std::move(source.m_pD2dBitmap))
 {
-	m_pD2dBitmap = source.m_pD2dBitmap;
-	source.m_pD2dBitmap = nullptr;
+	//m_pD2dBitmap = source.m_pD2dBitmap;
+	//source.m_pD2dBitmap = nullptr;
 }
 
 RenderableTexture2D& RenderableTexture2D::operator=(RenderableTexture2D &&source)
 {
 	Texture2D::operator=(std::move(source));
 	m_pRenderTargetView = std::move(source.m_pRenderTargetView);
-	if (m_pD2dBitmap)
-	{
-		m_pD2dBitmap->Release();
-		m_pD2dBitmap = nullptr;
-	}
-	m_pD2dBitmap = source.m_pD2dBitmap;
-	source.m_pD2dBitmap = nullptr;
+	//if (m_pD2dBitmap)
+	//{
+	//	m_pD2dBitmap->Release();
+	//	m_pD2dBitmap = nullptr;
+	//}
+	m_pD2dBitmap = std::move(source.m_pD2dBitmap);
+	//source.m_pD2dBitmap = nullptr;
 
 	return *this;
 }
@@ -282,14 +283,20 @@ RenderableTexture2D& RenderableTexture2D::operator=(const RenderableTexture2D &r
 	Texture2D::operator=(rhs);
 	m_pRenderTargetView = rhs.m_pRenderTargetView;
 	m_pD2dBitmap = rhs.m_pD2dBitmap;
-	if (m_pD2dBitmap)
-		m_pD2dBitmap->AddRef();
+	//if (m_pD2dBitmap)
+	//	m_pD2dBitmap->AddRef();
 	return *this;
 }
 
 RenderableTexture2D::RenderableTexture2D(const RenderableTexture2D & rhs)
 {
 	*this = rhs;
+}
+
+void RenderableTexture2D::Reset() {
+	m_pD2dBitmap.Reset();
+	m_pRenderTargetView.Reset();
+	Texture2D::Reset();
 }
 
 DepthStencilBuffer::DepthStencilBuffer()

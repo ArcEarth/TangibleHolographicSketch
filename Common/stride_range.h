@@ -11,49 +11,97 @@
 namespace stdx {
 	using std::iterator_range;
 
-	template <class T>
+	template <class T, size_t _Stride>
 	class stride_range;
 
-	template <class _Ty>
-	class stride_iterator : public std::iterator<std::random_access_iterator_tag, _Ty>
+	template <class _Ty, size_t _Stride>
+	struct stride_iterator_storage
 	{
-	private:
-		pointer data;
-		// stride in byte
+		_Ty* data;
+		constexpr static size_t stride = _Stride;
+
+		stride_iterator_storage() { data = nullptr; }
+
+		inline constexpr size_t get_stride() const { return stride; }
+
+		void assign(_Ty* _data, size_t _stride)
+		{
+			data = _data;
+			assert(_stride == stride || _stride == -1);
+		}
+
+		template <size_t _OtherStride>
+		void assign(const stride_iterator_storage<_Ty, _OtherStride>& other)
+		{
+			static_assert(_Stride == _OtherStride, "static stride storage must has _Equal_Stride_");
+			data = other.data;
+		}
+	};
+
+	template <class _Ty>
+	struct stride_iterator_storage<_Ty, -1>
+	{
+		_Ty* data;
 		size_t stride;
+
+		stride_iterator_storage() { data = nullptr; stride = sizeof(_Ty); }
+
+		inline size_t get_stride() const { return stride; }
+
+		void assign(_Ty* _data, size_t _stride)
+		{
+			data = _data;
+			stride = _stride;
+			assert(_stride != -1);
+		}
+
+		template <size_t _OtherStride>
+		void assign(const stride_iterator_storage<_Ty, _OtherStride>& other)
+		{
+			data = other.data;
+			stride = other.get_stride();
+		}
+
+	};
+
+
+	template <class _Ty, size_t _Stride = -1>
+	class stride_iterator : 
+		public std::iterator<std::random_access_iterator_tag, _Ty>,
+		public stride_iterator_storage<_Ty,_Stride>
+	{
+		using byte_ptr = std::conditional_t<std::is_const<_Ty>::value, const char*, char*>;
+		using storage_t = stride_iterator_storage<_Ty, _Stride>;
 
 	protected:
 		// these friend declarations are to allow access to the protected
 		// "raw" constructor that starts from a raw pointer plus
 		// stride+length info
-		template <class U> friend class stride_iterator;
-		template <class U> friend class stride_range;
+		template <class U, size_t _Stride> friend class stride_iterator;
+		template <class U, size_t _Stride> friend class stride_range;
 
-		stride_iterator(pointer data, size_t stride) :
-			data(data), stride(stride) {}
+		stride_iterator(pointer data, size_t stride = -1)
+		{
+			storage_t::assign(data, stride);
+		}
 
 	public:
-		typedef stride_iterator<_Ty> _Myiter;
+		typedef stride_iterator<_Ty, _Stride> _Myiter;
 
-		stride_iterator(const stride_iterator& other) :
-			data(other.data), stride(other.stride) {}
-
-		template <class U>
-		explicit stride_iterator(const stride_iterator<U>& other) :
-			data(other.data), stride(other.stride) {}
-
-
-		bool has_more() const { return data < stop; }
+		template <size_t _OtherStride>
+		stride_iterator(const stride_iterator<_Ty, _OtherStride>& other)
+		{
+			storage_t::assign(other);
+		}
 
 		// Dereference
-
 		reference operator*()
 		{
 			return *data;
 		}
 		reference operator[](int idx)
 		{
-			auto ptr = reinterpret_cast<pointer>(reinterpret_cast<char*>(data) + stride*idx);
+			auto ptr = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*idx);
 			return *ptr;
 		}
 
@@ -67,13 +115,13 @@ namespace stdx {
 
 		difference_type operator-(const _Myiter& other) const
 		{
-			return ((char*) data - (char*) other.data) / stride;
+			return (reinterpret_cast<byte_ptr>(data)- reinterpret_cast<byte_ptr>(other.data)) / stride;
 		}
 
 		// Increment/Decrement
 
-		_Myiter& operator++() { data = reinterpret_cast<pointer>(reinterpret_cast<char*>(data) + stride); return *this; }
-		_Myiter& operator--() { data = reinterpret_cast<pointer>(reinterpret_cast<char*>(data) - stride); return *this; }
+		_Myiter& operator++() { data = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride); return *this; }
+		_Myiter& operator--() { data = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) - stride); return *this; }
 
 		_Myiter operator++(int) { _Myiter cpy(*this); data += stride; return cpy; }
 		_Myiter operator--(int) { _Myiter cpy(*this); data -= stride; return cpy; }
@@ -83,45 +131,20 @@ namespace stdx {
 
 		_Myiter operator+(int x) const { _Myiter res(*this); res += x; return res; }
 		_Myiter operator-(int x) const { _Myiter res(*this); res -= x; return res; }
-
-		//#if _ITERATOR_DEBUG_LEVEL == 2
-		//	void _Compat(const _Myiter& _Right) const
-		//	{	// test for compatible iterator pair
-		//		if (this->_Getcont() == 0
-		//			|| this->_Getcont() != _Right._Getcont())
-		//		{	// report error
-		//			_DEBUG_ERROR("iterators incompatible");
-		//			_SCL_SECURE_INVALID_ARGUMENT;
-		//		}
-		//	}
-		//
-		//#elif _ITERATOR_DEBUG_LEVEL == 1
-		//	void _Compat(const _Myiter& _Right) const
-		//	{	// test for compatible iterator pair
-		//		_SCL_SECURE_VALIDATE(this->_Getcont() != 0);
-		//		_SCL_SECURE_VALIDATE_RANGE(this->_Getcont() == _Right._Getcont());
-		//	}
-		//
-		//#else /* _ITERATOR_DEBUG_LEVEL == 0 */
-		//	void _Compat(const _Myiter&) const
-		//	{	// test for compatible iterator pair
-		//	}
-		//#endif /* _ITERATOR_DEBUG_LEVEL */
-		//
 	};
 }
 
-namespace std {
-	template<class _Container>
-	struct _Is_checked_helper<stdx::stride_iterator<_Container> >
-		: public true_type
-	{	// mark back_insert_iterator as checked
-	};
-}
+//namespace std {
+//	template<class _Container, size_t _Stride>
+//	struct _Is_checked_helper<stdx::stride_iterator<_Container, _Stride> >
+//		: public true_type
+//	{	// mark back_insert_iterator as checked
+//	};
+//}
 
 namespace stdx {
-	template <class _Ty>
-	class stride_range
+	template <class _Ty, size_t _Stride = -1>
+	class stride_range : protected stride_iterator_storage<_Ty,_Stride>
 	{
 	public:
 		typedef	std::random_access_iterator_tag	iterator_category;
@@ -131,33 +154,32 @@ namespace stdx {
 		typedef value_type*										pointer;
 		typedef value_type&										reference;
 
-		typedef stride_iterator<value_type>						iterator_type;
-		typedef stride_iterator<std::add_const_t<value_type>>	const_iterator_type;
+		using byte_ptr = std::conditional_t<std::is_const<_Ty>::value, const char*, char*>;
+		using storage_t = stride_iterator_storage<_Ty, _Stride>;
+
+		typedef stride_iterator<value_type, _Stride>					iterator_type;
+		typedef stride_iterator<std::add_const_t<value_type>, _Stride>	const_iterator_type;
+
 	protected:
-		pointer data;
-		// stride in byte
-		size_t	stride;
 		pointer stop;
 	public:
 		stride_range()
-			:data(nullptr), stride(1), stop(nullptr)
+			: stop(nullptr)
 		{}
 
 		stride_range(pointer data, size_t stride, size_t count)
-			:data(data), stride(stride), stop(reinterpret_cast<pointer>(reinterpret_cast<char*>(data) + stride*count))
+			:stop(reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*count))
 		{}
 
 		void reset(pointer data, size_t stride, size_t count)
 		{
-			this->data = data;
-			this->stride = stride;
-			this->stop = reinterpret_cast<pointer>(reinterpret_cast<char*>(data) + stride*count);
+			storage_t::assign(data, stride);
+			this->stop = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*count);
 		}
 
 		void reset()
 		{
-			data = nullptr;
-			stride = 0;
+			storage_t::assign(nullptr, -1);
 			stop = nullptr;
 		}
 
@@ -168,7 +190,7 @@ namespace stdx {
 
 		size_t size()
 		{
-			return ((char*) stop - (char*) data) / stride;;
+			return ((byte_ptr) stop - (byte_ptr) data) / stride;
 		}
 
 		iterator_type begin()
@@ -203,7 +225,7 @@ namespace stdx {
 
 		reference operator[](int idx)
 		{
-			auto ptr = reinterpret_cast<pointer>(reinterpret_cast<char*>(data) + stride*idx);
+			auto ptr = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*idx);
 #if _ITERATOR_DEBUG_LEVEL == 2
 			if (stop <= ptr)
 			{	// report error

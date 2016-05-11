@@ -406,22 +406,24 @@ namespace DirectX {
 
 		void Clear(ID3D11DeviceContext *pDeviceContext, FXMVECTOR Color = g_XMIdentityR3);
 
-		void Reset() {
-			m_pRenderTargetView.Reset();
-			Texture2D::Reset();
-		}
+		void Reset();
 
 		RenderableTexture2D& operator=(nullptr_t) { Reset(); return *this; }
 
 		// Create a shared bitmap interface to use D2D
 		ID2D1Bitmap1* CreateD2DBitmapView(ID2D1DeviceContext *pContext, float dpi = 96.0f);
 
-		ID2D1Bitmap1* BitmapView() { return m_pD2dBitmap; }
+		ID2D1Bitmap1* BitmapView() { return m_pD2dBitmap.Get(); }
+
+		operator ID2D1Bitmap1* ()
+		{
+			return m_pD2dBitmap.Get();
+		}
 
 	protected:
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView>			m_pRenderTargetView;
 		// For not generate dependency for d2d headers
-		ID2D1Bitmap1*											m_pD2dBitmap;
+		Microsoft::WRL::ComPtr<ID2D1Bitmap1>					m_pD2dBitmap;
 	};
 
 	/// <summary>

@@ -55,7 +55,7 @@ void MeshBuffer::CreateInputLayout(ID3D11Device * pDevice, const void * shaderBy
 	{
 		ThrowIfFailed(
 			pDevice->CreateInputLayout(pInputElements, InputElementCount, shaderByteCode, byteCodeLength, &pInputLayout)
-			);
+		);
 	}
 	if (pInputLayout == nullptr)
 	{
@@ -79,7 +79,7 @@ void MeshBuffer::Draw(ID3D11DeviceContext *pContext, IEffect *pEffect) const
 			pContext->GetDevice(&pDevice);
 			ThrowIfFailed(
 				pDevice->CreateInputLayout(pInputElements, InputElementCount, shaderByteCode, byteCodeLength, &pLayout)
-				);
+			);
 		}
 		pContext->IASetInputLayout(pLayout.Get());
 	}
@@ -132,6 +132,7 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 
 	auto& Vertices = pResult->Vertices;
 	auto& Facets = pResult->Facets;
+	auto& Indices = pResult->Indices;
 	auto& Parts = pResult->Parts;
 	auto& Positions = pResult->Positions;
 	auto& Normals = pResult->Normals;
@@ -147,8 +148,15 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		{
 			const auto& idcs = shape.mesh.indices;
 			//FacetPrimitives::Triangle<uint16_t> tri{ idcs[i * 3 + 0],idcs[i * 3 + 1],idcs[i * 3 + 2] };
-			FacetPrimitives::Triangle<IndexType> tri{ (IndexType)idcs[i * 3 + 2],(IndexType)idcs[i * 3 + 1],(IndexType)idcs[i * 3 + 0] };
-			Facets.push_back(tri);
+			
+			//FacetPrimitives::Triangle<IndexType> tri{ 
+			//	(IndexType)idcs[i * 3 + 2],
+			//	(IndexType)idcs[i * 3 + 1],
+			//	(IndexType)idcs[i * 3 + 0] };
+			//Facets.push_back(tri);
+			Indices.push_back((IndexType)idcs[i * 3 + 2]);
+			Indices.push_back((IndexType)idcs[i * 3 + 1]);
+			Indices.push_back((IndexType)idcs[i * 3 + 0]);
 		}
 
 		stride_range<Vector3> Pos(reinterpret_cast<Vector3*>(&shape.mesh.positions[0]), sizeof(float) * 3, N);
@@ -231,9 +239,9 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		iOffset += mesh->IndexCount;
 	}
 
-	Positions = stride_range<Vector3>((Vector3*)&Vertices[0].position, sizeof(VertexType), Vertices.size());
-	Normals = stride_range<Vector3>((Vector3*)&Vertices[0].normal, sizeof(VertexType), Vertices.size());
-	TexCoords = stride_range<Vector2>((Vector2*)&Vertices[0].textureCoordinate, sizeof(VertexType), Vertices.size());
+	Positions.reset((Vector3*)&Vertices[0].position, sizeof(VertexType), Vertices.size());
+	Normals.reset((Vector3*)&Vertices[0].normal, sizeof(VertexType), Vertices.size());
+	TexCoords.reset((Vector2*)&Vertices[0].textureCoordinate, sizeof(VertexType), Vertices.size());
 
 	DirectX::CreateBoundingBoxesFromPoints(pResult->BoundBox, pResult->BoundOrientedBox,
 		Positions.size(), &Positions[0], sizeof(VertexType));
@@ -271,8 +279,8 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 	}
 
 	// Device Dependent Resources Creation
-	auto pVertexBuffer = DirectX::CreateVertexBuffer(pDevice, Vertices.size(), &Vertices[0]);
-	auto pIndexBuffer = DirectX::CreateIndexBuffer(pDevice, Facets.size() * 3, &Facets[0].V0);
+	auto pVertexBuffer = DirectX::CreateVertexBuffer(pDevice, Vertices.size(), Vertices.data());
+	auto pIndexBuffer = DirectX::CreateIndexBuffer(pDevice, Indices.size(), Indices.data());
 
 	for (size_t i = 0; i < shapes.size(); i++)
 	{
@@ -318,7 +326,7 @@ void DefaultStaticModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4 
 
 bool DefaultStaticModel::IsInMemery() const
 {
-	return Vertices.size() > 0 && Facets.size() > 0;
+	return !Vertices.empty() && !Indices.empty();
 }
 
 bool DefaultStaticModel::CreateDeviceResource(ID3D11Device * pDevice)
@@ -332,10 +340,10 @@ bool DefaultStaticModel::CreateDeviceResource(ID3D11Device * pDevice)
 	}
 
 	// Device Dependent Resources Creation
-	auto pVertexBuffer = DirectX::CreateVertexBuffer(pDevice, Vertices.size(), &Vertices[0]);
+	auto pVertexBuffer = DirectX::CreateVertexBuffer(pDevice, Vertices.size(), Vertices.data());
 	if (!pVertexBuffer)
 		return false;
-	auto pIndexBuffer = DirectX::CreateIndexBuffer(pDevice, Facets.size() * 3, &Facets[0].V0);
+	auto pIndexBuffer = DirectX::CreateIndexBuffer(pDevice, Indices.size(), Indices.data());
 	if (!pIndexBuffer)
 		return false;
 
@@ -351,7 +359,12 @@ bool DefaultStaticModel::CreateDeviceResource(ID3D11Device * pDevice)
 void DefaultStaticModel::ReleaseDynamicResource()
 {
 	Vertices.clear();
-	Facets.clear();
+	Indices.clear();
+	Facets.reset();
+	Positions.reset();
+	Normals.reset();
+	TexCoords.reset();
+	//Facets.clear();
 }
 
 bool DefaultStaticModel::Serialize(std::ostream & binary) const
@@ -430,6 +443,18 @@ void CompositionModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4& t
 
 		part.Render(pContext, pEffect);
 	}
+}
+
+void CompositionModel::CreateBoundingGeometry()
+{
+	if (Parts.empty()) return;
+
+	this->BoundBox = Parts[0].BoundBox;
+	for (auto& part : Parts)
+	{
+		BoundingBox::CreateMerged(this->BoundBox, this->BoundBox, part.BoundBox);
+	}
+	BoundingOrientedBox::CreateFromBoundingBox(this->BoundOrientedBox, this->BoundBox);
 }
 
 //XMMATRIX IModelNode::GetWorldMatrix() const

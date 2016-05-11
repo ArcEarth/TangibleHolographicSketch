@@ -488,11 +488,12 @@ namespace DirectX
 			DefaultStaticModel();
 			~DefaultStaticModel();
 		public:
-			std::vector<VertexType>								Vertices;
-			std::vector<TriangleType>							Facets;
-			stdx::stride_range<Vector3>							Positions;
-			stdx::stride_range<Vector3>							Normals;
-			stdx::stride_range<Vector2>							TexCoords;
+			std::vector<VertexType>									Vertices;
+			std::vector<IndexType>									Indices;
+			stdx::stride_range<TriangleType, sizeof(TriangleType)>	Facets;
+			stdx::stride_range<Vector3, sizeof(VertexType)>			Positions;
+			stdx::stride_range<Vector3, sizeof(VertexType)>			Normals;
+			stdx::stride_range<Vector2, sizeof(VertexType)>			TexCoords;
 
 		private:
 			bool				m_IsLoaded;
@@ -560,14 +561,14 @@ namespace DirectX
 			//	BoneTransforms;
 
 		public:
-			stdx::stride_range<VertexType>							Vertices;
-			stdx::stride_range<TriangleType>						Facets;
-			stdx::stride_range<Vector3>								Positions;
-			stdx::stride_range<Vector3>								Normals;
-			stdx::stride_range<Vector2>								TexCoords;
-			stdx::stride_range<Vector4>								Tagents;
-			stdx::stride_range<uint32_t>							BlendWeights;
-			stdx::stride_range<uint32_t>							BlendIndices;
+			stdx::stride_range<VertexType, sizeof(VertexType)>		Vertices;
+			stdx::stride_range<TriangleType, sizeof(TriangleType)>	Facets;
+			stdx::stride_range<Vector3, sizeof(VertexType)>			Positions;
+			stdx::stride_range<Vector3, sizeof(VertexType)>			Normals;
+			stdx::stride_range<Vector2, sizeof(VertexType)>			TexCoords;
+			stdx::stride_range<Vector4, sizeof(VertexType)>			Tagents;
+			stdx::stride_range<uint32_t, sizeof(VertexType)>		BlendWeights;
+			stdx::stride_range<uint32_t, sizeof(VertexType)>		BlendIndices;
 
 		private:
 			bool				m_IsLoaded;
