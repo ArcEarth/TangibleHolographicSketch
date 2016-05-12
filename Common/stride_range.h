@@ -21,6 +21,7 @@ namespace stdx {
 		constexpr static size_t stride = _Stride;
 
 		stride_iterator_storage() { data = nullptr; }
+		stride_iterator_storage(_Ty* _data, size_t _stride) : data(_data) {}
 
 		inline constexpr size_t get_stride() const { return stride; }
 
@@ -45,6 +46,7 @@ namespace stdx {
 		size_t stride;
 
 		stride_iterator_storage() { data = nullptr; stride = sizeof(_Ty); }
+		stride_iterator_storage(_Ty* _data, size_t _stride) : data(_data), stride(_stride) {}
 
 		inline size_t get_stride() const { return stride; }
 
@@ -167,13 +169,13 @@ namespace stdx {
 			: stop(nullptr)
 		{}
 
-		stride_range(pointer data, size_t stride, size_t count)
-			:stop(reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*count))
+		stride_range(pointer _data, size_t _count, size_t _stride = -1)
+			: storage_t(_data, _stride), stop(reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(_data) + stride*_count))
 		{}
 
-		void reset(pointer data, size_t stride, size_t count)
+		void reset(pointer data, size_t count, size_t _stride = -1)
 		{
-			storage_t::assign(data, stride);
+			storage_t::assign(data, _stride);
 			this->stop = reinterpret_cast<pointer>(reinterpret_cast<byte_ptr>(data) + stride*count);
 		}
 

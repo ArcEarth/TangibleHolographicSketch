@@ -19,32 +19,74 @@ namespace DirectX
 	{
 		namespace FacetPrimitives
 		{
-			template <class _TIndex>
+			template <typename IndexType>
 			struct Triangle
 			{
-				union
-				{
-					_TIndex V[3];
-					struct
-					{
-						_TIndex V0, V1, V2;
-					};
-				};
+				static constexpr size_t VertexCount = 3;
+				typedef std::array<IndexType, VertexCount> container_type;
+				container_type v;
 
-				inline _TIndex& operator[](size_t idx)
+				typedef IndexType value_type;
+				typedef size_t size_type;
+				typedef ptrdiff_t difference_type;
+				typedef IndexType *pointer;
+				typedef const IndexType *const_pointer;
+				typedef IndexType& reference;
+				typedef const IndexType& const_reference;
+
+				typedef typename container_type::iterator iterator;
+				typedef typename container_type::const_iterator const_iterator;
+
+				typedef typename container_type::reverse_iterator reverse_iterator;
+				typedef typename container_type::const_reverse_iterator const_reverse_iterator;
+
+				Triangle() {}
+				Triangle(const IndexType &v0, const IndexType &v1, const IndexType &v2)
 				{
-					return V[idx];
+					v[0] = v0; v[1] = v1; v[2] = v2;
+				}
+				Triangle(const IndexType *v_)
+				{
+					v[0] = v_[0]; v[1] = v_[1]; v[2] = v_[2];
+				}
+				template <class S> explicit Triangle(const S &x)
+				{
+					v[0] = x[0];  v[1] = x[1];  v[2] = x[2];
+				}
+				IndexType &operator[] (int i) { return v[i]; }
+				IndexType operator[] (int i) const { return v[i]; }
+				operator const IndexType * () const { return &(v[0]); }
+				operator IndexType * () { return &(v[0]); }
+
+				void rewind() {
+					std::swap(v[0], v[2]);
 				}
 
-				inline _TIndex operator[](size_t idx) const
+				int indexof(IndexType v_) const
 				{
-					return V[idx];
+					return (v[0] == v_) ? 0 :
+						(v[1] == v_) ? 1 :
+						(v[2] == v_) ? 2 : -1;
 				}
+
+				// contrainer access
+				auto begin() { return v.begin(); }
+				auto end() { return v.end(); }
+				auto begin() const { return v.begin(); }
+				auto end() const { return v.end(); }
+
+				auto rbegin() { return v.rbegin(); }
+				auto rend() { return v.rend(); }
+				auto rbegin() const { return v.rbegin(); }
+				auto rend() const { return v.rend(); }
+
+				size_t size() const { return VertexCount; }
 
 				operator XMUINT3() const
 				{
-					return XMUINT3(V0, V1, V2);
+					return XMUINT3(v[0], v[1], v[2]);
 				}
+
 			};
 		}
 

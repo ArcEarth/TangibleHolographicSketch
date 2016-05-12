@@ -214,14 +214,14 @@ namespace DirectX
 
 		template <class TVertex>
 		std::enable_if_t<has_uv<TVertex>::value>
-			XM_CALLCONV set_uv(TVertex& vertex, float u, float v)
+			XM_CALLCONV set_uv(TVertex& vertex, const float u, const float v)
 		{
 			vertex.uv.x = u; vertex.uv.y = v;
 		}
 		
 		template <class TVertex>
 		std::enable_if_t<!has_uv<TVertex>::value && has_tex<TVertex>::value>
-			XM_CALLCONV set_uv(TVertex& vertex, float u, float v)
+			XM_CALLCONV set_uv(TVertex& vertex, const float u, const float v)
 		{
 			vertex.textureCoordinate.x = u;
 			vertex.textureCoordinate.y = v;
@@ -229,7 +229,7 @@ namespace DirectX
 
 		template <class TVertex>
 		std::enable_if_t<!has_uv<TVertex>::value && !has_tex<TVertex>::value>
-			XM_CALLCONV set_uv(TVertex& vertex, float u, float v)
+			XM_CALLCONV set_uv(TVertex& vertex, const float u, const float v)
 		{
 		}
 

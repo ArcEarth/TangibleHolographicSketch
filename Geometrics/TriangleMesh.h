@@ -145,12 +145,131 @@ namespace Geometrics
 		void flip()
 		{
 			using namespace DirectX::VertexTraits;
-			for (auto& v : vertices)
-				set_normal(v, -get_normal(v));
+
+			if (has_normal<VertexType>::value)
+			{
+				for (auto& v : vertices)
+					set_normal(v, -get_normal(v));
+			}
 
 			static constexpr int vc = FaceType::VertexCount;
 			for (int i = 0; i < indices.size() / vc; i++)
 				std::reverse(indices.begin() + i * vc, indices.begin() + (i + 1)* vc);
+		}
+
+		void generate_normal()
+		{
+			using namespace DirectX::VertexTraits;
+			using namespace DirectX;
+			static_assert(PolygonVertex == 3, "This mesh is not trigle mesh, please trianglize it first");
+			static_assert(has_normal<VertexType>::value, "The vertex type dose not contains normal field");
+
+			std::vector<XMVECTOR, XMAllocator> normals(vertices.size());
+
+			// set zero
+			std::memset(normals.data(), 0, normals.size() * sizeof(XMVECTOR));
+
+			XMVECTOR v0, v1, v2, n;
+			for (const auto& face : this->facets())
+			{
+				v0 = get_position(vertices[face[0]]);
+				v1 = get_position(vertices[face[1]]);
+				v2 = get_position(vertices[face[2]]);
+				v1 -= v0;
+				v2 -= v0;
+
+				v1 = XMVector3Normalize(v1);
+				v2 = XMVector3Normalize(v2);
+				n = XMVector3Cross(v1, v2); // weighted normal 
+
+				//n = XMVectorNegate(n);
+				//if (XMVectorGetY(n) < 0.0f)
+				//	n = XMVectorNegate(n);
+				//facetNormals.emplace_back(n);
+				normals[face[0]] += n;
+				normals[face[1]] += n;
+				normals[face[2]] += n;
+			}
+
+			for (size_t i = 0; i < vertices.size(); i++)
+			{
+				n = XMVector3Normalize(normals[i]);
+				set_normal(vertices[i], n);
+			}
+		}
+
+		void generate_tangent()
+		{
+			using namespace DirectX::VertexTraits;
+			using namespace DirectX;
+
+			static_assert(PolygonVertex == 3, "This mesh is not trigle mesh, please trianglize it first");
+			static_assert(has_tangent<VertexType>::value, "The vertex type dose not contains tangent field");
+
+			std::vector<XMVECTOR, XMAllocator> tan1(vertices.size() * 2);
+			XMVECTOR* tan2 = &tan1[vertices.size()];
+			std::memset(tan1.data(), 0, tan1.size() * sizeof(XMVECTOR));
+
+			for (const auto& face : this->facets())
+			{
+				{
+					XMVECTOR v0, v1, v2, w0, w1, w2;
+					v0 = get_position(vertices[face[0]]);
+					w0 = get_uv(vertices[face[0]]);
+
+					v1 = get_position(vertices[face[1]]);
+					w1 = get_uv(vertices[face[1]]);
+
+					v2 = get_position(vertices[face[2]]);
+					w2 = get_uv(vertices[face[2]]);
+				}
+				XMFLOAT4A v_1, v_2, w_1, w_2;
+
+				XMStoreA(v_1, v1 - v0); 
+				XMStoreA(v_2, v2 - v0);
+				XMStoreA(w_1, w1 - w0; 
+				XMStoreA(w_2, w2 - w0);
+
+				float x1 = v_1.x; float x2 = v_2.x;
+				float y1 = v_1.y; float y2 = v_2.y;
+				float z1 = v_1.z; float z2 = v_2.z;
+
+				float s1 = w_1.x; float s2 = w_2.x;
+				float t1 = w_1.y; float t2 = w_2.y;
+
+				float r = 1.0F / (s1 * t2 - s2 * t1);
+				XMVECTOR sdir = XMVectorSet(
+					(t2 * x1 - t1 * x2) * r,
+					(t2 * y1 - t1 * y2) * r,
+					(t2 * z1 - t1 * z2) * r, .0f);
+				XMVECTOR tdir = XMVectorSet(
+					(s1 * x2 - s2 * x1) * r,
+					(s1 * y2 - s2 * y1) * r,
+					(s1 * z2 - s2 * z1) * r, .0f);
+
+				tan1[face[0]] += sdir;
+				tan1[face[1]] += sdir;
+				tan1[face[2]] += sdir;
+
+				tan2[face[0]] += tdir;
+				tan2[face[1]] += tdir;
+				tan2[face[2]] += tdir;
+			}
+
+			for (size_t i = 0; i < vertices.size(); i++)
+			{
+				XMVECTOR n = get_normal(vertices[i], n);
+				XMVECTOR t = tan1[i];
+
+				// Gram-Schmidt orthogonalize
+				XMVECTOR nt = XMVector3Normalize(t - n * XMVector3Dot(n, t));
+
+				XMVECTOR w = XMVectorLess(XMVector3Dot(XMVector3Cross(n, t), tan2[i]), XMVectorZero());
+				w = XMVectorSelect(g_XMNegativeOne.v, g_XMOne.v, w);
+
+				nt = _DXMEXT XMVectorSelect<0,0,0,1>(nt, w);
+				set_tangent(vertices[i], nt);
+			}
 		}
 
 		// applies an uniform transform to all vertices in the mesh 
@@ -370,7 +489,7 @@ namespace Geometrics
 				std::sort(output->begin(), output->end());
 			return count;
 		}
-			};
+	};
 
 	namespace Internal
 	{
@@ -554,4 +673,4 @@ namespace Geometrics
 
 
 
-		}
+}

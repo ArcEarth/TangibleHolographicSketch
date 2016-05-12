@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <DirectXPackedVector.h>
 #include <unordered_set>
+#include <Geometrics\TriangleMesh.h>
 
 //using namespace Causality;
 using namespace DirectX;
@@ -116,10 +117,19 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 	vector<shape_t> shapes;
 	vector<material_t> materis;
 	path file(fileName);
+	string err;
 	auto dir = file.parent_path();
-	auto result = tinyobj::LoadObj(shapes, materis, file.string().c_str(), (dir.string() + "\\").c_str());
 
-	if (!result.empty())
+	std::ifstream ifs(file);
+
+	if (!ifs.is_open())
+		return nullptr;
+
+	MaterialFileReader mtlReader(dir.string() + '\\');
+
+	auto result = tinyobj::LoadObj(shapes, materis, err, ifs, mtlReader, true);
+
+	if (!result)
 		return nullptr; // error happend while loading obj file
 
 	DefaultStaticModel *pResult = new DefaultStaticModel();
@@ -129,6 +139,38 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 	std::vector<std::shared_ptr<PhongMaterial>> Materials;
 
 	path lookup(textureDir);
+
+	bool useBump = false;
+	for (auto& mat : materis)
+	{
+		HRESULT hr = S_OK;
+		ComPtr<ID3D11Resource> pResource;
+		auto pMaterial = make_shared<PhongMaterial>();
+		pMaterial->Name = mat.name;
+		pMaterial->Alpha = mat.dissolve;
+		pMaterial->DiffuseColor = Color(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2], 1.0f);
+		pMaterial->AmbientColor = Color(mat.ambient[0], mat.ambient[1], mat.ambient[2], 1.0f);
+		pMaterial->SpecularColor = Color(mat.specular[0], mat.specular[1], mat.specular[2], 1.0f);
+		if (!mat.diffuse_texname.empty())
+		{
+			auto fileName = lookup / mat.diffuse_texname;
+			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->DiffuseMap);
+		}
+		if (!mat.specular_texname.empty())
+		{
+			auto fileName = lookup / mat.specular_texname;
+			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->SpecularMap);
+
+		}
+		if (!mat.bump_texname.empty())
+		{
+			auto fileName = lookup / mat.bump_texname;
+			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->NormalMap);
+			useBump = true;
+		}
+		ThrowIfFailed(hr);
+		Materials.push_back(pMaterial);
+	}
 
 	auto& Vertices = pResult->Vertices;
 	auto& Facets = pResult->Facets;
@@ -173,62 +215,22 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		const Vector3* Nor = reinterpret_cast<Vector3*>(shape.mesh.normals.data());
 		const Vector2* Tex = reinterpret_cast<Vector2*>(shape.mesh.texcoords.data());
 
-		if (shape.mesh.normals.size() == 0)
+		for (size_t i = 0; i < N; i++)
 		{
-			// Generate smooth vertex normal, should be improved to corperate co-tanget weight
-			shape.mesh.normals.resize(N * 3);
-			XMVECTOR n, v0, v1, v2;
+			Vertices.emplace_back();
+			auto& ver = Vertices.back();
+			VertexTraits::set_position(ver, Pos[i]);
 
-			stride_range<Vector3, sizeof(Vector3)> normals(reinterpret_cast<Vector3*>(shape.mesh.normals.data()), -1, N);
-			using idx_t = decltype(shape.mesh.indices[0]);
-			using tri_t = FacetPrimitives::Triangle<idx_t>;
-			stride_range<tri_t,sizeof(tri_t)> facets(reinterpret_cast<tri_t*>(shape.mesh.indices.data()), -1, shape.mesh.indices.size() / 3);
-			ZeroMemory(shape.mesh.normals.data(), shape.mesh.normals.size() * sizeof(float));
+			if (Nor)
+				VertexTraits::set_normal(ver, Nor[i]);
 
-			for (const auto& face : facets)
-			{
-				v0 = Pos[face.V0];
-				v1 = Pos[face.V1];
-				v2 = Pos[face.V2];
-				v1 -= v0;
-				v2 -= v0;
-				n = XMVector3Cross(v1, v2);
-				n = XMVector3Normalize(n);
-				//n = XMVectorNegate(n);
-				//if (XMVectorGetY(n) < 0.0f)
-				//	n = XMVectorNegate(n);
-				//facetNormals.emplace_back(n);
-				normals[face.V0] += n;
-				normals[face.V1] += n;
-				normals[face.V2] += n;
-			}
-
-			for (auto& nor : normals)
-			{
-				nor.Normalize();
-			}
-		}
-
-		if (shape.mesh.texcoords.size() != 0)
-		{
-			if (flipNormal)
-				for (size_t i = 0; i < N; i++)
-				{
-					Vector2 uv(Tex[i].x, 1.0f - Tex[i].y);
-					Vertices.emplace_back(Pos[i], Nor[i], uv);
-				}
+			if (Tex)
+				if (flipNormal)
+					VertexTraits::set_uv(ver, Tex[i].x, 1.0f - Tex[i].y);
+				else
+					VertexTraits::set_uv(ver, Tex[i].x, Tex[i].y);
 			else
-				for (size_t i = 0; i < N; i++)
-				{
-					Vertices.emplace_back(Pos[i], Nor[i], Tex[i]);
-				}
-		}
-		else
-		{
-			for (size_t i = 0; i < N; i++)
-			{
-				Vertices.emplace_back(Pos[i], Nor[i], Vector2(0, 0));
-			}
+				VertexTraits::set_uv(ver, .0f, .0f);
 		}
 
 		auto mesh = std::make_shared<MeshBuffer>();
@@ -253,45 +255,15 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		iOffset += mesh->IndexCount;
 	}
 
-	Positions.reset((Vector3*)&Vertices[0].position, sizeof(VertexType), Vertices.size());
-	Normals.reset((Vector3*)&Vertices[0].normal, sizeof(VertexType), Vertices.size());
-	TexCoords.reset((Vector2*)&Vertices[0].textureCoordinate, sizeof(VertexType), Vertices.size());
-	Facets.reset((TriangleType*)Indices.data(), sizeof(TriangleType), Indices.size() / 3);
+	Positions.reset((Vector3*)&Vertices[0].position, Vertices.size());
+	Normals.reset((Vector3*)&Vertices[0].normal, Vertices.size());
+	TexCoords.reset((Vector2*)&Vertices[0].textureCoordinate, Vertices.size());
+	Facets.reset((TriangleType*)Indices.data(), Indices.size() / 3);
 
 	DirectX::CreateBoundingBoxesFromPoints(pResult->BoundBox, pResult->BoundOrientedBox,
 		Positions.size(), &Positions[0], sizeof(VertexType));
 
 	BoundingSphere::CreateFromPoints(pResult->BoundSphere, Positions.size(), &Positions[0], sizeof(VertexType));
-
-	for (auto& mat : materis)
-	{
-		HRESULT hr = S_OK;
-		ComPtr<ID3D11Resource> pResource;
-		auto pMaterial = make_shared<PhongMaterial>();
-		pMaterial->Name = mat.name;
-		pMaterial->Alpha = mat.dissolve;
-		pMaterial->DiffuseColor = Color(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2], 1.0f);
-		pMaterial->AmbientColor = Color(mat.ambient[0], mat.ambient[1], mat.ambient[2], 1.0f);
-		pMaterial->SpecularColor = Color(mat.specular[0], mat.specular[1], mat.specular[2], 1.0f);
-		if (!mat.diffuse_texname.empty())
-		{
-			auto fileName = lookup / mat.diffuse_texname;
-			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->DiffuseMap);
-		}
-		if (!mat.specular_texname.empty())
-		{
-			auto fileName = lookup / mat.specular_texname;
-			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->SpecularMap);
-
-		}
-		if (!mat.normal_texname.empty())
-		{
-			auto fileName = lookup / mat.normal_texname;
-			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->NormalMap);
-		}
-		ThrowIfFailed(hr);
-		Materials.push_back(pMaterial);
-	}
 
 	// Device Dependent Resources Creation
 	auto pVertexBuffer = DirectX::CreateVertexBuffer(pDevice, Vertices.size(), Vertices.data());

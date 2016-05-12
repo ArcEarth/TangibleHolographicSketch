@@ -72,14 +72,14 @@ std::vector<std::shared_ptr<PhongMaterial>> PhongMaterial::CreateFromMtlFile(ID3
 			auto fileName = lookup / mat.specular_texname;
 			pMaterial->SpecularMapName = fileName.string();
 		}
-		if (!mat.normal_texname.empty())
+		if (!mat.bump_texname.empty())
 		{
-			auto fileName = lookup / mat.normal_texname;
+			auto fileName = lookup / mat.bump_texname;
 			pMaterial->NormalMapName = fileName.string();
 		}
 		if (!mat.ambient_texname.empty())
 		{
-			auto fileName = lookup / mat.normal_texname;
+			auto fileName = lookup / mat.ambient_texname;
 			pMaterial->AmbientMapName = fileName.string();
 		}
 		Materials.push_back(pMaterial);
