@@ -162,12 +162,14 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->SpecularMap);
 
 		}
-		if (!mat.bump_texname.empty())
+
+		if (VertexTraits::has_tangent<VertexType>::value && !mat.bump_texname.empty())
 		{
 			auto fileName = lookup / mat.bump_texname;
 			hr = CreateWICTextureFromFile(pDevice, fileName.wstring().data(), &pResource, &pMaterial->NormalMap);
 			useBump = true;
 		}
+
 		ThrowIfFailed(hr);
 		Materials.push_back(pMaterial);
 	}
@@ -194,28 +196,23 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 
 	for (auto& shape : shapes)
 	{
-		auto N = shape.mesh.positions.size() / 3;
-
-		for (size_t i = 0; i < shape.mesh.indices.size() / 3; i++)
-		{
-			const auto& idcs = shape.mesh.indices;
-			//FacetPrimitives::Triangle<uint16_t> tri{ idcs[i * 3 + 0],idcs[i * 3 + 1],idcs[i * 3 + 2] };
-			
-			//FacetPrimitives::Triangle<IndexType> tri{ 
-			//	(IndexType)idcs[i * 3 + 2],
-			//	(IndexType)idcs[i * 3 + 1],
-			//	(IndexType)idcs[i * 3 + 0] };
-			//Facets.push_back(tri);
-			Indices.push_back((IndexType)idcs[i * 3 + 2]);
-			Indices.push_back((IndexType)idcs[i * 3 + 1]);
-			Indices.push_back((IndexType)idcs[i * 3 + 0]);
-		}
-
+		ptrdiff_t Nv = shape.mesh.positions.size() / 3;
+		ptrdiff_t Nf = shape.mesh.indices.size() / 3;
 		const Vector3* Pos = reinterpret_cast<Vector3*>(shape.mesh.positions.data());
 		const Vector3* Nor = reinterpret_cast<Vector3*>(shape.mesh.normals.data());
 		const Vector2* Tex = reinterpret_cast<Vector2*>(shape.mesh.texcoords.data());
 
-		for (size_t i = 0; i < N; i++)
+		// Copy triangles
+		for (size_t i = 0; i < Nf; i++)
+		{
+			const auto& idcs = shape.mesh.indices;
+
+			Indices.push_back((IndexType)idcs[i * 3 + 2]);
+			Indices.push_back((IndexType)idcs[i * 3 + 1]);
+			Indices.push_back((IndexType)idcs[i * 3 + 0]);
+		}
+		// Copy vertices
+		for (size_t i = 0; i < Nv; i++)
 		{
 			Vertices.emplace_back();
 			auto& ver = Vertices.back();
@@ -229,9 +226,23 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 					VertexTraits::set_uv(ver, Tex[i].x, 1.0f - Tex[i].y);
 				else
 					VertexTraits::set_uv(ver, Tex[i].x, Tex[i].y);
-			else
-				VertexTraits::set_uv(ver, .0f, .0f);
 		}
+
+		if (!Nor)
+		{
+			using gtri_t = Geometrics::Triangle<IndexType>;
+			Geometrics::generate_normal<VertexType, IndexType>(
+			{ &Vertices[vOffset],Nv },
+			{ reinterpret_cast<const gtri_t*>(&Indices[iOffset]), Nf });
+		}
+
+		//if (VertexTraits::has_tangent<VertexType>::value && useBump && Tex)
+		//{
+		//	using gtri_t = Geometrics::Triangle<IndexType>;
+		//	Geometrics::generate_tangent<VertexType, IndexType>(
+		//	{ &Vertices[vOffset],Nv },
+		//	{ reinterpret_cast<const gtri_t*>(&Indices[iOffset]), Nf });
+		//}
 
 		auto mesh = std::make_shared<MeshBuffer>();
 		Parts.emplace_back();
@@ -241,10 +252,10 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		auto& part = Parts.back();
 
 		DirectX::CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
-			N, (XMFLOAT3*)shape.mesh.positions.data(), sizeof(XMFLOAT3));
+			Nv, (XMFLOAT3*)shape.mesh.positions.data(), sizeof(XMFLOAT3));
 
 		mesh->SetInputElementDescription<VertexPositionNormalTexture>();
-		mesh->VertexCount = N;
+		mesh->VertexCount = Nv;
 		mesh->IndexCount = shape.mesh.indices.size();
 		mesh->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 		mesh->IndexFormat = ExtractDXGIFormat<uint16_t>::value;
@@ -253,6 +264,8 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		mesh->StartIndex = iOffset;
 		vOffset += mesh->VertexCount;
 		iOffset += mesh->IndexCount;
+
+
 	}
 
 	Positions.reset((Vector3*)&Vertices[0].position, Vertices.size());

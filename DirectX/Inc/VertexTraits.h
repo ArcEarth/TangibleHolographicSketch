@@ -12,7 +12,7 @@
         template <typename U, U> struct type_check;                     \
         template <typename _1> static yes &chk(type_check<Signature, &_1::member_name > *); \
         template <typename   > static no  &chk(...);                    \
-        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
+        static constexpr bool value = sizeof(chk<T>(0)) == sizeof(yes);     \
     }
 #endif // !HAS_MEM_FUNC
 
@@ -24,7 +24,7 @@
         typedef char no [2];                                            \
         template <typename> static yes &chk(decltype(T::member_name)*);	\
         template <typename> static no  &chk(...);						\
-        static bool const value = sizeof(chk<T>(0)) == sizeof(yes);     \
+        static constexpr bool value = sizeof(chk<T>(0)) == sizeof(yes);     \
     }
 #endif // !HAS_MEM_FUNC
 

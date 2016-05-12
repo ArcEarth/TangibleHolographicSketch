@@ -26,6 +26,7 @@
   <PropertyGroup Label="UserMacros">
     <TinyXml2Dir>..\tinyxml2</TinyXml2Dir>
     <DirectXTKDir>..\DirectXTK</DirectXTKDir>
+    <GSLIncDir>..\GSL\include</GSLIncDir>
     <SrcDir>.\Src</SrcDir>
     <ShaderBtyeCodeDir>$(SrcDir)\Shaders\Windows</ShaderBtyeCodeDir>
     <CdToSrcShaders>cd Src\Shaders\</CdToSrcShaders>
@@ -81,7 +82,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(DirectXTKDir)\Inc;$(ProjectDir)Inc;$(ProjectDir)..\Common\;$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(DirectXTKDir)\Inc;$(GSLIncDir);$(ProjectDir)Inc;$(ProjectDir)..\Common\;$(SolutionDir);$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
