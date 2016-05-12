@@ -8,6 +8,7 @@
 #include "Cca.h"
 #include <Geometrics\csg.h>
 #include <GeometricPrimitive.h>
+#include "AssetDictionary.h"
 using namespace Causality;
 using namespace DirectX::Scene;
 using namespace Causality::Math;
@@ -16,7 +17,7 @@ REGISTER_SCENE_OBJECT_IN_PARSER(bezier_patch, BezierPatchObject);
 
 float g_ControlPointsRaius = 0.005f;
 float g_ControlPointsConnectionRadius = 0.002;
-static constexpr size_t g_DecalResolution = 512;
+static constexpr size_t g_DecalResolution = 500;
 
 namespace Causality
 {
@@ -47,12 +48,14 @@ inline std::shared_ptr<MeshBuffer> CreateMeshBuffer(IRenderDevice* pDevice,
 void BezierPatchObject::Parse(const ParamArchive * archive)
 {
 	using namespace DirectX::VertexTraits;
-	SceneObject::Parse(archive);
+	VisualObject::Parse(archive);
 
 	const char* cpstr = nullptr;
 	std::vector<float> cps;
+	const char* mesh_name = nullptr;
 
 	m_isReady = false;
+	m_declDirtyFalg = 0;
 	int tessellation = 9;
 	GetParam(archive, "tessellation", tessellation);
 	Color color = DirectX::Colors::White;
@@ -63,6 +66,10 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	GetParam(archive, "margin", margin);
 	GetParam(archive, "z_tolerence", z_tolerence);
 
+	m_decalBackground = Colors::Transparent.v;
+	m_decalFill = Colors::LimeGreen.v;
+	m_decalStroke = Colors::Black.v;
+
 	//GetParamArray(archive, "control_points", cps);
 
 	//if (cps.size() < 16 * 3)
@@ -70,7 +77,12 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 
 	//std::copy_n(cps.data(), 3 * 16, (float*)m_patch.data());
 
-	BuildTriangleMesh(tessellation, color);
+	if (m_pRenderModel)
+	{
+		ExtractMeshFromModel(m_mesh, m_pRenderModel);
+	}
+	else
+		BuildTriangleMesh(tessellation, color);
 
 	BoundingBox bb;
 	BoundingOrientedBox obb;
@@ -91,23 +103,27 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		pModel->BoundBox = bb;
 		pModel->BoundOrientedBox = obb;
 		m_pModel.reset(pModel);
-		VisualObject::m_pRenderModel = pModel;
+		//VisualObject::m_pRenderModel = pModel;
 
 		m_decal = RenderableTexture2D(pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true);
 		m_decal.CreateD2DBitmapView(pD2dContext);
 
 		auto declMat = make_shared<PhongMaterial>();
 		declMat->DiffuseMap = m_decal;
+		declMat->UseAlphaDiscard = true;
 		pModel->pMaterial = std::move(declMat);
 
-		DrawDecal();
+		UpdateDecalGeometry(Scene->Get2DFactory());
 	}
 
-	concurrency::create_task([this, obb, bb, patchSize, z_tolerence, pDevice]() {
+	m_requestCancelLoading = 0;
+	m_loadingTask = concurrency::create_task([=]() {
 		m_mesh.build();
 
 		int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
 		int ysize = (int)ceilf(obb.Extents.z * 2.0f / patchSize);
+		xsize = 0;
+		ysize = 0;
 
 		//m_mesh.transform(XMMatrixTranslationFromVector(-XMLoad(bb.Center)));
 
@@ -116,8 +132,12 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		std::cout << "Building mesh BSP tree..." << std::endl;
 		auto meshNode = BSPNode::create(m_mesh);
 
+		if (this->m_requestCancelLoading) return;
+
 		Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
 		DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
+
+		if (this->m_requestCancelLoading) return;
 
 		float zoffset = bb.Center.y;
 		XMVECTOR sclFactor = XMVectorSet(0.9f * patchSize, 5.0 * z_tolerence, 0.9f *  patchSize, 1.0f);
@@ -133,8 +153,13 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 					XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
 
 				cubeMesh.transform(M);
+
+				if (this->m_requestCancelLoading) return;
+
 				// the area of interest for this index
 				auto cubeNode = BSPNode::create(cubeMesh);
+
+				if (this->m_requestCancelLoading) return;
 
 				XMVECTOR det;
 				M = XMMatrixInverse(&det, M);
@@ -143,9 +168,13 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 				std::cout << "Computing mesh insection (" << i << ',' << j << ')' << std::endl;
 				uptr<BSPNode> nodeRet(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
 
+				if (this->m_requestCancelLoading) return;
+
 				// the segmented mesh
 				m_fracorizedMeshes.emplace_back();
 				nodeRet->convertToMesh(m_fracorizedMeshes.back());
+
+				if (this->m_requestCancelLoading) return;
 			}
 		}
 
@@ -159,24 +188,36 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 
 		{
 			auto pModel = new CompositionModel();
+			this->m_factorizeModel.reset(pModel);
+			if (this->m_requestCancelLoading) return;
+
 			auto& parts = pModel->Parts;
 			for (auto& mesh : m_fracorizedMeshes)
 			{
 				parts.emplace_back();
 				auto& part = parts.back();
+
+				if (this->m_requestCancelLoading) return;
+
 				part.pMesh = CreateMeshBuffer(pDevice, mesh);
 				part.Name = "factorized_patch";
+
+				if (this->m_requestCancelLoading) return;
+
 				CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
 					mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
+
+				if (this->m_requestCancelLoading) return;
 			}
 			pModel->CreateBoundingGeometry();
 
-			this->m_factorizeModel.reset(pModel);
+			if (this->m_requestCancelLoading) return;
 
 			auto pVisual = new VisualObject();
 			pVisual->Scene = this->Scene;
 			pVisual->SetRenderModel(pModel);
 
+			if (this->m_requestCancelLoading) return;
 			{
 				this->AddChild(pVisual);
 				std::lock_guard<std::mutex>(this->Scene->ContentMutex());
@@ -245,12 +286,23 @@ void BezierPatchObject::BuildTriangleMesh(int tessellation, DirectX::SimpleMath:
 
 BezierPatchObject::~BezierPatchObject()
 {
+	m_requestCancelLoading = 1;
+
+	//if (!m_loadingTask.is_done())
+	//	m_loadingTask.wait();
+
+	//m_decal.BitmapView()->Release();
+	m_decal.Reset();
+	//std::cout << "Decal destroyed" << std::endl;
 	//auto pModel = static_cast<MonolithModel*>(m_pModel.release());
 	//if (pModel) delete pModel;
 }
 
 void BezierPatchObject::Render(IRenderContext * pContext, IEffect * pEffect)
 {
+	if (m_declDirtyFalg)
+		DrawDecal(Scene->Get2DContext());
+
 	VisualObject::Render(pContext, pEffect);
 
 	if (g_DebugView && pEffect)
@@ -315,10 +367,22 @@ void BezierPatchObject::Render(IRenderContext * pContext, IEffect * pEffect)
 	}
 }
 
-void BezierPatchObject::DrawDecal()
+inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)
 {
-	auto pFactory = Scene->Get2DFactory();
-	auto pContext = Scene->Get2DContext();
+	D2D1_COLOR_F cf = reinterpret_cast<const D2D1_COLOR_F&>(color);
+	return cf;
+}
+
+inline D2D1_POINT_2F XM_CALLCONV GetD2DPoint(const Vector2& v)
+{
+	D2D1_POINT_2F dv = reinterpret_cast<const D2D1_POINT_2F&>(v);
+	return dv;
+}
+
+
+
+void BezierPatchObject::UpdateDecalGeometry(I2DFactory* pFactory)
+{
 	ThrowIfFailed(pFactory->CreatePathGeometry(&m_patchGeos));
 	cptr<ID2D1GeometrySink> pSink;
 	ThrowIfFailed(m_patchGeos->Open(&pSink));
@@ -339,22 +403,35 @@ void BezierPatchObject::DrawDecal()
 	pSink->Close();
 	pSink.Reset();
 
+	m_declDirtyFalg = 1;
+}
+
+void BezierPatchObject::DrawDecal(I2DContext *pContext)
+{
 	D2D1_COLOR_F color;
 	color = { .2f,0.7f,.2f,1.0f };
-	ThrowIfFailed(pContext->CreateSolidColorBrush(color, &m_brush));
+
+	if (!m_brush)
+		ThrowIfFailed(pContext->CreateSolidColorBrush(color, &m_brush));
 
 	//color = { .0f,.0f,.0f,.0f };
-	color = { .5f,.5f,.5f,1.0f };
-
 	pContext->SetTarget(m_decal);
 	pContext->BeginDraw();
-	pContext->Clear(color);
-	pContext->FillGeometry(m_patchGeos.Get(), m_brush.Get());
-	color = { .0f,1.0f,.0f,1.0f };
-	m_brush->SetColor(color);
-	pContext->DrawGeometry(m_patchGeos.Get(), m_brush.Get());
-	ThrowIfFailed(pContext->EndDraw());
+	pContext->Clear(GetD2DColor(m_decalBackground));
 
+	if (m_patchGeos && m_brush)
+	{
+		m_brush->SetColor(GetD2DColor(m_decalFill));
+		pContext->FillGeometry(m_patchGeos.Get(), m_brush.Get());
+
+		m_brush->SetColor(GetD2DColor(m_decalStroke));
+		pContext->DrawGeometry(m_patchGeos.Get(), m_brush.Get(), 2.0f);
+	}
+
+	ThrowIfFailed(pContext->EndDraw());
+	pContext->SetTarget(nullptr);
+
+	m_declDirtyFalg = 0;
 }
 
 const TeapotPatch TeapotPatches[10] =

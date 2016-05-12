@@ -282,6 +282,7 @@ namespace DirectX
 
 			// This render method will not set "Transform"
 			void Render(ID3D11DeviceContext *pContext, IEffect* pEffect = nullptr);
+			~ModelPart();
 		};
 
 		class LocalMatrixHolder : virtual public ILocalMatrix
@@ -351,6 +352,7 @@ namespace DirectX
 		class MonolithModel : public IModelNode, public ModelPart
 		{
 		public:
+			virtual ~MonolithModel() override;
 			virtual void Render(ID3D11DeviceContext *pContext, const Matrix4x4& transform, IEffect* pEffect) override;
 
 			const std::string& Name() const override { return ModelPart::Name; }
@@ -375,6 +377,7 @@ namespace DirectX
 
 			std::vector<ModelPart>	Parts;
 
+			virtual ~CompositionModel() override;
 			virtual void Render(ID3D11DeviceContext *pContext, const Matrix4x4& transform, IEffect* pEffect) override;
 			const std::string& Name() const override { return _Name; }
 			void SetName(const std::string& name) { _Name = name; }
@@ -409,6 +412,7 @@ namespace DirectX
 
 		public:
 
+			virtual ~CollectionModel() override;
 			// All the data in Children's postion/orientation is 
 			// In the local coordinate of it's parent!
 			void AddChild(const std::shared_ptr<IModelNode> &model, const LinearTransform &transform = reinterpret_cast<const LinearTransform&>(LinearTransform::Identity));
@@ -486,7 +490,7 @@ namespace DirectX
 			bool Reload() override;
 
 			DefaultStaticModel();
-			~DefaultStaticModel();
+			virtual ~DefaultStaticModel() override;
 		public:
 			std::vector<VertexType>									Vertices;
 			std::vector<IndexType>									Indices;
@@ -553,7 +557,7 @@ namespace DirectX
 			virtual const BoundingOrientedBox* GetBoneBoundingBoxes() const override;
 
 			DefaultSkinningModel();
-			~DefaultSkinningModel();
+			virtual ~DefaultSkinningModel() override;
 
 		public:
 			//std::vector<Matrix4x4,

@@ -140,6 +140,16 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 
 	int vOffset = 0, iOffset = 0;
 
+	size_t vTotal = 0, iTotal = 0;
+	for (auto& shape : shapes)
+	{
+		vTotal += shape.mesh.positions.size() / 3;
+		iTotal += shape.mesh.indices.size();
+	}
+
+	Vertices.reserve(vTotal);
+	Indices.reserve(iTotal);
+
 	for (auto& shape : shapes)
 	{
 		auto N = shape.mesh.positions.size() / 3;
@@ -159,15 +169,22 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 			Indices.push_back((IndexType)idcs[i * 3 + 0]);
 		}
 
-		stride_range<Vector3> Pos(reinterpret_cast<Vector3*>(&shape.mesh.positions[0]), sizeof(float) * 3, N);
+		const Vector3* Pos = reinterpret_cast<Vector3*>(shape.mesh.positions.data());
+		const Vector3* Nor = reinterpret_cast<Vector3*>(shape.mesh.normals.data());
+		const Vector2* Tex = reinterpret_cast<Vector2*>(shape.mesh.texcoords.data());
+
 		if (shape.mesh.normals.size() == 0)
 		{
 			// Generate smooth vertex normal, should be improved to corperate co-tanget weight
 			shape.mesh.normals.resize(N * 3);
 			XMVECTOR n, v0, v1, v2;
-			stride_range<Vector3> normals(reinterpret_cast<Vector3*>(&shape.mesh.normals[0]), sizeof(float) * 3, N);
-			stride_range<FacetPrimitives::Triangle<unsigned int>> facets(reinterpret_cast<FacetPrimitives::Triangle<unsigned int>*>(&shape.mesh.indices[0]), sizeof(unsigned int) * 3, shape.mesh.indices.size() / 3);
-			std::fill_n(shape.mesh.normals.begin(), N * 3, .0f);
+
+			stride_range<Vector3, sizeof(Vector3)> normals(reinterpret_cast<Vector3*>(shape.mesh.normals.data()), -1, N);
+			using idx_t = decltype(shape.mesh.indices[0]);
+			using tri_t = FacetPrimitives::Triangle<idx_t>;
+			stride_range<tri_t,sizeof(tri_t)> facets(reinterpret_cast<tri_t*>(shape.mesh.indices.data()), -1, shape.mesh.indices.size() / 3);
+			ZeroMemory(shape.mesh.normals.data(), shape.mesh.normals.size() * sizeof(float));
+
 			for (const auto& face : facets)
 			{
 				v0 = Pos[face.V0];
@@ -191,9 +208,6 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 				nor.Normalize();
 			}
 		}
-		stride_range<Vector3> Nor(reinterpret_cast<Vector3*>(&shape.mesh.normals[0]), sizeof(float) * 3, N);
-
-		stride_range<Vector2> Tex(reinterpret_cast<Vector2*>(&shape.mesh.texcoords[0]), sizeof(float) * 2, N);
 
 		if (shape.mesh.texcoords.size() != 0)
 		{
@@ -242,6 +256,7 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 	Positions.reset((Vector3*)&Vertices[0].position, sizeof(VertexType), Vertices.size());
 	Normals.reset((Vector3*)&Vertices[0].normal, sizeof(VertexType), Vertices.size());
 	TexCoords.reset((Vector2*)&Vertices[0].textureCoordinate, sizeof(VertexType), Vertices.size());
+	Facets.reset((TriangleType*)Indices.data(), sizeof(TriangleType), Indices.size() / 3);
 
 	DirectX::CreateBoundingBoxesFromPoints(pResult->BoundBox, pResult->BoundOrientedBox,
 		Positions.size(), &Positions[0], sizeof(VertexType));
@@ -389,6 +404,8 @@ DefaultStaticModel::~DefaultStaticModel()
 
 }
 
+CollectionModel::~CollectionModel(){}
+
 void CollectionModel::AddChild(const std::shared_ptr<IModelNode>& model, const LinearTransform & transform)
 {
 	//model->SetParent(this);
@@ -411,6 +428,8 @@ void CollectionModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4& tr
 	}
 }
 
+ModelPart::~ModelPart() = default;
+
 void ModelPart::Render(ID3D11DeviceContext * pContext, IEffect * pEffect)
 {
 	if (pEffect == nullptr)
@@ -428,6 +447,8 @@ void ModelPart::Render(ID3D11DeviceContext * pContext, IEffect * pEffect)
 
 	pMesh->Draw(pContext, pEffect);
 }
+
+CompositionModel::~CompositionModel() {}
 
 void CompositionModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4& transform, IEffect* pEffect)
 {
@@ -509,6 +530,9 @@ void CompositionModel::CreateBoundingGeometry()
 //{
 //	return XMLoadFloat4x4(&LocalMatrix);
 //}
+
+MonolithModel::~MonolithModel() {}
+
 
 void MonolithModel::Render(ID3D11DeviceContext * pContext, const Matrix4x4& transform, IEffect * pEffect)
 {

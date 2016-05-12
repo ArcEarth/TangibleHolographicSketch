@@ -202,6 +202,7 @@ void EffectRenderControl::Begin(IRenderContext * context)
 	auto pContext = m_pRenderContext.Get();
 	if (m_IfClearRenderTarget)
 		m_RenderTarget.Clear(pContext, m_Background);
+	pContext->ClearState();
 	m_RenderTarget.SetAsRenderTarget(pContext);
 }
 

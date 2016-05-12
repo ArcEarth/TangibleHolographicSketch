@@ -19,7 +19,8 @@ namespace Causality
 
 		virtual void Render(IRenderContext * pContext, IEffect* pEffect = nullptr) override;
 	private:
-		void DrawDecal();
+		void DrawDecal(I2DContext* pContext);
+		void UpdateDecalGeometry(I2DFactory* pFactory);
 
 		CubicBezierPatch	m_patch;
 		using TriangleMeshType = Geometrics::TriangleMesh<DirectX::VertexPositionNormalTangentColorTexture>;
@@ -29,15 +30,22 @@ namespace Causality
 		void BuildTriangleMesh(int tessellation, DirectX::SimpleMath::Color &color);
 
 		// Decal texture for rendering highlights in target model
-		RenderableTexture2D			m_decal;
-		cptr<ID2D1PathGeometry>		m_patchGeos;
-		cptr<ID2D1SolidColorBrush>	m_brush;
+		int								m_declDirtyFalg;
+		int								m_requestCancelLoading;
+		RenderableTexture2D				m_decal;
+		cptr<ID2D1PathGeometry>			m_patchGeos;
+		cptr<ID2D1SolidColorBrush>		m_brush;
 
-		std::vector<TriangleMeshType> m_fracorizedMeshes;
-		uptr<DirectX::Scene::IModelNode> m_pModel;
+		Color							m_decalBackground;
+		Color							m_decalStroke;
+		Color							m_decalFill;
 
-		uptr<DirectX::Scene::IModelNode> m_factorizeModel;
+		std::vector<TriangleMeshType>		m_fracorizedMeshes;
+		uptr<DirectX::Scene::IModelNode>	m_pModel;
 
-		std::atomic_bool	m_isReady;
+		uptr<DirectX::Scene::IModelNode>	m_factorizeModel;
+
+		std::atomic_bool				m_isReady;
+		concurrency::task<void>			m_loadingTask;
 	};
 }

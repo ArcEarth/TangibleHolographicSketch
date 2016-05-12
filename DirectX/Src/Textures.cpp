@@ -137,7 +137,6 @@ ID2D1Bitmap1* RenderableTexture2D::CreateD2DBitmapView(ID2D1DeviceContext *pCont
 	if (m_pD2dBitmap != nullptr)
 		return m_pD2dBitmap.Get();
 
-	ID2D1Bitmap1* bitmap = nullptr;
 	// D2D requires BGRA color order
 	if (!IsDXGIFormatD2DSupported(Format()))
 		throw runtime_error("D2D only support DXGI Format DXGI_FORMAT_B8G8R8A8_UNORM or DXGI_FORMAT_A8_UNORM");
@@ -153,20 +152,18 @@ ID2D1Bitmap1* RenderableTexture2D::CreateD2DBitmapView(ID2D1DeviceContext *pCont
 			);
 
 	ComPtr<IDXGISurface2> dxgiSurface;
-	ThrowIfFailed(
-		m_pTexture.As(&dxgiSurface)
+	HRESULT hr;
+	hr = m_pTexture.As(&dxgiSurface);
+
+	if (FAILED(hr))	return nullptr;
+
+	hr = pContext->CreateBitmapFromDxgiSurface(
+		dxgiSurface.Get(),
+		&bitmapProperties,
+		&m_pD2dBitmap
 	);
 
-	ThrowIfFailed(
-		pContext->CreateBitmapFromDxgiSurface(
-			dxgiSurface.Get(),
-			&bitmapProperties,
-			&bitmap
-			)
-		);
-
-	m_pD2dBitmap = bitmap;
-	return bitmap;
+	return m_pD2dBitmap.Get();
 }
 
 
@@ -373,8 +370,7 @@ DynamicTexture2D::~DynamicTexture2D()
 
 RenderableTexture2D::~RenderableTexture2D()
 {
-	if (m_pD2dBitmap)
-		m_pD2dBitmap->Release();
+	Reset();
 }
 
 void RenderableTexture2D::Clear(ID3D11DeviceContext * pDeviceContext, FXMVECTOR Color)

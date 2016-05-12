@@ -9,6 +9,7 @@
     <mesh name="cube_mesh" src="cube.obj"></mesh>
     <mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>
+    <mesh name="ceil_mesh" src="woman.obj"></mesh>
     <!--<mesh name="bottle_mesh" src="wine_bottle.obj"></mesh>-->
   </scene.assets>
   <scene.content>
@@ -39,7 +40,7 @@
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <bezier_patch position="0,0.35,0" tessellation="10" patch_size="0.15">
+      <bezier_patch position="0,0.35,0" tessellation="10"  patch_size="0.15" mesh="{ceil_mesh}">
       
       </bezier_patch>
       
