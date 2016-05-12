@@ -81,7 +81,11 @@ namespace Geometrics
 	{
 		using namespace DirectX::VertexTraits;
 		using namespace DirectX;
-		static_assert(has_normal<VertexType>::value, "The vertex type dose not contains normal field");
+
+		if (!has_normal<VertexType>::value)
+			return false;
+
+		//static_assert(has_normal<VertexType>::value, "The vertex type dose not contains normal field");
 
 		std::vector<XMVECTOR, XMAllocator> normals(vertices.size());
 
@@ -111,6 +115,8 @@ namespace Geometrics
 			n = XMVector3Normalize(normals[i]);
 			set_normal(vertices[i], n);
 		}
+
+		return true;
 	}
 
 	// generate per vertex tangent for given triangle mesh
@@ -120,7 +126,9 @@ namespace Geometrics
 		using namespace DirectX::VertexTraits;
 		using namespace DirectX;
 
-		static_assert(has_tangent<VertexType>::value, "The vertex type dose not contains tangent field");
+		if (!has_tangent<VertexType>::value)
+			return false;
+		//static_assert(has_tangent<VertexType>::value, "The vertex type dose not contains tangent field");
 
 		std::vector<XMVECTOR, XMAllocator> tan1(vertices.size() * 2);
 		XMVECTOR* tan2 = &tan1[vertices.size()];
@@ -186,6 +194,8 @@ namespace Geometrics
 			nt = _DXMEXT XMVectorSelect<0, 0, 0, 1>(nt, w);
 			set_tangent(vertices[i], nt);
 		}
+
+		return true;
 	}
 
 

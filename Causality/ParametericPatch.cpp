@@ -130,7 +130,16 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 		using Geometrics::csg::BSPNode;
 
 		std::cout << "Building mesh BSP tree..." << std::endl;
-		auto meshNode = BSPNode::create(m_mesh);
+
+		uptr<BSPNode> meshNode;
+		try
+		{
+			meshNode = BSPNode::create(m_mesh);
+		}
+		catch (const std::exception&)
+		{
+			return;
+		}
 
 		if (this->m_requestCancelLoading) return;
 
@@ -166,13 +175,28 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 				cubeMesh.transform(M); // transform back
 
 				std::cout << "Computing mesh insection (" << i << ',' << j << ')' << std::endl;
-				uptr<BSPNode> nodeRet(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
+				uptr<BSPNode> nodeRet;
+				try
+				{
+					nodeRet.reset(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
+				}
+				catch (const std::exception&)
+				{
+					return;
+				}
 
 				if (this->m_requestCancelLoading) return;
 
 				// the segmented mesh
 				m_fracorizedMeshes.emplace_back();
-				nodeRet->convertToMesh(m_fracorizedMeshes.back());
+				try
+				{
+					nodeRet->convertToMesh(m_fracorizedMeshes.back());
+				}
+				catch (const std::exception&)
+				{
+					return;
+				}
 
 				if (this->m_requestCancelLoading) return;
 			}
