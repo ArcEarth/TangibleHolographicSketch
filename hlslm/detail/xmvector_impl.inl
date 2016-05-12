@@ -6,7 +6,8 @@
 #include "mpl.hpp"
 #include "vector_math.h"
 
-#define XM_EMPTY_BASE __declspec(empty_bases)
+//#define XM_EMPTY_BASE __declspec(empty_bases)
+#define XM_EMPTY_BASE
 
 namespace DirectX
 {
