@@ -6,7 +6,7 @@
     </enviroment>
   </scene.settings>
   <scene.assets>
-    <mesh name="ceil_mesh" src="ConfederatePistol.obj"></mesh>
+    <mesh name="ceil_mesh" src="woman.obj" flip_normal="true"></mesh>
     <mesh name="cube_mesh" src="cube.obj"></mesh>
     <!--<mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>-->
@@ -40,7 +40,7 @@
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <bezier_patch position="0,0.35,0" tessellation="10" scale="0.01" patch_size="0.15" mesh="{ceil_mesh}">
+      <bezier_patch position="0,0.35,0" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
       
       </bezier_patch>
       

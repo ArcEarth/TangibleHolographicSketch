@@ -202,15 +202,17 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		const Vector3* Nor = reinterpret_cast<Vector3*>(shape.mesh.normals.data());
 		const Vector2* Tex = reinterpret_cast<Vector2*>(shape.mesh.texcoords.data());
 
+		const auto& idcs = shape.mesh.indices;
 		// Copy triangles
 		for (size_t i = 0; i < Nf; i++)
 		{
-			const auto& idcs = shape.mesh.indices;
 
 			Indices.push_back((IndexType)idcs[i * 3 + 2]);
 			Indices.push_back((IndexType)idcs[i * 3 + 1]);
 			Indices.push_back((IndexType)idcs[i * 3 + 0]);
 		}
+
+		XMVECTOR normalFactor = XMVectorReplicate(flipNormal ? -1.0f : 1.0f);
 		// Copy vertices
 		for (size_t i = 0; i < Nv; i++)
 		{
@@ -219,7 +221,7 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 			VertexTraits::set_position(ver, Pos[i]);
 
 			if (Nor)
-				VertexTraits::set_normal(ver, Nor[i]);
+				VertexTraits::set_normal(ver, normalFactor * XMLoad(Nor[i]));
 
 			if (Tex)
 				if (flipNormal)
@@ -254,18 +256,16 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		DirectX::CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
 			Nv, (XMFLOAT3*)shape.mesh.positions.data(), sizeof(XMFLOAT3));
 
-		mesh->SetInputElementDescription<VertexPositionNormalTexture>();
+		mesh->SetInputElementDescription<VertexType>();
 		mesh->VertexCount = Nv;
 		mesh->IndexCount = shape.mesh.indices.size();
 		mesh->PrimitiveType = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-		mesh->IndexFormat = ExtractDXGIFormat<uint16_t>::value;
-		mesh->VertexStride = sizeof(VertexPositionNormalTexture);
+		mesh->IndexFormat = ExtractDXGIFormat<IndexType>::value;
+		mesh->VertexStride = sizeof(VertexType);
 		mesh->VertexOffset = vOffset;
 		mesh->StartIndex = iOffset;
 		vOffset += mesh->VertexCount;
 		iOffset += mesh->IndexCount;
-
-
 	}
 
 	Positions.reset((Vector3*)&Vertices[0].position, Vertices.size());
