@@ -33,7 +33,5 @@ namespace Causality
 		float m_dragingStr;
 
 		scoped_connection m_con_pc;
-		const KeyboardMouseFirstPersonControl*
-			m_mouse;
 	};
 }

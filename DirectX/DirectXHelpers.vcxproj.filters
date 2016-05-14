@@ -141,6 +141,9 @@
     <ClInclude Include="Inc\DirectXMathTransforms.h">
       <Filter>Include</Filter>
     </ClInclude>
+    <ClInclude Include="Inc\SimpleMathExtend.h">
+      <Filter>Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Include">

@@ -1,5 +1,6 @@
 #pragma once
-#include "Interactive.h"
+#include "Pointer.h"
+#include "Keyboard.h"
 #include "Events.h"
 #include <string>
 #define NOMINMAX
@@ -85,12 +86,12 @@ namespace Causality
 		virtual bool Move(int x, int y) = 0;
 
 		virtual void OnResize(size_t width, size_t height) = 0;
-		virtual void OnMouseMove(int x, int y) = 0;
+		virtual void OnPointerMove(int x, int y) = 0;
 		virtual void OnKeyDown(unsigned char key) = 0;
 		virtual void OnKeyUp(unsigned char key) = 0;
 	};
 
-	struct CursorHandler : public ICursorController
+	struct CursorHandler
 	{
 	public:
 		CursorHandler()
@@ -99,10 +100,11 @@ namespace Causality
 			WheelValue = 0;
 			WheelDelta = 0;
 		}
+
 		// Event Interface
-		Event<const CursorButtonEvent&> CursorButtonDown;
-		Event<const CursorButtonEvent&> CursorButtonUp;
-		Event<const CursorMoveEventArgs&> CursorMove;
+		Event<const PointerButtonEvent&>	PointerDown;
+		Event<const PointerButtonEvent&>	PointerUp;
+		Event<const PointerMoveEventArgs&>	CursorMove;
 
 		Vector2 CursorPostiton;
 		Vector2 CursorPositionDelta;
@@ -110,7 +112,9 @@ namespace Causality
 		float	WheelDelta;
 		bool	ButtonStates[3];
 
-		// Inherited via ICursorController
+		std::vector<IPointer*> m_pointers;
+
+		// Inherited via IPointer
 		virtual DirectX::Vector2 CurrentPosition() const override;
 		virtual DirectX::Vector2 DeltaPosition() const override;
 		virtual bool IsButtonDown(CursorButtonEnum button) const override;
@@ -153,7 +157,7 @@ namespace Causality
 		virtual bool IsFullScreen() const override;
 		virtual void EnterFullScreen() override;
 		virtual void ExitFullScreen() override;
-		virtual void OnMouseMove(int x, int y) override;
+		virtual void OnPointerMove(int x, int y) override;
 		virtual void OnKeyDown(unsigned char key) override;
 		virtual void OnKeyUp(unsigned char key) override;
 		virtual void OnResize(size_t width, size_t height) override;
@@ -188,7 +192,7 @@ namespace Causality
 		void ExitFullScreen();
 		bool Move(int x, int y) override;
 
-		virtual void OnMouseMove(int x, int y) override;
+		virtual void OnPointerMove(int x, int y) override;
 		virtual void OnKeyDown(unsigned char key) override;
 		virtual void OnKeyUp(unsigned char key) override;
 		virtual void OnResize(size_t width, size_t height) override;
@@ -208,7 +212,7 @@ namespace Causality
 			return m_Boundary;
 		}
 
-		Event<const Vector2&> SizeChanged;
+		Event<IWindow*, Vector2> SizeChanged;
 
 	private:
 		std::wstring		m_Title;

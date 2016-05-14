@@ -81,10 +81,9 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-
   <Choose>
     <When Condition="Exists('$(FBX_SDK_ROOT)')">
-      <PropertyGroup  Label="FbxConfiguration">
+      <PropertyGroup Label="FbxConfiguration">
         <HasFbx>true</HasFbx>
         <FbxIncludePath>$(FBX_SDK_ROOT)\include</FbxIncludePath>
         <FbxLibPath>$(FBX_SDK_ROOT)\lib\vs2015\$(PlatformTarget)\$(Configuration)\</FbxLibPath>
@@ -109,11 +108,11 @@
     <Otherwise>
       <PropertyGroup Label="KinectConfiguration">
         <HasKinect>false</HasKinect>
-        <HasKinectMarco></HasKinectMarco>
+        <HasKinectMarco>
+        </HasKinectMarco>
       </PropertyGroup>
     </Otherwise>
   </Choose>
-
   <Choose>
     <When Condition="Exists('$(LeapSDK_Root)')">
       <PropertyGroup Label="LeapConfiguration">
@@ -123,7 +122,6 @@
         <LeapLibPath>$(LeapSDK_Root)\lib\$(PlatformTarget)\</LeapLibPath>
         <LeapDllCopyCommand>copy $(LeapSDK_Root)\lib\$(PlatformTarget)\leap.dll "$(OutDir)"</LeapDllCopyCommand>
       </PropertyGroup>
-
     </When>
     <Otherwise>
       <PropertyGroup Label="LeapConfiguration">
@@ -134,7 +132,6 @@
   <PropertyGroup>
     <AvaiableTrackingDevices>$(HasLeapMacro);$(HasKinectMarco)</AvaiableTrackingDevices>
   </PropertyGroup>
-
   <PropertyGroup>
     <IncludePath>$(LibOvr_Root)\Include;$(LeapIncludePath);$(FbxIncludePath);$(KinectIncludePath);$(Bullet3Dir)\src;$(DirectXTKDir)\Inc;$(TinyXml2Dir)\;$(DLibDir);$(EigenDir);$(FftwDir);$(SolutionDir)\DirectX\Inc\;$(SolutionDir)\GSL\include;$(SolutionDir)\;$(SolutionDir)\Common\;$(AmpDir)\ampalgorithms\inc\;$(AmpDir)\amprng\inc\;$(AmpDir)\amphlsl\inc\;$(IncludePath)</IncludePath>
     <LibraryPath>$(LeapLibPath);$(LibOvr_Root)\Lib\$(Platform)\$(PlatformToolsetVersion)\;$(KinectLibPath);$(FbxLibPath);$(FftwDir)\$(PlatformTarget)\;$(LibraryPath)</LibraryPath>
@@ -246,6 +243,7 @@
     <ClCompile Include="pch_bcl.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Pointer.cpp" />
     <ClCompile Include="Settings.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -287,6 +285,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CCA.h" />
+    <ClInclude Include="Keyboard.h" />
     <ClInclude Include="ParametericPatch.h" />
     <ClInclude Include="TrackedObjectControl.h" />
     <ClInclude Include="TrackerdPen.h" />
@@ -322,7 +321,7 @@
     <ClInclude Include="GSL\fail_fast.h" />
     <ClInclude Include="GSL\gsl.h" />
     <ClInclude Include="GSL\string_view.h" />
-    <ClInclude Include="Interactive.h" />
+    <ClInclude Include="Pointer.h" />
     <ClInclude Include="InverseKinematics.h" />
     <ClInclude Include="KinectSensor.h" />
     <ClInclude Include="LeapMotion.h" />

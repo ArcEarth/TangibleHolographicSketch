@@ -205,6 +205,12 @@ namespace DirectX
 				return ret;
 			}
 
+			template <typename _NewType>
+			inline xmvector<_NewType, Size> XM_CALLCONV cast() const
+			{
+				return this->eval().cast<_NewType>();
+			}
+
 			inline XM_CALLCONV operator XMVECTOR () const
 			{ return eval().v; }
 

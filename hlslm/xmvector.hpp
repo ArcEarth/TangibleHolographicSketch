@@ -102,8 +102,15 @@ namespace DirectX
 			}
 
 			template <int _NewSize>
-			inline explicit operator xmvector<Scalar, _NewSize>() const {
+			inline explicit operator const xmvector<Scalar, _NewSize>&() const {
 				return as<Scalar, _NewSize>();
+			}
+
+			template <typename _NewType>
+			inline xmvector<_NewType, _Size> XM_CALLCONV cast() const
+			{
+				xmvector<_NewType, _Size> result;
+				result.v = detail::cast_vector<Scalar, _NewType, _Size>(this->v);
 			}
 
 			template <index_t... selectors>

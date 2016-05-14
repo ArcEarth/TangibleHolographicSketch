@@ -110,7 +110,7 @@ void KeyboardMouseFirstPersonControl::OnKeyUp(const KeyboardEventArgs & e)
 
 }
 
-void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent & e)
+void KeyboardMouseFirstPersonControl::OnPointerDown(const PointerButtonEvent & e)
 {
 	switch (e.Button)
 	{
@@ -137,7 +137,7 @@ void KeyboardMouseFirstPersonControl::OnMouseButtonDown(const CursorButtonEvent 
 	//}
 }
 
-void KeyboardMouseFirstPersonControl::OnMouseButtonUp(const CursorButtonEvent & e)
+void KeyboardMouseFirstPersonControl::OnPointerUp(const PointerButtonEvent & e)
 {
 	switch (e.Button)
 	{
@@ -155,7 +155,7 @@ void KeyboardMouseFirstPersonControl::OnMouseButtonUp(const CursorButtonEvent & 
 	}
 }
 
-void KeyboardMouseFirstPersonControl::OnMouseMove(const CursorMoveEventArgs & e)
+void KeyboardMouseFirstPersonControl::OnPointerMove(const PointerMoveEventArgs & e)
 {
 	using namespace DirectX;
 	if (!IsTrackingCursor) return;

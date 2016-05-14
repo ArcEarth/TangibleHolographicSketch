@@ -11,6 +11,8 @@ namespace Causality
 		class IViconClient;
 	}
 
+	class KeyboardMouseFirstPersonControl;
+
 	class RigidObjectTracker;
 
 	class TrackedObjectControl : public SceneObject
@@ -40,5 +42,7 @@ namespace Causality
 		int					m_idx;
 
 		scoped_connection	m_parentChangedConnection;
+
+		const KeyboardMouseFirstPersonControl* m_mouse;
 	};
 }

@@ -5,6 +5,15 @@
 
 namespace DirectX
 {
+	inline XMVECTOR	XM_CALLCONV	XMVectorCastFloatToInt(FXMVECTOR V)
+	{
+		return _mm_castsi128_ps(_mm_cvttps_epi32(V));
+	}
+	inline XMVECTOR	XM_CALLCONV	XMVectorCastIntToFloat(FXMVECTOR V)
+	{
+		return _mm_cvtepi32_ps(_mm_castps_si128(V));
+	}
+
 	inline XMVECTOR XM_CALLCONV XMVectorAddInt(FXMVECTOR V1, FXMVECTOR V2)
 	{
 #if defined(_XM_NO_INTRINSICS_)

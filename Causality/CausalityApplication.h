@@ -58,7 +58,7 @@ namespace Causality
 		void UnregisterComponent(IAppComponent *pComponent);
 		void XM_CALLCONV RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection);
 		Event<const DirectX::StepTimer&> TimeElapsed;
-		//void NotifyChildrenCursorButtonDown(const CursorButtonEvent&e);
+		//void NotifyChildrenCursorButtonDown(const PointerButtonEvent&e);
 	protected:
 		// Devices & Resources
 		path											m_assetsDir;

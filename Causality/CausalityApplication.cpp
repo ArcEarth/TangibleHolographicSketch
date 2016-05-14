@@ -291,9 +291,9 @@ void App::RegisterComponent(IAppComponent *pComponent)
 	auto& Regs = ComponentsEventRegisterations[pComponent];
 	if (pCursorInteractive)
 	{
-		Regs.push_back(pWindow->CursorButtonDown += MakeEventHandler(&ICursorInteractive::OnMouseButtonDown, pCursorInteractive));
-		Regs.push_back(pWindow->CursorButtonUp += MakeEventHandler(&ICursorInteractive::OnMouseButtonUp, pCursorInteractive));
-		Regs.push_back(pWindow->CursorMove += MakeEventHandler(&ICursorInteractive::OnMouseMove, pCursorInteractive));
+		Regs.push_back(pWindow->PointerDown += MakeEventHandler(&ICursorInteractive::OnPointerDown, pCursorInteractive));
+		Regs.push_back(pWindow->PointerUp += MakeEventHandler(&ICursorInteractive::OnPointerUp, pCursorInteractive));
+		Regs.push_back(pWindow->CursorMove += MakeEventHandler(&ICursorInteractive::OnPointerMove, pCursorInteractive));
 	}
 	auto pKeyInteractive = pComponent->As<IKeybordInteractive>();
 	if (pKeyInteractive)

@@ -2,9 +2,10 @@
 #include "NativeWindow.h"
 #include "resource.h"
 
+#include <Keyboard.h>
+
 namespace Causality
 {
-
 	std::map<HWND, std::weak_ptr<IWindow>> Application::WindowsLookup;
 	std::unique_ptr<Application> Application::Current;
 	//Window::Window()
@@ -37,7 +38,7 @@ namespace Causality
 		return MoveWindow(m_hWnd, x, y, m_Boundary.Width(), m_Boundary.Height(),TRUE);
 	}
 
-	void NativeWindow::OnMouseMove(int x, int y)
+	void NativeWindow::OnPointerMove(int x, int y)
 	{
 		auto current = Vector2((float)x, (float)y);
 		CursorPositionDelta = current - CursorPostiton;
@@ -59,17 +60,17 @@ namespace Causality
 		case VK_LBUTTON:
 			if (ButtonStates[LButton]) return;
 			ButtonStates[LButton] = true;
-			CursorButtonDown(CursorButtonEvent(LButton));
+			PointerDown(PointerButtonEvent(LButton));
 			break;
 		case VK_RBUTTON:
 			if (ButtonStates[RButton]) return;
 			ButtonStates[RButton] = true;
-			CursorButtonDown(CursorButtonEvent(RButton));
+			PointerDown(PointerButtonEvent(RButton));
 			break;
 		case VK_MBUTTON:
 			if (ButtonStates[MButton]) return;
 			ButtonStates[MButton] = true;
-			CursorButtonDown(CursorButtonEvent(MButton));
+			PointerDown(PointerButtonEvent(MButton));
 			break;
 		default:
 			if (Keys[key]) return;
@@ -85,17 +86,17 @@ namespace Causality
 		case VK_LBUTTON:
 			if (!ButtonStates[LButton]) return;
 			ButtonStates[LButton] = false;
-			CursorButtonUp(CursorButtonEvent(LButton));
+			PointerUp(PointerButtonEvent(LButton));
 			break;
 		case VK_RBUTTON:
 			if (!ButtonStates[RButton]) return;
 			ButtonStates[RButton] = false;
-			CursorButtonUp(CursorButtonEvent(RButton));
+			PointerUp(PointerButtonEvent(RButton));
 			break;
 		case VK_MBUTTON:
 			if (!ButtonStates[MButton]) return;
 			ButtonStates[MButton] = false;
-			CursorButtonUp(CursorButtonEvent(MButton));
+			PointerUp(PointerButtonEvent(MButton));
 			break;
 		default:
 			if (!Keys[key]) return;
@@ -186,6 +187,8 @@ namespace Causality
 		SetForegroundWindow(m_hWnd);
 		SetFocus(m_hWnd);
 
+		//DirectX::Mouse::Get().SetWindow(m_hWnd);
+
 		RECT bound;
 		GetWindowRect(m_hWnd, &bound);
 		m_Boundary.Position.x = (float)bound.left;
@@ -238,9 +241,23 @@ namespace Causality
 		auto itr = WindowsLookup.find(hwnd);
 		if (itr != WindowsLookup.end() && !itr->second.expired())
 			window = itr->second.lock();
+
+
 		switch (umessage)
 		{
-			// Check if the window is being destroyed.
+		case WM_ACTIVATEAPP:
+		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYUP:
+			DirectX::Keyboard::ProcessMessage(umessage, wparam, lparam);
+		}
+
+		//DirectX::Mouse::ProcessMessage(umessage, wparam, lparam);
+
+		switch (umessage)
+		{
+		// Check if the window is being destroyed.
 		case WM_DESTROY:
 		{
 			PostQuitMessage(0);
@@ -293,7 +310,8 @@ namespace Causality
 		case WM_KEYDOWN:
 		{
 			// If a key is pressed send it to the input object so it can record that state.
-			if (window) window->OnKeyDown((unsigned char) wparam);
+			if (window) 
+				window->OnKeyDown((unsigned char) wparam);
 			//m_pInput->KeyDown((unsigned int) wparam);
 			return S_OK;
 		}
@@ -312,7 +330,7 @@ namespace Causality
 		//Handel the mouse(hand gesture glove) input
 		case WM_MOUSEMOVE:
 		{
-			if (window) window->OnMouseMove(LOWORD(lparam), HIWORD(lparam));
+			if (window) window->OnPointerMove(LOWORD(lparam), HIWORD(lparam));
 			return S_OK;
 		}
 		break;
@@ -402,7 +420,7 @@ void DebugConsole::ExitFullScreen()
 {
 }
 
-void DebugConsole::OnMouseMove(int x, int y)
+void DebugConsole::OnPointerMove(int x, int y)
 {
 }
 
