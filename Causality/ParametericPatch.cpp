@@ -13,7 +13,7 @@ using namespace Causality;
 using namespace DirectX::Scene;
 using namespace Causality::Math;
 
-REGISTER_SCENE_OBJECT_IN_PARSER(bezier_patch, BezierPatchObject);
+REGISTER_SCENE_OBJECT_IN_PARSER(surface_inspector, SurfaceInspectionPlanner);
 
 float g_ControlPointsRaius = 0.005f;
 float g_ControlPointsConnectionRadius = 0.002;
@@ -45,7 +45,7 @@ inline std::shared_ptr<MeshBuffer> CreateMeshBuffer(IRenderDevice* pDevice,
 	return pMesh;
 }
 
-void BezierPatchObject::Parse(const ParamArchive * archive)
+void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 {
 	using namespace DirectX::VertexTraits;
 	VisualObject::Parse(archive);
@@ -254,7 +254,7 @@ void BezierPatchObject::Parse(const ParamArchive * archive)
 	});
 }
 
-void BezierPatchObject::ExtractMeshFromModel(TriangleMeshType& mesh, const IModelNode* pNode)
+void SurfaceInspectionPlanner::ExtractMeshFromModel(TriangleMeshType& mesh, const IModelNode* pNode)
 {
 	using DirectX::Scene::DefaultStaticModel;
 	using DirectX::Scene::DefaultSkinningModel;
@@ -280,7 +280,7 @@ void BezierPatchObject::ExtractMeshFromModel(TriangleMeshType& mesh, const IMode
 	}
 }
 
-void BezierPatchObject::BuildTriangleMesh(int tessellation, DirectX::SimpleMath::Color &color)
+void SurfaceInspectionPlanner::BuildTriangleMesh(int tessellation, DirectX::SimpleMath::Color &color)
 {
 	auto& patch = TeapotPatches[9];
 	for (int i = 0; i < std::size(patch.indices); i++)
@@ -308,7 +308,7 @@ void BezierPatchObject::BuildTriangleMesh(int tessellation, DirectX::SimpleMath:
 
 }
 
-BezierPatchObject::~BezierPatchObject()
+SurfaceInspectionPlanner::~SurfaceInspectionPlanner()
 {
 	m_requestCancelLoading = 1;
 
@@ -322,7 +322,7 @@ BezierPatchObject::~BezierPatchObject()
 	//if (pModel) delete pModel;
 }
 
-void BezierPatchObject::Render(IRenderContext * pContext, IEffect * pEffect)
+void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffect)
 {
 	if (m_declDirtyFalg)
 		DrawDecal(Scene->Get2DContext());
@@ -405,7 +405,7 @@ inline D2D1_POINT_2F XM_CALLCONV GetD2DPoint(const Vector2& v)
 
 
 
-void BezierPatchObject::UpdateDecalGeometry(I2DFactory* pFactory)
+void SurfaceInspectionPlanner::UpdateDecalGeometry(I2DFactory* pFactory)
 {
 	ThrowIfFailed(pFactory->CreatePathGeometry(&m_patchGeos));
 	cptr<ID2D1GeometrySink> pSink;
@@ -430,7 +430,7 @@ void BezierPatchObject::UpdateDecalGeometry(I2DFactory* pFactory)
 	m_declDirtyFalg = 1;
 }
 
-void BezierPatchObject::DrawDecal(I2DContext *pContext)
+void SurfaceInspectionPlanner::DrawDecal(I2DContext *pContext)
 {
 	D2D1_COLOR_F color;
 	color = { .2f,0.7f,.2f,1.0f };

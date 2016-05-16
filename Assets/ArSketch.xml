@@ -40,9 +40,8 @@
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <bezier_patch position="0,0.35,0" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
-      
-      </bezier_patch>
+      <surface_inspector position="0,0.35,0" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
+      </surface_inspector>
       
       <!--<object name="mug2" visible="true" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
