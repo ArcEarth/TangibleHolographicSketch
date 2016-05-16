@@ -226,6 +226,7 @@
     <ClInclude Include="Inc\PostProcessingEffect.h" />
     <ClInclude Include="Inc\ShadowMapGenerationEffect.h" />
     <ClInclude Include="Inc\ShaderEffectBase.h" />
+    <ClInclude Include="Inc\SimpleMathExtend.h" />
     <ClInclude Include="Inc\SkyDomeEffect.h" />
     <ClInclude Include="Inc\VertexTraits.h" />
     <ClInclude Include="Src\tiny_obj_loader.h" />

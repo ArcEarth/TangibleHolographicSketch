@@ -44,6 +44,8 @@ void TrackedPen::Update(const time_seconds & time_delta)
 		m_visible = UpdateFromVicon(time_delta.count());
 	else if (m_pLeap)
 		m_visible = UpdateFromLeapFinger(time_delta.count());
+	else if (m_mouse)
+		m_visible = true;
 }
 
 bool TrackedPen::UpdateFromLeapFinger(double dt)

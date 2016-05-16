@@ -200,6 +200,7 @@
     <ClCompile Include="ParametericPatch.cpp">
       <Filter>PenModeler</Filter>
     </ClCompile>
+    <ClCompile Include="Pointer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -304,9 +305,6 @@
     <ClInclude Include="CausalityApplication.h">
       <Filter>Platform Application Logic</Filter>
     </ClInclude>
-    <ClInclude Include="Interactive.h">
-      <Filter>Platform Application Logic</Filter>
-    </ClInclude>
     <ClInclude Include="FloatHud.h">
       <Filter>Scene Objects</Filter>
     </ClInclude>
@@ -381,6 +379,12 @@
     </ClInclude>
     <ClInclude Include="CCA.h">
       <Filter>Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="Pointer.h">
+      <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>Platform Application Logic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

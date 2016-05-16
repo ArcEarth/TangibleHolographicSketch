@@ -220,7 +220,6 @@ namespace DirectX
 				return XMVectorSetInt(x, y, z, w);
 			}
 
-
 			enum components_name_enums
 			{
 				_x = 0,
@@ -372,6 +371,29 @@ namespace DirectX
 				intrinsic_vector_t<Scalar, Size>,
 				__mvector<Scalar, Size>
 				>;
+
+			template <typename _TSrc, typename _Dst>
+			inline XMVECTOR XM_CALLCONV cast_vector_4(FXMVECTOR V);
+
+			template <>
+			inline XMVECTOR XM_CALLCONV cast_vector_4<float, uint32_t>(FXMVECTOR V)
+			{
+				return XMVectorCastFloatToInt(V);
+			}
+
+			template <>
+			inline XMVECTOR XM_CALLCONV cast_vector_4<uint32_t, float>(FXMVECTOR V)
+			{
+				return XMVectorCastFloatToInt(V);
+			}
+
+			template <typename _TSrc, typename _Dst, size_t _Size>
+			inline XMVECTOR XM_CALLCONV cast_vector(FXMVECTOR V)
+			{
+				static_assert(_Size <= 4, "size must not exceed 4");
+				return cast_vector_4<_TSrc, _TDst>(V);
+			}
+
 		}
 
 #pragma endregion

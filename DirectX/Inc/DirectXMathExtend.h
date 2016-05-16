@@ -66,6 +66,9 @@ namespace DirectX
 		return M;
 	}
 
+	// Using trucate algorithm to cast float to int, compenent-wise c-style cast from float to int. vi = (int) vf
+	inline XMVECTOR	XM_CALLCONV	XMVectorCastFloatToInt(FXMVECTOR V);
+	inline XMVECTOR	XM_CALLCONV	XMVectorCastIntToFloat(FXMVECTOR V);
 	XMVECTOR    XM_CALLCONV     XMVectorAddInt(FXMVECTOR V1, FXMVECTOR V2);
 	XMVECTOR    XM_CALLCONV     XMVectorSubtractInt(FXMVECTOR V1, FXMVECTOR V2);
 	XMVECTOR    XM_CALLCONV     XMVectorMultiplyInt(FXMVECTOR V1, FXMVECTOR V2);

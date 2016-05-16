@@ -24,9 +24,9 @@ namespace Causality
 		virtual void OnKeyUp(const KeyboardEventArgs & e) override;
 
 		// Inherited via ICursorInteractive
-		virtual void OnMouseButtonDown(const CursorButtonEvent & e) override;
-		virtual void OnMouseButtonUp(const CursorButtonEvent & e) override;
-		virtual void OnMouseMove(const CursorMoveEventArgs & e) override;
+		virtual void OnPointerDown(const PointerButtonEvent & e) override;
+		virtual void OnPointerUp(const PointerButtonEvent & e) override;
+		virtual void OnPointerMove(const PointerMoveEventArgs & e) override;
 
 		bool isLeftButtonDown() const { return leftButtonDown;  }
 		bool isRightButtonDown() const { return rightButtonDown; }
