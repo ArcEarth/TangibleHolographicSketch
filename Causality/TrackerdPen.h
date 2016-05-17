@@ -3,7 +3,7 @@
 
 namespace Causality
 {
-	class KeyboardMouseFirstPersonControl;
+	class IPointer;
 
 	class TrackedPen : public TrackedObjectControl
 	{
@@ -21,8 +21,6 @@ namespace Causality
 		bool IsDraging() const;
 
 		bool IsVisible() const;
-
-		void setMouse(const KeyboardMouseFirstPersonControl* m);
 
 		// = 0.0145 m
 		static const float TipLength;

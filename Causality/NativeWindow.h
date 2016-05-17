@@ -3,8 +3,7 @@
 #include "Keyboard.h"
 #include "Events.h"
 #include <string>
-#define NOMINMAX
-#include <minwindef.h>
+#include "Application.h"
 
 namespace Causality
 {
@@ -28,45 +27,6 @@ namespace Causality
 
 	class IWindow;
 
-	class Application
-	{
-	public:
-		template <class TDerived>
-		static int Invoke(const std::vector<std::string>& args)
-		{
-			Current = std::make_unique<TDerived>();
-			return Current->Run(args);
-		}
-
-	public:
-		Application();
-
-		virtual ~Application();
-
-		int Run(const std::vector<std::string>& args);
-
-		void Exit();
-
-		virtual bool OnStartup(const std::vector<std::string>& args) = 0;
-		virtual void OnExit() = 0;
-		virtual bool OnIdle() = 0;
-
-		HINSTANCE Instance()
-		{
-			return hInstance;
-		}
-
-	public:
-		static std::unique_ptr<Application> Current;
-	public:
-		static std::map<HWND, std::weak_ptr<IWindow>> WindowsLookup;
-		static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-	protected:
-		HINSTANCE	hInstance;
-		bool		exitProposal = false;
-
-	};
-
 	class IWindow abstract
 	{
 	public:
@@ -86,56 +46,7 @@ namespace Causality
 		virtual bool Move(int x, int y) = 0;
 
 		virtual void OnResize(size_t width, size_t height) = 0;
-		virtual void OnPointerMove(int x, int y) = 0;
-		virtual void OnKeyDown(unsigned char key) = 0;
-		virtual void OnKeyUp(unsigned char key) = 0;
-	};
-
-	struct CursorHandler
-	{
-	public:
-		CursorHandler()
-		{
-			std::fill_n(ButtonStates, 3, false);
-			WheelValue = 0;
-			WheelDelta = 0;
-		}
-
-		// Event Interface
-		Event<const PointerButtonEvent&>	PointerDown;
-		Event<const PointerButtonEvent&>	PointerUp;
-		Event<const PointerMoveEventArgs&>	CursorMove;
-
-		Vector2 CursorPostiton;
-		Vector2 CursorPositionDelta;
-		float	WheelValue;
-		float	WheelDelta;
-		bool	ButtonStates[3];
-
-		std::vector<IPointer*> m_pointers;
-
-		// Inherited via IPointer
-		virtual DirectX::Vector2 CurrentPosition() const override;
-		virtual DirectX::Vector2 DeltaPosition() const override;
-		virtual bool IsButtonDown(CursorButtonEnum button) const override;
-		virtual void SetCursorPosition(const DirectX::Vector2 & pos) override;
-	};
-
-	struct KeyboardHandler
-	{
-	public:
-		KeyboardHandler()
-		{
-			memset(Keys, 0, 255 * sizeof(BOOL));
-		}
-		unsigned GetCurrentModifiers() const
-		{
-			return (Keys[VK_CONTROL] & Mod_Control) | (Keys[VK_SHIFT] & Mod_Shift) | (Keys[VK_MENU] & Mod_Alt) | ((Keys[VK_LWIN] | Keys[VK_RWIN])& Mod_Meta);
-		}
-
-		Event<const KeyboardEventArgs&> KeyDown;
-		Event<const KeyboardEventArgs&> KeyUp;
-		BOOL	Keys[255];
+		virtual void ProcessMessage(UINT, WPARAM, LPARAM) = 0;
 	};
 
 	class DebugConsole : public std::enable_shared_from_this<DebugConsole>, public IWindow
@@ -157,24 +68,21 @@ namespace Causality
 		virtual bool IsFullScreen() const override;
 		virtual void EnterFullScreen() override;
 		virtual void ExitFullScreen() override;
-		virtual void OnPointerMove(int x, int y) override;
-		virtual void OnKeyDown(unsigned char key) override;
-		virtual void OnKeyUp(unsigned char key) override;
 		virtual void OnResize(size_t width, size_t height) override;
 		virtual bool Move(int x, int y) override;
-
+		virtual void ProcessMessage(UINT, WPARAM, LPARAM) override {}
 
 	private:
 		HWND hWnd;
-
 	};
 
 	// Design to work with std::shared_ptr<NativeWindow>
-	class NativeWindow :public std::enable_shared_from_this<NativeWindow>,  public IWindow, public CursorHandler, public KeyboardHandler
+	class NativeWindow :public std::enable_shared_from_this<NativeWindow>,  public IWindow
 	{
 	public:
 		NativeWindow();
 		~NativeWindow();
+
 		virtual void Initialize(const std::string& title, unsigned int width, unsigned int height, bool fullScreen = false) override;
 
 		void Show();
@@ -192,10 +100,8 @@ namespace Causality
 		void ExitFullScreen();
 		bool Move(int x, int y) override;
 
-		virtual void OnPointerMove(int x, int y) override;
-		virtual void OnKeyDown(unsigned char key) override;
-		virtual void OnKeyUp(unsigned char key) override;
 		virtual void OnResize(size_t width, size_t height) override;
+		virtual void ProcessMessage(UINT, WPARAM, LPARAM) override;
 
 		HWND Handle() const
 		{
@@ -212,7 +118,7 @@ namespace Causality
 			return m_Boundary;
 		}
 
-		Event<IWindow*, Vector2> SizeChanged;
+		Event<Vector2> SizeChanged;
 
 	private:
 		std::wstring		m_Title;
@@ -220,6 +126,9 @@ namespace Causality
 		HINSTANCE			m_hInstance;
 		bool				m_FullScreen;
 		Rect				m_Boundary;
+
+		CursorHandler		m_cursor;
+		KeyboardHandler		m_keyboard;
 	};
 
 	//ref class Window sealed

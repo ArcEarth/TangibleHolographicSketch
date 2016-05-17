@@ -14,6 +14,7 @@ namespace Causality
 	class KeyboardMouseFirstPersonControl;
 
 	class RigidObjectTracker;
+	class IPointer;
 
 	class TrackedObjectControl : public SceneObject
 	{
@@ -28,6 +29,10 @@ namespace Causality
 		
 		bool UpdateFromVicon(double time_delta);
 		bool UpdateFromLeapHand(double time_delta);
+		bool UpdateFromCursor(double time_delta);
+
+		// Using mouse cursor and touch to emulate tracking
+		void SetCursorEmulation(const IPointer* _2dpointer);
 
 	protected:
 		LowPassFilter<Vector3,float>	m_posFilter;
@@ -39,10 +44,10 @@ namespace Causality
 		IsometricTransform&	m_intrinsic;
 		sptr<Devices::LeapSensor>	m_pLeap;
 		sptr<Devices::IViconClient>	m_pVicon;
+		const IPointer*		m_cursor;
 		int					m_idx;
 
 		scoped_connection	m_parentChangedConnection;
 
-		const KeyboardMouseFirstPersonControl* m_mouse;
 	};
 }

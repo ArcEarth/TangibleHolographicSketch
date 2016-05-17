@@ -98,9 +98,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Platform Application Logic</Filter>
     </ClCompile>
-    <ClCompile Include="BasicKeyboardMouseControlLogic.cpp">
-      <Filter>Platform Application Logic</Filter>
-    </ClCompile>
     <ClCompile Include="CausalityApplication.cpp">
       <Filter>Platform Application Logic</Filter>
     </ClCompile>
@@ -200,7 +197,19 @@
     <ClCompile Include="ParametericPatch.cpp">
       <Filter>PenModeler</Filter>
     </ClCompile>
-    <ClCompile Include="Pointer.cpp" />
+    <ClCompile Include="Application.cpp">
+      <Filter>Platform Application Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="Pointer.cpp">
+      <Filter>Platform Application Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstPersonControl.cpp">
+      <Filter>Platform Application Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultKeyboardShortsControl.cpp">
+      <Filter>Platform Application Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -299,9 +308,6 @@
     <ClInclude Include="resource.h">
       <Filter>Platform Application Logic</Filter>
     </ClInclude>
-    <ClInclude Include="BasicKeyboardMouseControlLogic.h">
-      <Filter>Platform Application Logic</Filter>
-    </ClInclude>
     <ClInclude Include="CausalityApplication.h">
       <Filter>Platform Application Logic</Filter>
     </ClInclude>
@@ -384,6 +390,15 @@
       <Filter>Platform Application Logic</Filter>
     </ClInclude>
     <ClInclude Include="Keyboard.h">
+      <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="Application.h">
+      <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstPersonControl.h">
+      <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="AppComponents.h">
       <Filter>Platform Application Logic</Filter>
     </ClInclude>
   </ItemGroup>

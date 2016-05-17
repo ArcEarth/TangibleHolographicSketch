@@ -1,8 +1,8 @@
 #include "pch_bcl.h"
 #include "TrackerdPen.h"
-#include "BasicKeyboardMouseControlLogic.h"
 #include "Scene.h"
 #include "CameraObject.h"
+#include "Pointer.h"
 
 #include "LeapMotion.h"
 #if defined(__HAS_LEAP__)
@@ -24,12 +24,10 @@ TrackedPen::TrackedPen()
 	m_dragingStr = 0;
 	m_erasingStr = 0;
 
-	m_con_pc = this->OnParentChanged += [this](SceneObject* _this, SceneObject *oldParent)
-	{
-		auto pCamera = dynamic_cast<SceneObject*>(this->Scene->PrimaryCamera());
-		if (pCamera)
-			setMouse(pCamera->FirstChildOfType<KeyboardMouseFirstPersonControl>());
-	};
+	//m_con_pc = this->OnParentChanged += [this](SceneObject* _this, SceneObject *oldParent)
+	//{
+	//	auto pCamera = dynamic_cast<SceneObject*>(this->Scene->PrimaryCamera());
+	//};
 }
 
 TrackedPen::~TrackedPen()
@@ -44,7 +42,7 @@ void TrackedPen::Update(const time_seconds & time_delta)
 		m_visible = UpdateFromVicon(time_delta.count());
 	else if (m_pLeap)
 		m_visible = UpdateFromLeapFinger(time_delta.count());
-	else if (m_mouse)
+	else if (m_cursor)
 		m_visible = true;
 }
 
@@ -96,7 +94,7 @@ bool TrackedPen::UpdateFromLeapFinger(double dt)
 
 bool TrackedPen::IsInking() const
 {
-	return (m_pVicon != nullptr && m_mouse->isLeftButtonDown())
+	return (m_pVicon != nullptr && m_cursor->IsButtonDown(LButton))
 		|| (m_pLeap != nullptr && (m_inkingStr > 0.5f && m_inkingStr > m_dragingStr && m_inkingStr > m_erasingStr));
 	// Was for leap:
 	//return ;
@@ -109,7 +107,7 @@ bool TrackedPen::IsErasing() const
 
 bool TrackedPen::IsDraging() const
 {
-	return (m_pVicon != nullptr && m_mouse->isRightButtonDown())
+	return (m_pVicon != nullptr && m_cursor->IsButtonDown(RButton))
 		|| (m_pLeap != nullptr && (m_dragingStr > 0.5f && m_dragingStr > m_inkingStr && m_dragingStr > m_erasingStr));
 }
 
@@ -118,4 +116,3 @@ bool TrackedPen::IsVisible() const
 	return m_visible;
 }
 
-void TrackedPen::setMouse(const KeyboardMouseFirstPersonControl * m) { m_mouse = m; }

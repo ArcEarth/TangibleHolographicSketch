@@ -5,6 +5,7 @@
 #include <Textures.h>
 #include <mutex>
 #include <vector>
+#include "SmartPointers.h"
 
 namespace DirectX
 {
@@ -20,6 +21,11 @@ namespace Causality
 	class AssetDictionary;
 
 	using DirectX::StepTimer;
+
+	extern bool		g_DebugView;
+	extern bool		g_ShowCharacterMesh;
+	extern float	g_DebugArmatureThinkness;
+	extern bool		g_MirrowInputX;
 
 	interface IScene abstract
 	{

@@ -239,6 +239,9 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="DefaultKeyboardShortsControl.cpp" />
+    <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="ParametericPatch.cpp" />
     <ClCompile Include="pch_bcl.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -248,7 +251,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="CharacterBehavier.cpp" />
-    <ClCompile Include="BasicKeyboardMouseControlLogic.cpp" />
+    <ClCompile Include="FirstPersonControl.cpp" />
     <ClCompile Include="CameraObject.cpp" />
     <ClCompile Include="CharacterObject.cpp" />
     <ClCompile Include="FloatHud.cpp" />
@@ -284,6 +287,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AppComponents.h" />
+    <ClInclude Include="Application.h" />
     <ClInclude Include="CCA.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="ParametericPatch.h" />
@@ -305,7 +310,7 @@
     <ClInclude Include="..\Common\tree.h" />
     <ClInclude Include="AnimationObject.h" />
     <ClInclude Include="Asset.h" />
-    <ClInclude Include="BasicKeyboardMouseControlLogic.h" />
+    <ClInclude Include="FirstPersonControl.h" />
     <ClInclude Include="BCL.h" />
     <ClInclude Include="Animations.h" />
     <ClInclude Include="AssetDictionary.h" />

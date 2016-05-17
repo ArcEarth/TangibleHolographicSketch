@@ -5,7 +5,6 @@
 //#include <fbxsdk.h>
 
 using namespace std;
-using namespace Leap;
 using namespace Causality;
 using namespace DirectX;
 

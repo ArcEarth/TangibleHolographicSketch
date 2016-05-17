@@ -46,17 +46,11 @@ namespace Causality
 		// Inherited via IDeviceNotify
 		virtual void OnDeviceLost() override;
 		virtual void OnDeviceRestored() override;
-		virtual void OnResize(const Vector2& size);
+		void OnResize(Vector2 size);
 
 		path GetResourcesDirectory() const;
 		void SetResourcesDirectory(const std::wstring& dir);
 
-		//void RegisterComponent(ICursorInteractive *pComponent);
-		//void RegisterComponent(IKeybordInteractive *pComponent);
-		//void RegisterComponent(IUserHandsInteractive *pComponent);
-		void RegisterComponent(IAppComponent *pComponent);
-		void UnregisterComponent(IAppComponent *pComponent);
-		void XM_CALLCONV RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection);
 		Event<const DirectX::StepTimer&> TimeElapsed;
 		//void NotifyChildrenCursorButtonDown(const PointerButtonEvent&e);
 	protected:
@@ -79,8 +73,6 @@ namespace Causality
 
 		// Application Logic object
 		std::vector<std::unique_ptr<IAppComponent>>		Components;
-		std::map<IAppComponent*, std::vector<EventConnection>> ComponentsEventRegisterations;
-
 
 		// Rendering loop timer.
 		DirectX::StepTimer								m_timer;

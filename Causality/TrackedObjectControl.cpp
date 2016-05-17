@@ -94,6 +94,7 @@ TrackedObjectControl::TrackedObjectControl()
 	:m_intrinsic(m_Transform.LocalTransform()), m_pLeap(nullptr)
 {
 	m_pRigid = nullptr;
+	m_cursor = nullptr;
 
 	m_parentChangedConnection = this->OnParentChanged.connect([this](SceneObject* _this, SceneObject* oldParent) {
 		m_pRigid = this->Parent();
@@ -112,6 +113,7 @@ TrackedObjectControl::TrackedObjectControl()
 #if defined(__HAS_LEAP__)
 	m_pLeap->SetDeviceWorldCoord(world);
 #endif
+
 	m_posFilter.SetUpdateFrequency(&m_freq);
 	m_rotFilter.SetUpdateFrequency(&m_freq);
 }

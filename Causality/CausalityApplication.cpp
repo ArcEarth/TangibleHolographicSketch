@@ -24,22 +24,6 @@ string  g_AppManifest = "App.xml";
 
 //std::wstring sceneFile = L"SelectorScene.xml";
 
-
-IAppComponent::~IAppComponent()
-{
-	Unregister();
-}
-
-void IAppComponent::Register()
-{
-	App::Current()->RegisterComponent(this);
-}
-
-void IAppComponent::Unregister()
-{
-	App::Current()->UnregisterComponent(this);
-}
-
 App::App()
 {
 }
@@ -50,51 +34,6 @@ App::~App()
 	{
 		UnregisterComponent(pCom.get());
 	}
-}
-
-Application::Application()
-{
-	hInstance = GetModuleHandle(NULL);
-}
-
-Application::~Application()
-{
-}
-
-int Application::Run(const std::vector<std::string>& args)
-{
-	if (OnStartup(args))
-	{
-		while (!exitProposal)
-		{
-			MSG msg;
-			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			else
-			{
-				bool succ = OnIdle();
-				if (!succ)
-					exitProposal = true;
-			}
-		}
-	}
-
-	OnExit();
-	return S_OK;
-}
-
-void Application::Exit()
-{
-	for (auto& p : WindowsLookup)
-	{
-		auto pWindow = p.second.lock();
-		if (pWindow)
-			pWindow->Close();
-	}
-	PostQuitMessage(0);
 }
 
 bool App::OnStartup(const std::vector<std::string>& args)
@@ -140,7 +79,6 @@ bool App::OnStartup(const std::vector<std::string>& args)
 		MessageBoxA(NULL, message.c_str(), "Startup failed", MB_OK);
 		return false;
 	}
-
 
 	string title = "No title";
 	GetParam(appSettings, "title", title);
@@ -285,43 +223,6 @@ void App::SetupDevices(const ParamArchive* arch)
 
 }
 
-void App::RegisterComponent(IAppComponent *pComponent)
-{
-	auto pCursorInteractive = pComponent->As<ICursorInteractive>();
-	auto& Regs = ComponentsEventRegisterations[pComponent];
-	if (pCursorInteractive)
-	{
-		Regs.push_back(pWindow->PointerDown += MakeEventHandler(&ICursorInteractive::OnPointerDown, pCursorInteractive));
-		Regs.push_back(pWindow->PointerUp += MakeEventHandler(&ICursorInteractive::OnPointerUp, pCursorInteractive));
-		Regs.push_back(pWindow->CursorMove += MakeEventHandler(&ICursorInteractive::OnPointerMove, pCursorInteractive));
-	}
-	auto pKeyInteractive = pComponent->As<IKeybordInteractive>();
-	if (pKeyInteractive)
-	{
-		Regs.push_back(pWindow->KeyDown += MakeEventHandler(&IKeybordInteractive::OnKeyDown, pKeyInteractive));
-		Regs.push_back(pWindow->KeyUp += MakeEventHandler(&IKeybordInteractive::OnKeyUp, pKeyInteractive));
-	}
-	//auto pAnimatable = pComponent->As<ITimeAnimatable>();
-	//if (pAnimatable)
-	//	Regs.push_back(TimeElapsed += MakeEventHandler(&ITimeAnimatable::UpdateAnimation, pAnimatable));
-	//auto pHands = pComponent->As<IUserHandsInteractive>();
-	//if (pHands && pLeap)
-	//{
-	//	Regs.push_back(pLeap->HandsTracked += MakeEventHandler(&IUserHandsInteractive::OnHandsTracked, pHands));
-	//	Regs.push_back(pLeap->HandsLost += MakeEventHandler(&IUserHandsInteractive::OnHandsTrackLost, pHands));
-	//}
-	//Components.push_back(std::move(pComponent));
-}
-
-void App::UnregisterComponent(IAppComponent * pComponent)
-{
-	auto itr = ComponentsEventRegisterations.find(pComponent);
-	if (itr != ComponentsEventRegisterations.end())
-		for (auto& connection : itr->second)
-			connection.disconnect();
-}
-
-
 void App::OnExit()
 {
 }
@@ -361,7 +262,7 @@ void App::OnDeviceRestored()
 {
 }
 
-void App::OnResize(const Vector2 & size)
+void App::OnResize(Vector2 size)
 {
 	//pDeviceResources->SetLogicalSize(DeviceResources::Size(size.x,size.y));
 	//auto& bb = pDeviceResources->GetBackBufferRenderTarget();
@@ -380,38 +281,3 @@ void App::SetResourcesDirectory(const std::wstring & dir)
 {
 	m_assetsDir = dir;
 }
-
-void XM_CALLCONV App::RenderToView(DirectX::FXMMATRIX view, DirectX::CXMMATRIX projection)
-{
-	//auto pContext = pDeviceResources->GetD3DDeviceContext();
-	//for (auto& pScene : Components)
-	//{
-	//	auto pViewable = dynamic_cast<IViewable*>(pScene.get());
-	//	if (pViewable)
-	//	{
-	//		pViewable->UpdateViewMatrix(view,projection);
-	//		//pViewable->UpdateProjectionMatrix(projection);
-	//	}
-	//	//auto pRenderable = pScene->As<IRenderable>();
-	//	//if (pRenderable)
-	//	//	pRenderable->Render(pContext);
-	//}
-}
-
-//inline void SampleListener::onConnect(const Leap::Controller & controller) {
-//	std::cout << "Connected" << std::endl;
-//}
-//
-//inline void SampleListener::onFrame(const Leap::Controller & controller) {
-//	auto frame = controller.frame();
-//	if (frame.hands().count() > PrevHandsCount)
-//	{
-//		PrevHandsCount = frame.hands().count();
-//	}
-//	else (frame.hands().count() < PrevHandsCount)
-//	{
-//		PrevHandsCount = frame.hands().count();
-//	}
-//	//std::cout << "Frame available" << std::endl;
-//}
-

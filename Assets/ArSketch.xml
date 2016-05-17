@@ -16,7 +16,7 @@
     <grid name="root">
 
       <!--<light name="sun_light" primary="false" color="#FFCCBBAA" position="5,25,25" near="8" far="60" focus="0,0,0" up="0,0,-1" hfov="30" wfov="30" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />-->
-
+      <default_keyboard_shorcuts/>
 
       <light name="sun_light" primary="false" color="#FF808080" position="2,5,2" near="4" far="8" focus="0,0,0" up="0,0,-1" hfov="1.75" wfov="1.75" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
 
