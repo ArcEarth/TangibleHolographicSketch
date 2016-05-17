@@ -248,7 +248,7 @@ namespace DirectX
 				assign(const xmswizzler<U, _SwzArgs...>& src)
 			{
 				static_assert(is_lvalue, "Swizzle expression contains duplication (like v.xxx) is not l-valued, and can not be assign to");
-				using mask_seq = typename detail::sequence_to_mask<index_sequence<_SwzArgs...>>::type;
+				using mask_seq = typename detail::sequence_to_mask<std::index_sequence<_SwzArgs...>>::type;
 				this->v = detail::select_impl<mask_seq>::invoke(this->v, src.v);
 			}
 

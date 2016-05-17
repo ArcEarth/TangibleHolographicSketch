@@ -5,7 +5,8 @@
 #include "detail/xmvector_impl.inl"
 
 #if defined(_M_IX86) && defined(_DEBUG)
-#define XM_VECTOR_LOAD_CTOR explicit
+#define XM_VECTOR_LOAD_CTOR 
+//explicit
 #else
 #define XM_VECTOR_LOAD_CTOR
 #endif
@@ -111,6 +112,7 @@ namespace DirectX
 			{
 				xmvector<_NewType, _Size> result;
 				result.v = detail::cast_vector<Scalar, _NewType, _Size>(this->v);
+				return result;
 			}
 
 			template <index_t... selectors>

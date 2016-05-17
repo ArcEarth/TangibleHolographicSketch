@@ -387,7 +387,7 @@ namespace DirectX
 				return XMVectorCastFloatToInt(V);
 			}
 
-			template <typename _TSrc, typename _Dst, size_t _Size>
+			template <typename _TSrc, typename _TDst, size_t _Size>
 			inline XMVECTOR XM_CALLCONV cast_vector(FXMVECTOR V)
 			{
 				static_assert(_Size <= 4, "size must not exceed 4");
