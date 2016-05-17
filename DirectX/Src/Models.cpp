@@ -191,6 +191,8 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		iTotal += shape.mesh.indices.size();
 	}
 
+	assert(vTotal <= std::numeric_limits<IndexType>::max());
+
 	Vertices.reserve(vTotal);
 	Indices.reserve(iTotal);
 
@@ -203,16 +205,25 @@ DefaultStaticModel * DefaultStaticModel::CreateFromObjFile(const std::wstring & 
 		const Vector2* Tex = reinterpret_cast<Vector2*>(shape.mesh.texcoords.data());
 
 		const auto& idcs = shape.mesh.indices;
+
 		// Copy triangles
 		for (size_t i = 0; i < Nf; i++)
 		{
-
-			Indices.push_back((IndexType)idcs[i * 3 + 2]);
-			Indices.push_back((IndexType)idcs[i * 3 + 1]);
-			Indices.push_back((IndexType)idcs[i * 3 + 0]);
+			if (flipNormal)
+			{
+				Indices.push_back((IndexType)idcs[i * 3 + 2]);
+				Indices.push_back((IndexType)idcs[i * 3 + 1]);
+				Indices.push_back((IndexType)idcs[i * 3 + 0]);
+			}
+			else
+			{
+				Indices.push_back((IndexType)idcs[i * 3 + 0]);
+				Indices.push_back((IndexType)idcs[i * 3 + 1]);
+				Indices.push_back((IndexType)idcs[i * 3 + 2]);
+			}
 		}
 
-		XMVECTOR normalFactor = XMVectorReplicate(flipNormal ? -1.0f : 1.0f);
+		XMVECTOR normalFactor = XMVectorReplicate(flipNormal ? 1.0f : -1.0f);
 		// Copy vertices
 		for (size_t i = 0; i < Nv; i++)
 		{

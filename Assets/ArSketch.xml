@@ -6,8 +6,8 @@
     </enviroment>
   </scene.settings>
   <scene.assets>
-    <mesh name="ceil_mesh" src="woman.obj" flip_normal="true"></mesh>
-    <mesh name="cube_mesh" src="cube.obj"></mesh>
+    <mesh name="ceil_mesh" src="ceil.obj" flip_normal="false"></mesh>
+    <mesh name="cube_mesh" src="cube.obj" flip_normal="false"></mesh>
     <!--<mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>-->
     <!--<mesh name="bottle_mesh" src="wine_bottle.obj"></mesh>-->
@@ -40,7 +40,7 @@
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <surface_inspector position="0,0.35,0" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
+      <surface_inspector position="0,-1.31,1.0" orientation="<-90,0,0>" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
       </surface_inspector>
       
       <!--<object name="mug2" visible="true" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">

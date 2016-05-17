@@ -19,6 +19,7 @@ REGISTER_SCENE_OBJECT_IN_PARSER(surface_inspector, SurfaceInspectionPlanner);
 
 float g_ControlPointsRaius = 0.005f;
 float g_ControlPointsConnectionRadius = 0.002;
+bool  g_VisualizeNormal = false;
 static constexpr size_t g_DecalResolution = 500;
 
 namespace Causality
@@ -340,7 +341,7 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 
 		drawer.SetWorld(world);
 
-		if (m_pModel)
+		if (m_pModel && g_VisualizeNormal)
 		{
 			drawer.Begin();
 			using namespace DirectX::VertexTraits;

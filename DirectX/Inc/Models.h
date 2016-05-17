@@ -507,7 +507,7 @@ namespace DirectX
 		{
 		public:
 			typedef VertexPositionNormalTexture				VertexType;
-			typedef uint16_t								IndexType;
+			typedef uint32_t								IndexType; // This creap mesh indices could exceed 65536
 			typedef FacetPrimitives::Triangle<IndexType>	TriangleType;
 
 			static DefaultStaticModel * CreateFromObjFile(const std::wstring &file, ID3D11Device * pDevice = nullptr, const std::wstring& textureDir = L"", bool flipNormal = false);

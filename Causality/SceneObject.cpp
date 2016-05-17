@@ -19,14 +19,14 @@ SceneObject::SceneObject() {
 }
 
 
-Quaternion ParseRotation(const char* store)
+Quaternion ParseRotation(const char* rotstr)
 {
-	string rotstr;
+
 	Quaternion rotation;
 	if (rotstr[0] == '[')
 	{
 		Matrix4x4 mat = Matrix4x4::Identity;
-		sscanf_s(rotstr.c_str(), "[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
+		sscanf_s(rotstr, "[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
 			&mat(0, 0), &mat(0, 1), &mat(0, 2),
 			&mat(1, 0), &mat(1, 1), &mat(1, 2),
 			&mat(2, 0), &mat(2, 1), &mat(2, 2)
@@ -38,16 +38,17 @@ Quaternion ParseRotation(const char* store)
 	else if (rotstr[0] == '{') // Quaternion
 	{
 		Quaternion q;
-		sscanf_s(rotstr.c_str(), "{%f,%f,%f,%f}", &q.x, &q.y, &q.z, &q.w);
+		sscanf_s(rotstr, "{%f,%f,%f,%f}", &q.x, &q.y, &q.z, &q.w);
 		rotation = q;
 	}
 	else
 	{
 		Vector3 e;
 		if (rotstr[0] == '<')
-			sscanf_s(rotstr.c_str(), "<%f,%f,%f>", &e.x, &e.y, &e.z);
+			sscanf_s(rotstr, "<%f,%f,%f>", &e.x, &e.y, &e.z);
 		else
-			sscanf_s(rotstr.c_str(), "%f,%f,%f", &e.x, &e.y, &e.z);
+			sscanf_s(rotstr, "%f,%f,%f", &e.x, &e.y, &e.z);
+		e *= (XM_PI/180.0f);
 		rotation = Quaternion::CreateFromYawPitchRoll(e.y, e.x, e.z);
 	}
 	return rotation;
