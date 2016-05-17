@@ -42,14 +42,6 @@ namespace Causality
 
 	class IPointer;
 
-	struct PointerButtonEventArgs
-	{
-		const IPointer* Pointer;
-		int						ButtonIndex;
-		PointerButtonStateEnum	OldState;
-		PointerButtonStateEnum	NewState;
-	};
-
 	struct PointerMoveEventArgs
 	{
 		const IPointer* Pointer;
@@ -62,6 +54,7 @@ namespace Causality
 	{
 		size_t _bitcode;
 
+		PointerButtonStates() = default;
 		explicit PointerButtonStates(size_t state) : _bitcode(state) {}
 		operator size_t () const { return _bitcode; }
 		PointerButtonStates& operator=(size_t state) { _bitcode = state; return *this; }
@@ -70,6 +63,10 @@ namespace Causality
 		{
 			return PointerButtonStateEnum((_bitcode >> (button * 2)) & 0x3);
 		};
+
+		bool IsButtonDown(unsigned short key) const { return (bool)(GetState(key) & 1); }
+		bool IsButtonChanged(unsigned short key) const { return (bool)(GetState(key) & 2); }
+
 
 		void SetState(int button, PointerButtonStateEnum _state)
 		{
@@ -81,6 +78,13 @@ namespace Causality
 			_bitcode &= (state & 0x3) << (button * 2);
 		}
 	};
+
+	struct PointerButtonEventArgs
+	{
+		const IPointer* Pointer;
+		PointerButtonStates	States;
+	};
+
 
 	class IPointer abstract
 	{
@@ -207,6 +211,6 @@ namespace Causality
 
 	namespace CoreInputs
 	{
-		IPointer*			PrimaryPointer();
+		IPointer*	PrimaryPointer();
 	}
 }

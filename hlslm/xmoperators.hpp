@@ -153,6 +153,9 @@ namespace DirectX
 			return ret;
 		}
 
+#ifndef XM_NAMES
+#define XM_NAMES ::DirectX::
+#endif
 		// Bitwise operators for uint vectors
 		// lhs & ~rhs
 		XM_MAKE_BINARY_CWISE_OPERATOR(uint, andnot, XMVectorAndCInt, XM_NAMES)

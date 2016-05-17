@@ -10,6 +10,7 @@ REGISTER_SCENE_OBJECT_IN_PARSER(first_person_keyboard_mouse_control, KeyboardMou
 KeyboardMouseFirstPersonControl::KeyboardMouseFirstPersonControl()
 {
 	Speed = 2.0f;
+	TuringSpeed = 1.0f;
 	Flip_X = true;
 	Flip_Y = true;
 	
@@ -21,10 +22,10 @@ KeyboardMouseFirstPersonControl::KeyboardMouseFirstPersonControl()
 	m_keyboard = CoreInputs::PrimaryKeyboard();
 	m_cursor = CoreInputs::PrimaryPointer();
 
-	if (m_keyboard)
-		m_conkeyUp = m_keyboard->KeyUp.connect([this](const auto&args) {
-			this->OnKeyUp(args);
-		});
+	//if (m_keyboard)
+	//	m_conkeyUp = m_keyboard->KeyUp.connect([this](const auto&args) {
+	//		this->OnKeyUp(args);
+	//	});
 
 	if (m_cursor)
 		m_cursorMove = m_cursor->Move += [this](const auto&args) {
@@ -35,7 +36,7 @@ KeyboardMouseFirstPersonControl::KeyboardMouseFirstPersonControl()
 void KeyboardMouseFirstPersonControl::Parse(const ParamArchive * store)
 {
 	GetParam(store, "speed", Speed);
-	GetParam(store, "turing_speed", CameraAngularVeclocity);
+	GetParam(store, "turing_speed", TuringSpeed);
 
 	GetParam(store, "flip_x", Flip_X);
 	GetParam(store, "flip_y", Flip_Y);
@@ -87,16 +88,20 @@ void KeyboardMouseFirstPersonControl::OnPointerMove(const PointerMoveEventArgs &
 	auto btnStates = e.Pointer->ButtonStates();
 
 	auto state = btnStates.GetState(MButton);
+
 	if (state == PointerButton_Pressing)
 		ResetTarget(m_pTarget); // Reset Rotational states
 
 	IsTrackingCursor = state & 0x1;
 
+	if (!IsTrackingCursor) 
+		return;
+
 	float yawFlip = Flip_X ? -1.0f : 1.0f;
 	float pitchFlip = Flip_Y ? -1.0f : 1.0f;
 
-	auto yaw = yawFlip * e.PositionDelta.x / 1000.0f * XM_PI * AngularSpeed;
-	auto pitch = pitchFlip * e.PositionDelta.y / 1000.0f * XM_PI * AngularSpeed;
+	auto yaw = yawFlip * e.PositionDelta.x / 1000.0f * XM_PI * TuringSpeed;
+	auto pitch = pitchFlip * e.PositionDelta.y / 1000.0f * XM_PI * TuringSpeed;
 
 	AddationalYaw += yaw;
 	AddationalPitch += pitch;

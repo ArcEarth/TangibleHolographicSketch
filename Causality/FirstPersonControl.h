@@ -17,12 +17,11 @@ namespace Causality
 
 		void ResetTarget(IRigid* pTarget);
 
-		void OnKeyUp(const KeyboardEventArgs & e);
 		void OnPointerMove(const PointerMoveEventArgs & e);
 
 	public:
 		float											Speed;
-		float											AngularSpeed;
+		float											TuringSpeed;
 
 		bool											Flip_X; // flip Roll
 		bool											Flip_Y; // flip Pitch

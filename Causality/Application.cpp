@@ -96,7 +96,8 @@ namespace Causality
 
 		case WM_SIZE:
 		{
-			window->OnResize(LOWORD(lparam), HIWORD(lparam));
+			if (window)
+				window->OnResize(LOWORD(lparam), HIWORD(lparam));
 		}
 		break;
 		// Check if the window is being closed.
@@ -114,7 +115,8 @@ namespace Causality
 		// All other messages pass to the message handler in the system class.
 		default:
 		{
-			window->ProcessMessage(umessage, wparam, lparam);
+			if (window)
+				window->ProcessMessage(umessage, wparam, lparam);
 			return DefWindowProc(hwnd, umessage, wparam, lparam);
 		}
 

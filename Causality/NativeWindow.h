@@ -83,6 +83,8 @@ namespace Causality
 		NativeWindow();
 		~NativeWindow();
 
+		static shared_ptr<NativeWindow> GetForCurrentView();
+
 		virtual void Initialize(const std::string& title, unsigned int width, unsigned int height, bool fullScreen = false) override;
 
 		void Show();
@@ -120,6 +122,10 @@ namespace Causality
 
 		Event<Vector2> SizeChanged;
 
+		const CursorHandler&	Cursors() const { return m_cursor; }
+		const KeyboardHandler&	Keyboard() const { return m_keyboard; }
+		CursorHandler&	Cursors() { return m_cursor; }
+		KeyboardHandler&	Keyboard() { return m_keyboard; }
 	private:
 		std::wstring		m_Title;
 		HWND				m_hWnd;

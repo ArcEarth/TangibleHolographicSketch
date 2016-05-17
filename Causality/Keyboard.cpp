@@ -1,5 +1,6 @@
 #include "pch_bcl.h"
 #include "Keyboard.h"
+#include "NativeWindow.h"
 
 using namespace Causality;
 
@@ -31,5 +32,6 @@ void KeyboardHandler::ProcessMessage(UINT umessage, WPARAM wparam, LPARAM lparam
 
 KeyboardHandler * CoreInputs::PrimaryKeyboard()
 {
-	return nullptr;
+	auto window = NativeWindow::GetForCurrentView();
+	return window ? &window->Keyboard() : nullptr;
 }

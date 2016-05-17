@@ -9,10 +9,28 @@ IPointer::IPointer() : m_parent(nullptr), m_btnCount(1), m_btnState(0), m_type(P
 
 IPointer::~IPointer() = default;
 
+void IPointer::SignalMoved()
+{
+	PointerMoveEventArgs args;
+	args.Pointer = this;
+	args.Position = this->m_pos;
+	args.PositionDelta = this->m_delta;
+	this->Move(args);
+}
+
+void IPointer::SignalButton()
+{
+	PointerButtonEventArgs args;
+	args.Pointer = this;
+	args.States = this->m_btnState;
+	this->ButtonStateChanged(args);
+}
+
 MousePointer::MousePointer() {
 	m_deltaEpsilon = 1.0f;
 	m_parent = nullptr;
 	m_type = PointerType_Mouse;
+	m_btnCount = 3;
 }
 
 MousePointer::~MousePointer()
@@ -26,7 +44,10 @@ void MousePointer::Update(Vector4 pos, PointerButtonStates state) {
 	m_pos.x = pos.x; m_pos.y = pos.y; m_pos.z += m_pos.z;
 
 	if (state != m_btnState)
+	{
+		m_btnState = state;
 		SignalButton();
+	}
 
 	if (m_delta.LengthSquared() > m_deltaEpsilon)
 		SignalMoved();
@@ -50,6 +71,12 @@ static bool is_rm_rdp_mouse(char cDeviceString[])
 	return 1;
 }
 
+
+CursorHandler::CursorHandler()
+{
+	m_initialized = false;
+	m_useRdp = false;
+}
 
 bool CursorHandler::SetWindow(IWindow *window) {
 	unsigned int nInputDevices = 0, i;
@@ -248,5 +275,6 @@ void CursorHandler::ProcessMessage(UINT umessage, WPARAM wparam, LPARAM lparam)
 
 IPointer * CoreInputs::PrimaryPointer()
 {
-	return nullptr;
+	auto window = NativeWindow::GetForCurrentView();
+	return window ? window->Cursors().GetPrimaryPointer() : nullptr;
 }

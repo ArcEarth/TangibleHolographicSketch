@@ -1,5 +1,5 @@
 #include "pch_bcl.h"
-#include "ParametericPatch.h"
+#include "SurfaceInspectionPlanner.h"
 #include "Scene.h"
 #include <Models.h>
 #include <VertexTypes.h>
@@ -9,7 +9,9 @@
 #include <Geometrics\csg.h>
 #include <GeometricPrimitive.h>
 #include "AssetDictionary.h"
+
 using namespace Causality;
+using namespace Causality::SurfaceInspection;
 using namespace DirectX::Scene;
 using namespace Causality::Math;
 

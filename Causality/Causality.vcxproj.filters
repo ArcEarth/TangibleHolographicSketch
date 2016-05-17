@@ -194,9 +194,6 @@
     <ClCompile Include="Tests.cpp">
       <Filter>Utility Foundation</Filter>
     </ClCompile>
-    <ClCompile Include="ParametericPatch.cpp">
-      <Filter>PenModeler</Filter>
-    </ClCompile>
     <ClCompile Include="Application.cpp">
       <Filter>Platform Application Logic</Filter>
     </ClCompile>
@@ -210,6 +207,9 @@
       <Filter>Platform Application Logic</Filter>
     </ClCompile>
     <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="SurfaceInspectionPlanner.cpp">
+      <Filter>PenModeler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NativeWindow.h">
@@ -380,9 +380,6 @@
     <ClInclude Include="TrackedObjectControl.h">
       <Filter>PenModeler</Filter>
     </ClInclude>
-    <ClInclude Include="ParametericPatch.h">
-      <Filter>PenModeler</Filter>
-    </ClInclude>
     <ClInclude Include="CCA.h">
       <Filter>Algorithms</Filter>
     </ClInclude>
@@ -400,6 +397,9 @@
     </ClInclude>
     <ClInclude Include="AppComponents.h">
       <Filter>Platform Application Logic</Filter>
+    </ClInclude>
+    <ClInclude Include="SurfaceInspectionPlanner.h">
+      <Filter>PenModeler</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

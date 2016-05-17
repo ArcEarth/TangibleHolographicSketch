@@ -108,6 +108,16 @@ NativeWindow::~NativeWindow()
 	Close();
 }
 
+shared_ptr<NativeWindow> Causality::NativeWindow::GetForCurrentView()
+{
+	for (auto& pr : Application::WindowsLookup)
+	{
+		if (!pr.second.expired() && dynamic_cast<NativeWindow*>(pr.second._Get()))
+			return std::static_pointer_cast<NativeWindow>(pr.second.lock());
+	}
+	return nullptr;
+}
+
 void NativeWindow::Initialize(const std::string& title, unsigned int screenWidth, unsigned int screenHeight, bool fullScreen)
 {
 	WNDCLASSEX wc;
