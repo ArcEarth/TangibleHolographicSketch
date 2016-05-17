@@ -36,6 +36,9 @@ namespace Causality
 		KeyboardHandler*								m_keyboard;
 		IPointer*										m_cursor;
 
+		std::array<char,4>								m_directionalKeys;
+		int												m_turingBtn;
+
 		scoped_connection								m_conParChg;
 		scoped_connection								m_conkeyUp;
 		scoped_connection								m_cursorMove;

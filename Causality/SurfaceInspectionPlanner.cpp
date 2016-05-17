@@ -8,7 +8,7 @@
 #include "Cca.h"
 #include <Geometrics\csg.h>
 #include <GeometricPrimitive.h>
-#include "AssetDictionary.h"
+#include "Pointer.h"
 
 using namespace Causality;
 using namespace Causality::SurfaceInspection;
@@ -56,6 +56,8 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	const char* cpstr = nullptr;
 	std::vector<float> cps;
 	const char* mesh_name = nullptr;
+
+	m_cursor = CoreInputs::PrimaryPointer();
 
 	m_isReady = false;
 	m_declDirtyFalg = 0;
@@ -105,7 +107,7 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 		pModel->SetName("whole_patch");
 		pModel->BoundBox = bb;
 		pModel->BoundOrientedBox = obb;
-		m_pModel.reset(pModel);
+		m_decalModel.reset(pModel);
 		//VisualObject::m_pRenderModel = pModel;
 
 		m_decal = RenderableTexture2D(pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true);
@@ -332,6 +334,8 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 
 	VisualObject::Render(pContext, pEffect);
 
+	m_decalModel->Render(pContext, GlobalTransformMatrix(), pEffect);
+
 	if (g_DebugView && pEffect)
 	{
 		auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
@@ -341,7 +345,7 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 
 		drawer.SetWorld(world);
 
-		if (m_pModel && g_VisualizeNormal)
+		if (m_decalModel && g_VisualizeNormal)
 		{
 			drawer.Begin();
 			using namespace DirectX::VertexTraits;

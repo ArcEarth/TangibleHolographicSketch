@@ -439,9 +439,10 @@ namespace Geometrics
 			_IndexType vsize = this->vertices.size();
 			int esize = this->indices.size();
 
+			using hash_type = uint64_t;
 			// make sure int for hash is enough
-			assert(vsize*vsize < std::numeric_limits<int>::max());
-			std::unordered_map<int, _IndexType> edges(esize * 2);
+			assert(vsize*vsize < std::numeric_limits<hash_type>::max());
+			std::unordered_map<hash_type, _IndexType> edges(esize * 2);
 			// max items inside this table should be less than (esize / 2)
 
 			_IndexType fid = 0;
@@ -452,8 +453,8 @@ namespace Geometrics
 					_IndexType eid = i + fid * 3;
 					auto e = edge(fid, i);
 
-					int ehash = e.v0 * vsize + e.v1;
-					int revehash = e.v0 + e.v1 * vsize;
+					hash_type ehash = e.v0 * vsize + e.v1;
+					hash_type revehash = e.v0 + e.v1 * vsize;
 
 					auto revItr = edges.find(revehash);
 					if (revItr == edges.end())

@@ -21,7 +21,7 @@
       <light name="sun_light" primary="false" color="#FF808080" position="2,5,2" near="4" far="8" focus="0,0,0" up="0,0,-1" hfov="1.75" wfov="1.75" aspect="1" perspective="false" drops_shadow="true" resolution="2048" />
 
       <shadow_camera name="primary_camera" primary="true" background="#FFFFFFFF" position="0,1.7,5.0" focus="0,1.78,0" up="0,1,0" far="100">
-        <first_person_keyboard_mouse_control />
+        <first_person_keyboard_mouse_control turn_button="2" speed="2.0" turing_speed="1.0" flip_x="true" flip_y="true" movement_keys="WASD" />
       </shadow_camera>
 
       <!--<hmd_camera name="camera" primary="true" background="#FFFFFFFF" position="0,0,0" focus="0,0,-1" up="0,1,0" ipd="0.065" fov="23" far="100" perspective="true">

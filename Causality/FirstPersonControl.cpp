@@ -13,6 +13,8 @@ KeyboardMouseFirstPersonControl::KeyboardMouseFirstPersonControl()
 	TuringSpeed = 1.0f;
 	Flip_X = true;
 	Flip_Y = true;
+	m_directionalKeys = {'W','A','S','D'};
+	m_turingBtn = MButton;
 	
 	ResetTarget(nullptr);
 
@@ -40,6 +42,13 @@ void KeyboardMouseFirstPersonControl::Parse(const ParamArchive * store)
 
 	GetParam(store, "flip_x", Flip_X);
 	GetParam(store, "flip_y", Flip_Y);
+
+	GetParam(store, "turn_button", m_turingBtn);
+
+	const char* movement_keys = nullptr;
+	GetParam(store, "movement_keys", movement_keys);
+	if (movement_keys && strlen(movement_keys) >= 4)
+		std::copy_n(movement_keys,4,m_directionalKeys.begin());
 }
 
 void KeyboardMouseFirstPersonControl::ResetTarget(IRigid * pTarget)
@@ -71,13 +80,13 @@ void KeyboardMouseFirstPersonControl::Update(time_seconds const& time_delta)
 	using namespace DirectX;
 
 	XMVECTOR vel = XMVectorZero();
-	if (m_keyboard->IsKeyDown('W'))
+	if (m_keyboard->IsKeyDown(m_directionalKeys[0])) // 'W'
 		vel += XMVectorSet( .0f,.0f,-1.0f,.0f);
-	if (m_keyboard->IsKeyDown('S'))
+	if (m_keyboard->IsKeyDown(m_directionalKeys[2])) // 'S'
 		vel += XMVectorSet(.0f, .0f, 1.0f, .0f);
-	if (m_keyboard->IsKeyDown('A'))
+	if (m_keyboard->IsKeyDown(m_directionalKeys[1])) // 'A'
 		vel += XMVectorSet(-1.0f, .0f, .0f, .0f);
-	if (m_keyboard->IsKeyDown('D'))
+	if (m_keyboard->IsKeyDown(m_directionalKeys[3])) // 'D'
 		vel += XMVectorSet(1.0f, .0f, .0f, .0f);
 	vel = XMVector3Normalize(vel);
 	CameraVeclocity = vel;
@@ -97,7 +106,7 @@ void KeyboardMouseFirstPersonControl::OnPointerMove(const PointerMoveEventArgs &
 	using namespace DirectX;
 	auto btnStates = e.Pointer->ButtonStates();
 
-	auto state = btnStates.GetState(MButton);
+	auto state = btnStates.GetState(m_turingBtn);
 
 	if (state == PointerButton_Pressing)
 		ResetTarget(m_pTarget); // Reset Rotational states

@@ -10,10 +10,11 @@ namespace Causality
 {
 	typedef Geometrics::Bezier::BezierPatch<Vector3, 3U> CubicBezierPatch;
 	typedef CubicBezierPatch::ClippingType CubicBezierCurve;
+	class IPointer;
 
 	namespace SurfaceInspection
 	{
-		using TriangleMeshType = Geometrics::TriangleMesh<DirectX::VertexPositionNormalTangentColorTexture>;
+		using TriangleMeshType = Geometrics::TriangleMesh<DirectX::VertexPositionNormalTangentColorTexture, uint32_t>;
 
 		using MeshType = TriangleMeshType;
 
@@ -74,8 +75,10 @@ namespace Causality
 			Color							m_decalStroke;
 			Color							m_decalFill;
 
+			const IPointer*					m_cursor;
+
 			std::vector<TriangleMeshType>		m_fracorizedMeshes;
-			uptr<DirectX::Scene::IModelNode>	m_pModel;
+			uptr<DirectX::Scene::IModelNode>	m_decalModel;
 
 			uptr<DirectX::Scene::IModelNode>	m_factorizeModel;
 
