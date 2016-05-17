@@ -28,28 +28,11 @@ namespace Causality
 		bool GetVector4(const ParamArchive* archive, const char* name, Vector4& param);
 		bool GetColor(const ParamArchive* archive, const char* name, Color& param);
 
-		inline bool ParseValue(const char * str, size_t len, bool& value)
-		{
-			if (_stricmp(str, "true"))
-				value = true;
-			else if (_stricmp(str, "false"))
-				value = false;
-			else
-				value = atoi(str);
-			return true;
-		}
-		inline bool ParseValue(const char * str, size_t len, int& value)
-		{
-			value = atoi(str); return true;
-		}
-		inline bool ParseValue(const char * str, size_t len, unsigned& value)
-		{
-			value = (unsigned)atoi(str); return true;
-		}
-		inline bool ParseValue(const char * str, size_t len, float& value)
-		{
-			value = (float)atof(str); return true;
-		}
+		inline bool ParseValue(const char * str, size_t len, bool& value);
+		inline bool ParseValue(const char * str, size_t len, int& value);
+		inline bool ParseValue(const char * str, size_t len, unsigned& value);
+		inline bool ParseValue(const char * str, size_t len, float& value);
+
 		template <class _Ty>
 		inline int ParseArray(const char * str, size_t len, std::vector<_Ty>& values, const char * splitters = " \t\n\r,;[](){}/")
 		{

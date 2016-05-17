@@ -205,6 +205,28 @@ namespace Causality
 			const char* attrval = nullptr;
 			return GetString(store, name, attrval) && ParseColor(attrval, param);
 		}
+		bool ParseValue(const char * str, size_t len, bool & value)
+		{
+			if (_stricmp(str, "true"))
+				value = true;
+			else if (_stricmp(str, "false"))
+				value = false;
+			else
+				value = atoi(str);
+			return true;
+		}
+		bool ParseValue(const char * str, size_t len, int & value)
+		{
+			value = atoi(str); return true;
+		}
+		bool ParseValue(const char * str, size_t len, unsigned & value)
+		{
+			value = (unsigned)atoi(str); return true;
+		}
+		bool ParseValue(const char * str, size_t len, float & value)
+		{
+			value = (float)atof(str); return true;
+		}
 	}
 
 	const ParamArchive * GetFirstChildArchive(const ParamArchive * store, const char * name)

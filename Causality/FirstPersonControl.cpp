@@ -47,11 +47,21 @@ void KeyboardMouseFirstPersonControl::ResetTarget(IRigid * pTarget)
 	m_pTarget = pTarget;
 	if (pTarget)
 	{
+		using namespace DirectX;
 		m_pTarget = pTarget;
-		InitialOrientation = pTarget->GetOrientation();
-		AddationalYaw = 0;
-		AddationalPitch = 0;
-		AddationalRoll = 0;
+		InitialOrientation = XMQuaternionIdentity();
+		if (m_pTarget = pTarget)
+		{
+			Vector3 euler = XMQuaternionEulerAngleYawPitchRoll(pTarget->GetOrientation());;
+			AddationalYaw = euler.y;
+			AddationalPitch = euler.x;
+			AddationalRoll = euler.z;
+		} else
+		{
+			AddationalYaw = .0f;
+			AddationalPitch = .0f;
+			AddationalRoll = .0f;
+		}
 	}
 
 }
@@ -106,11 +116,15 @@ void KeyboardMouseFirstPersonControl::OnPointerMove(const PointerMoveEventArgs &
 	AddationalYaw += yaw;
 	AddationalPitch += pitch;
 
+	// Explicit prohibit pitch to exceed [-90,90] degrees
+	AddationalPitch = std::min(AddationalPitch, XM_PIDIV2 - 0.01f);
+	AddationalPitch = std::max(AddationalPitch, -XM_PIDIV2 + 0.01f);
+
 	if (m_pTarget)
 	{
 		XMVECTOR extrinsic = XMQuaternionRotationRollPitchYaw(AddationalPitch, AddationalYaw, 0);
 		XMVECTOR intial = InitialOrientation;
-		intial = XMQuaternionMultiply(intial, extrinsic);
+		intial = XMQuaternionMultiply(intial,extrinsic);
 		m_pTarget->SetOrientation(intial);
 	}
 
