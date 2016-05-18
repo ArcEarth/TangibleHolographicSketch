@@ -9,6 +9,7 @@
 #include <Geometrics\csg.h>
 #include <GeometricPrimitive.h>
 #include "Pointer.h"
+#include "TrackerdPen.h"
 
 using namespace Causality;
 using namespace Causality::SurfaceInspection;
@@ -126,141 +127,141 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	}
 
 	m_requestCancelLoading = 0;
-	m_loadingTask = concurrency::create_task([=]() {
-		m_mesh.build();
+	//m_loadingTask = concurrency::create_task([=]() {
+	//	m_mesh.build();
 
-		int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
-		int ysize = (int)ceilf(obb.Extents.z * 2.0f / patchSize);
-		xsize = 0;
-		ysize = 0;
+	//	int xsize = (int)ceilf(obb.Extents.x * 2.0f / patchSize);
+	//	int ysize = (int)ceilf(obb.Extents.z * 2.0f / patchSize);
+	//	xsize = 0;
+	//	ysize = 0;
 
-		//m_mesh.transform(XMMatrixTranslationFromVector(-XMLoad(bb.Center)));
+	//	//m_mesh.transform(XMMatrixTranslationFromVector(-XMLoad(bb.Center)));
 
-		using Geometrics::csg::BSPNode;
+	//	using Geometrics::csg::BSPNode;
 
-		std::cout << "Building mesh BSP tree..." << std::endl;
+	//	std::cout << "Building mesh BSP tree..." << std::endl;
 
-		uptr<BSPNode> meshNode;
-		try
-		{
-			meshNode = BSPNode::create(m_mesh);
-		}
-		catch (const std::exception&)
-		{
-			return;
-		}
+	//	uptr<BSPNode> meshNode;
+	//	try
+	//	{
+	//		meshNode = BSPNode::create(m_mesh);
+	//	}
+	//	catch (const std::exception&)
+	//	{
+	//		return;
+	//	}
 
-		if (this->m_requestCancelLoading) return;
+	//	if (this->m_requestCancelLoading) return;
 
-		Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
-		DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
+	//	Geometrics::TriangleMesh<VertexPositionNormalTexture> cubeMesh;
+	//	DirectX::GeometricPrimitive::CreateCube(cubeMesh.vertices, cubeMesh.indices, 1.0f);
 
-		if (this->m_requestCancelLoading) return;
+	//	if (this->m_requestCancelLoading) return;
 
-		float zoffset = bb.Center.y;
-		XMVECTOR sclFactor = XMVectorSet(0.9f * patchSize, 5.0 * z_tolerence, 0.9f *  patchSize, 1.0f);
-		for (int i = 0; i < xsize; i++)
-		{
-			for (int j = 0; j < ysize; j++)
-			{
-				float xoffset = bb.Center.x - bb.Extents.x + (i + 0.5f) * patchSize;
-				float yoffset = bb.Center.z - bb.Extents.z + (j + 0.5f) * patchSize;
+	//	float zoffset = bb.Center.y;
+	//	XMVECTOR sclFactor = XMVectorSet(0.9f * patchSize, 5.0 * z_tolerence, 0.9f *  patchSize, 1.0f);
+	//	for (int i = 0; i < xsize; i++)
+	//	{
+	//		for (int j = 0; j < ysize; j++)
+	//		{
+	//			float xoffset = bb.Center.x - bb.Extents.x + (i + 0.5f) * patchSize;
+	//			float yoffset = bb.Center.z - bb.Extents.z + (j + 0.5f) * patchSize;
 
-				XMMATRIX M = XMMatrixAffineTransformation(
-					sclFactor, XMVectorZero(), XMQuaternionIdentity(),
-					XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
+	//			XMMATRIX M = XMMatrixAffineTransformation(
+	//				sclFactor, XMVectorZero(), XMQuaternionIdentity(),
+	//				XMVectorSet(xoffset, zoffset, yoffset, 0.0f));
 
-				cubeMesh.transform(M);
+	//			cubeMesh.transform(M);
 
-				if (this->m_requestCancelLoading) return;
+	//			if (this->m_requestCancelLoading) return;
 
-				// the area of interest for this index
-				auto cubeNode = BSPNode::create(cubeMesh);
+	//			// the area of interest for this index
+	//			auto cubeNode = BSPNode::create(cubeMesh);
 
-				if (this->m_requestCancelLoading) return;
+	//			if (this->m_requestCancelLoading) return;
 
-				XMVECTOR det;
-				M = XMMatrixInverse(&det, M);
-				cubeMesh.transform(M); // transform back
+	//			XMVECTOR det;
+	//			M = XMMatrixInverse(&det, M);
+	//			cubeMesh.transform(M); // transform back
 
-				std::cout << "Computing mesh insection (" << i << ',' << j << ')' << std::endl;
-				uptr<BSPNode> nodeRet;
-				try
-				{
-					nodeRet.reset(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
-				}
-				catch (const std::exception&)
-				{
-					return;
-				}
+	//			std::cout << "Computing mesh insection (" << i << ',' << j << ')' << std::endl;
+	//			uptr<BSPNode> nodeRet;
+	//			try
+	//			{
+	//				nodeRet.reset(Geometrics::csg::nodeSubtract(meshNode.get(), cubeNode.get()));
+	//			}
+	//			catch (const std::exception&)
+	//			{
+	//				return;
+	//			}
 
-				if (this->m_requestCancelLoading) return;
+	//			if (this->m_requestCancelLoading) return;
 
-				// the segmented mesh
-				m_fracorizedMeshes.emplace_back();
-				try
-				{
-					nodeRet->convertToMesh(m_fracorizedMeshes.back());
-				}
-				catch (const std::exception&)
-				{
-					return;
-				}
+	//			// the segmented mesh
+	//			m_fracorizedMeshes.emplace_back();
+	//			try
+	//			{
+	//				nodeRet->convertToMesh(m_fracorizedMeshes.back());
+	//			}
+	//			catch (const std::exception&)
+	//			{
+	//				return;
+	//			}
 
-				if (this->m_requestCancelLoading) return;
-			}
-		}
+	//			if (this->m_requestCancelLoading) return;
+	//		}
+	//	}
 
-		//m_projMesh = m_mesh; // copy the mesh
-		//for (auto& v : m_projMesh.vertices)
-		//{
-		//	XMVECTOR p = get_position(v);
-		//	p = XMVector3Rotate(p,quat);
-		//	set_position(v, p);
-		//}
+	//	//m_projMesh = m_mesh; // copy the mesh
+	//	//for (auto& v : m_projMesh.vertices)
+	//	//{
+	//	//	XMVECTOR p = get_position(v);
+	//	//	p = XMVector3Rotate(p,quat);
+	//	//	set_position(v, p);
+	//	//}
 
-		{
-			auto pModel = new CompositionModel();
-			this->m_factorizeModel.reset(pModel);
-			if (this->m_requestCancelLoading) return;
+	//	{
+	//		auto pModel = new CompositionModel();
+	//		this->m_factorizeModel.reset(pModel);
+	//		if (this->m_requestCancelLoading) return;
 
-			auto& parts = pModel->Parts;
-			for (auto& mesh : m_fracorizedMeshes)
-			{
-				parts.emplace_back();
-				auto& part = parts.back();
+	//		auto& parts = pModel->Parts;
+	//		for (auto& mesh : m_fracorizedMeshes)
+	//		{
+	//			parts.emplace_back();
+	//			auto& part = parts.back();
 
-				if (this->m_requestCancelLoading) return;
+	//			if (this->m_requestCancelLoading) return;
 
-				part.pMesh = CreateMeshBuffer(pDevice, mesh);
-				part.Name = "factorized_patch";
+	//			part.pMesh = CreateMeshBuffer(pDevice, mesh);
+	//			part.Name = "factorized_patch";
 
-				if (this->m_requestCancelLoading) return;
+	//			if (this->m_requestCancelLoading) return;
 
-				CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
-					mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
+	//			CreateBoundingBoxesFromPoints(part.BoundBox, part.BoundOrientedBox,
+	//				mesh.vertices.size(), &mesh.vertices[0].position, sizeof(TVertex));
 
-				if (this->m_requestCancelLoading) return;
-			}
-			pModel->CreateBoundingGeometry();
+	//			if (this->m_requestCancelLoading) return;
+	//		}
+	//		pModel->CreateBoundingGeometry();
 
-			if (this->m_requestCancelLoading) return;
+	//		if (this->m_requestCancelLoading) return;
 
-			auto pVisual = new VisualObject();
-			pVisual->Scene = this->Scene;
-			pVisual->SetRenderModel(pModel);
+	//		auto pVisual = new VisualObject();
+	//		pVisual->Scene = this->Scene;
+	//		pVisual->SetRenderModel(pModel);
 
-			if (this->m_requestCancelLoading) return;
-			{
-				this->AddChild(pVisual);
-				std::lock_guard<std::mutex>(this->Scene->ContentMutex());
-				this->Scene->SignalCameraCache();
-			}
-			//VisualObject::m_pRenderModel = pModel;
-		}
+	//		if (this->m_requestCancelLoading) return;
+	//		{
+	//			this->AddChild(pVisual);
+	//			std::lock_guard<std::mutex>(this->Scene->ContentMutex());
+	//			this->Scene->SignalCameraCache();
+	//		}
+	//		//VisualObject::m_pRenderModel = pModel;
+	//	}
 
-		m_isReady = true;
-	});
+	//	m_isReady = true;
+	//});
 }
 
 void SurfaceInspectionPlanner::ExtractMeshFromModel(TriangleMeshType& mesh, const IModelNode* pNode)
@@ -317,6 +318,11 @@ void SurfaceInspectionPlanner::BuildTriangleMesh(int tessellation, DirectX::Simp
 
 }
 
+SurfaceInspectionPlanner::SurfaceInspectionPlanner()
+{
+	m_pen = nullptr;
+}
+
 SurfaceInspectionPlanner::~SurfaceInspectionPlanner()
 {
 	m_requestCancelLoading = 1;
@@ -331,6 +337,17 @@ SurfaceInspectionPlanner::~SurfaceInspectionPlanner()
 	//if (pModel) delete pModel;
 }
 
+void SurfaceInspectionPlanner::AddChild(SceneObject * child)
+{
+	VisualObject::AddChild(child);
+	if (!m_pen)
+		m_pen = child->As<TrackedPen>();
+}
+
+void SurfaceInspectionPlanner::Update(time_seconds const & time_delta)
+{
+}
+
 void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffect)
 {
 	if (m_declDirtyFalg)
@@ -339,6 +356,11 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 	VisualObject::Render(pContext, pEffect);
 
 	m_decalModel->Render(pContext, GlobalTransformMatrix(), pEffect);
+
+	if (m_pen)
+	{
+		RenderPen(pContext,pEffect);
+	}
 
 	if (g_DebugView && pEffect)
 	{
@@ -400,6 +422,28 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 			drawer.DrawCylinder(m_patch.control_point(2, i), m_patch.control_point(3, i), g_ControlPointsConnectionRadius, color);
 		}
 	}
+}
+
+void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pEffect)
+{
+	auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
+
+	drawer.SetWorld(DirectX::XMMatrixIdentity());
+	XMVECTOR rot = m_pen->GetOrientation();
+	XMVECTOR pos = m_pen->GetPosition();
+
+	XMVECTOR yDir = XMVector3Rotate(-g_XMIdentityR2.v, rot);
+	XMVECTOR color = Colors::Yellow.v;
+
+	if (m_pen->IsInking())
+		color = Colors::LimeGreen.v;
+	else if (m_pen->IsDraging())
+		color = Colors::Red.v;
+
+	float length = 0.05f;
+	float radius = 0.01f;
+	drawer.DrawSphere(pos - (yDir * TrackedPen::TipLength), 0.0075f, color);
+	drawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
 }
 
 inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)

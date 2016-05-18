@@ -103,7 +103,8 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 	if (!m_cursor) return false;
 
 	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
-	pos = viewport.Unproject(pos,proj,view, m_intrinsic.TransformMatrix());
+	pos = XMVectorSetZ(pos,0.4f);
+	pos = viewport.Unproject(pos,proj,view, XMMatrixIdentity());
 
 	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(-g_XMIdentityR2.v, pos + view.r[3]);
 	m_pRigid->SetPosition(pos);
@@ -116,10 +117,11 @@ TrackedObjectControl::TrackedObjectControl()
 {
 	m_pRigid = nullptr;
 	m_cursor = nullptr;
+	m_pRigid = this;
 
-	m_parentChangedConnection = this->OnParentChanged.connect([this](SceneObject* _this, SceneObject* oldParent) {
-		m_pRigid = this->Parent();
-	});
+	//m_parentChangedConnection = this->OnParentChanged.connect([this](SceneObject* _this, SceneObject* oldParent) {
+	//	m_pRigid = this->Parent();
+	//});
 
 #if defined(__HAS_LEAP__)
 	m_pLeap = LeapSensor::GetForCurrentView();
@@ -147,41 +149,6 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 	SceneObject::Parse(archive);
 	GetParam(archive, "index", m_idx);
 	m_cursor = CoreInputs::PrimaryPointersHandler()->GetPointer(m_idx);
-
-	GetParam(archive, "translation", m_intrinsic.Translation);
-	GetParam(archive, "scale", m_intrinsic.Scale);
-	string rotstr;
-	if (GetParam(archive, "rotation", rotstr))
-	{
-		if (rotstr[0] == '[')
-		{
-			Matrix4x4 mat = Matrix4x4::Identity;
-			sscanf_s(rotstr.c_str(), "[%f,%f,%f;%f,%f,%f;%f,%f,%f]",
-				&mat(0, 0), &mat(0, 1), &mat(0, 2),
-				&mat(1, 0), &mat(1, 1), &mat(1, 2),
-				&mat(2, 0), &mat(2, 1), &mat(2, 2)
-				);
-			auto m = XMLoad(mat);
-			m = XMMatrixRotationRollPitchYaw(0, XMConvertToRadians(141), 0) * m;
-
-			//XMMATRIX v = XMMatrixIdentity();
-			//v *= m;
-			auto q = XMQuaternionRotationMatrix(m);
-			m_intrinsic.Rotation = q;
-		}
-		else if (rotstr[0] == '{') // Quaternion
-		{
-			Quaternion q;
-			sscanf_s(rotstr.c_str(), "{%f,%f,%f,%f}", &q.x, &q.y, &q.z, &q.w);
-			m_intrinsic.Rotation = q;
-		}
-		else if (rotstr[0] == '<')
-		{
-			Vector3 e;
-			sscanf_s(rotstr.c_str(), "<%f,%f,%f>", &e.x, &e.y, &e.z);
-			//m_intrinsic.Rotation = q;
-		}
-	}
 
 	float tvcap = 2.0f, rvcap = 5.0f;
 	GetParam(archive,"tvcap", tvcap);

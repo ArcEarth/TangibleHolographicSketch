@@ -95,6 +95,7 @@ bool TrackedPen::UpdateFromLeapFinger(double dt)
 bool TrackedPen::IsInking() const
 {
 	return (m_pVicon != nullptr && m_cursor->IsButtonDown(LButton))
+		|| (m_cursor != nullptr && m_cursor->IsButtonDown(LButton))
 		|| (m_pLeap != nullptr && (m_inkingStr > 0.5f && m_inkingStr > m_dragingStr && m_inkingStr > m_erasingStr));
 	// Was for leap:
 	//return ;
@@ -108,6 +109,7 @@ bool TrackedPen::IsErasing() const
 bool TrackedPen::IsDraging() const
 {
 	return (m_pVicon != nullptr && m_cursor->IsButtonDown(RButton))
+		|| (m_cursor != nullptr && m_cursor->IsButtonDown(RButton))
 		|| (m_pLeap != nullptr && (m_dragingStr > 0.5f && m_dragingStr > m_inkingStr && m_dragingStr > m_erasingStr));
 }
 
