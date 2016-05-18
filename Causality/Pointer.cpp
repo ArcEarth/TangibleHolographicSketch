@@ -278,3 +278,9 @@ IPointer * CoreInputs::PrimaryPointer()
 	auto window = NativeWindow::GetForCurrentView();
 	return window ? window->Cursors().GetPrimaryPointer() : nullptr;
 }
+
+CursorHandler* CoreInputs::PrimaryPointersHandler()
+{
+	auto window = NativeWindow::GetForCurrentView();
+	return window ? &window->Cursors() : nullptr;
+}

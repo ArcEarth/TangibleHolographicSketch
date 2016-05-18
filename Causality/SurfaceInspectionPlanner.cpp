@@ -20,7 +20,7 @@ REGISTER_SCENE_OBJECT_IN_PARSER(surface_inspector, SurfaceInspectionPlanner);
 float g_ControlPointsRaius = 0.005f;
 float g_ControlPointsConnectionRadius = 0.002;
 bool  g_VisualizeNormal = false;
-static constexpr size_t g_DecalResolution = 500;
+static constexpr size_t g_DecalResolution = 1024;
 
 namespace Causality
 {
@@ -58,22 +58,26 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	const char* mesh_name = nullptr;
 
 	m_cursor = CoreInputs::PrimaryPointer();
+	m_decalBackground = Colors::Transparent.v;
+	m_decalFill = Colors::LimeGreen.v;
+	m_decalStroke = Colors::Black.v;
+	//m_decalStroke.A(0.8f);
+	//m_decalFill.A(0.8f);
+
+	Color color = DirectX::Colors::White;
 
 	m_isReady = false;
 	m_declDirtyFalg = 0;
 	int tessellation = 9;
 	GetParam(archive, "tessellation", tessellation);
-	Color color = DirectX::Colors::White;
 	GetParam(archive, "color", color);
 	float patchSize = 0.1f, margin = 0.001f, z_tolerence = 0.01;
 
 	GetParam(archive, "patch_size", patchSize);
 	GetParam(archive, "margin", margin);
 	GetParam(archive, "z_tolerence", z_tolerence);
-
-	m_decalBackground = Colors::Transparent.v;
-	m_decalFill = Colors::LimeGreen.v;
-	m_decalStroke = Colors::Black.v;
+	GetParam(archive, "active_fill_color", m_decalFill);
+	GetParam(archive, "stroke_color", m_decalStroke);
 
 	//GetParamArray(archive, "control_points", cps);
 

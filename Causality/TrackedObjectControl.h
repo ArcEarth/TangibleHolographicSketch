@@ -39,6 +39,8 @@ namespace Causality
 		LowPassFilter<Quaternion,float>	m_rotFilter;
 		float				m_freq;
 
+		bool				m_visible;	// Is Visible to tracking device
+
 		SceneObject*		m_pRigid;
 		string				m_internalName;
 		IsometricTransform&	m_intrinsic;

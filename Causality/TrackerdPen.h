@@ -29,7 +29,6 @@ namespace Causality
 		// = 0.0145 m
 		static const float TipLength;
 	protected:
-		bool  m_visible;
 		float m_inkingStr;
 		float m_erasingStr;
 		float m_dragingStr;

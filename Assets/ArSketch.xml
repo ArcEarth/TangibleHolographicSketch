@@ -41,10 +41,16 @@
       </object>>-->
       
       <surface_inspector position="0,-1.31,1.0" orientation="<-90,0,0>" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
+          <tracked_pen name="pen_tracker" index="-1" tip_dir="0.0,0,-1.0" translation="0.051,-0.090,-0.013" rotation="{0.345,0.605,0.626,0.351}"></tracked_pen>
       </surface_inspector>
       
-      <!--when using tracked_pen from vicon, set proper tip_dir (last demo is (-1,0,0))
-      when using with mouse cursor, set tip_dir to (0,0,-1)-->
+      <!--
+      !IMPORTANT! 
+      ==== HOW TO SETUP <tracked_pen> ====
+      when streaming from vicon, set proper tip_dir (last demo is (-1,0,0)), set proper tracker index
+      when using with mouse cursor, set tip_dir to (0,0,-1), set index to -1 to use primary mouse,
+      set index to zero or positive values for indientify multiple mouse devices-->
+      
       <!--<object name="mug2" visible="true" position="0,0.5,0" scale="0.0352035" mesh="{mug_mesh}">
         <coordinate_axis max="2"/>
 

@@ -197,7 +197,10 @@ namespace Causality
 		bool SetWindow(IWindow *window);
 
 		int	 GetPointerCount() const { m_pointers.size(); }
-		const IPointer* GetPointer(int index) const { return m_pointers[index]; }
+		const IPointer* GetPointer(int index) const { 
+			if (index == -1) 
+				return &m_primaryPtr; else
+			return m_pointers[index]; }
 		const IPointer* GetPointer(const char* name) const;
 
 		const IPointer* GetPrimaryPointer() const { return &m_primaryPtr; }
@@ -212,5 +215,6 @@ namespace Causality
 	namespace CoreInputs
 	{
 		IPointer*	PrimaryPointer();
+		CursorHandler* PrimaryPointersHandler();
 	}
 }

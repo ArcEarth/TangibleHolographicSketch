@@ -43,13 +43,7 @@ void TrackedPen::Parse(const ParamArchive * archive)
 
 void TrackedPen::Update(const time_seconds & time_delta)
 {
-	SceneObject::Update(time_delta);
-	if (m_pVicon)
-		m_visible = UpdateFromVicon(time_delta.count());
-	else if (m_pLeap)
-		m_visible = UpdateFromLeapFinger(time_delta.count());
-	else if (m_cursor)
-		m_visible = UpdateFromCursor(time_delta.count());
+	TrackedObjectControl::Update(time_delta);
 }
 
 bool TrackedPen::UpdateFromLeapFinger(double dt)

@@ -100,13 +100,15 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 	auto view = pView->GetViewMatrix();
 	auto proj = pView->GetProjectionMatrix();
 
+	if (!m_cursor) return false;
+
 	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
 	pos = viewport.Unproject(pos,proj,view, m_intrinsic.TransformMatrix());
 
 	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(-g_XMIdentityR2.v, pos + view.r[3]);
 	m_pRigid->SetPosition(pos);
 	m_pRigid->SetOrientation(rotQ);
-	return false;
+	return true;
 }
 
 TrackedObjectControl::TrackedObjectControl()
@@ -122,7 +124,6 @@ TrackedObjectControl::TrackedObjectControl()
 #if defined(__HAS_LEAP__)
 	m_pLeap = LeapSensor::GetForCurrentView();
 #endif
-
 	m_pVicon = IViconClient::GetFroCurrentView();
 
 	if (m_pVicon && !m_pVicon->IsStreaming())
@@ -145,6 +146,7 @@ void TrackedObjectControl::Parse(const ParamArchive * archive)
 {
 	SceneObject::Parse(archive);
 	GetParam(archive, "index", m_idx);
+	m_cursor = CoreInputs::PrimaryPointersHandler()->GetPointer(m_idx);
 
 	GetParam(archive, "translation", m_intrinsic.Translation);
 	GetParam(archive, "scale", m_intrinsic.Scale);
@@ -192,7 +194,11 @@ void TrackedObjectControl::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
 	if (m_pVicon)
-		UpdateFromVicon(time_delta.count());
-	else if (m_pLeap)
-		UpdateFromLeapHand(time_delta.count());
+		m_visible = UpdateFromVicon(time_delta.count());
+	else if (m_pLeap) 
+		m_visible = UpdateFromLeapHand(time_delta.count());
+	else {
+		m_visible = m_cursor ? UpdateFromCursor(time_delta.count()) : false;
+	}
+	
 }
