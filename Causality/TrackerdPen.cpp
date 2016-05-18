@@ -23,7 +23,7 @@ TrackedPen::TrackedPen()
 	m_inkingStr = 0;
 	m_dragingStr = 0;
 	m_erasingStr = 0;
-
+	m_tipDirbase = -g_XMIdentityR0.v;
 	//m_con_pc = this->OnParentChanged += [this](SceneObject* _this, SceneObject *oldParent)
 	//{
 	//	auto pCamera = dynamic_cast<SceneObject*>(this->Scene->PrimaryCamera());
@@ -35,6 +35,12 @@ TrackedPen::~TrackedPen()
 
 }
 
+void TrackedPen::Parse(const ParamArchive * archive)
+{
+	TrackedObjectControl::Parse(archive);
+	GetParam(archive, "tip_dir", m_tipDirbase);
+}
+
 void TrackedPen::Update(const time_seconds & time_delta)
 {
 	SceneObject::Update(time_delta);
@@ -43,7 +49,7 @@ void TrackedPen::Update(const time_seconds & time_delta)
 	else if (m_pLeap)
 		m_visible = UpdateFromLeapFinger(time_delta.count());
 	else if (m_cursor)
-		m_visible = true;
+		m_visible = UpdateFromCursor(time_delta.count());
 }
 
 bool TrackedPen::UpdateFromLeapFinger(double dt)
@@ -114,5 +120,17 @@ bool TrackedPen::IsDraging() const
 bool TrackedPen::IsVisible() const
 {
 	return m_visible;
+}
+
+XMVECTOR XM_CALLCONV TrackedPen::GetTipPosition() const
+{
+	XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
+	return pos;
+}
+
+XMVECTOR XM_CALLCONV TrackedPen::GetTipDirection() const
+{
+	XMVECTOR dir = XMVector3Rotate(m_tipDirbase, m_Transform.LclRotation);
+	return dir;
 }
 

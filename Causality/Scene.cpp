@@ -67,6 +67,7 @@ void Scene::SetCanvas(DirectX::RenderTarget & canvas) {
 	{
 	}
 	m_canvas = canvas;
+	m_sceneViewport = canvas.ViewPort();
 	//back_buffer = canvas.ColorBuffer();
 	//m_canvas = DirectX::RenderTarget(DirectX::RenderableTexture2D(render_device, back_buffer.Width(), back_buffer.Height(), back_buffer.Format()), canvas.DepthBuffer());
 }

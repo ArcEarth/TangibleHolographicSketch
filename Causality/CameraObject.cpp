@@ -537,7 +537,7 @@ HMDCamera::HMDCamera()
 {
 }
 
-Causality::HMDCamera::~HMDCamera()
+HMDCamera::~HMDCamera()
 {
 
 }
@@ -570,6 +570,7 @@ void HMDCamera::CreateDeviceResources(IRenderDevice *pDevice, RenderTarget & can
 
 	m_Views[0]->SetAttachedRigid(this);
 	m_Views[1]->SetAttachedRigid(this);
+	m_virutalView.SetAttachedRigid(this);
 
 	SetIPD(g_DefaultIPD);
 
@@ -581,6 +582,11 @@ void HMDCamera::CreateDeviceResources(IRenderDevice *pDevice, RenderTarget & can
 	m_RenderTargets[1] = canvas.Subview(viewport);
 
 	pDevice->GetImmediateContext(&m_pContext);
+}
+
+const IViewControl * HMDCamera::GetCollisionView() const
+{
+	return &m_virutalView;
 }
 
 void HMDCamera::Parse(const ParamArchive * store)
@@ -671,10 +677,12 @@ void HMDCamera::SetPerspective(float fov, float aspect, float _near, float _far)
 {
 	m_Views[0]->SetPerspective(fov, aspect, _near, _far);
 	m_Views[1]->SetPerspective(fov, aspect, _near, _far);
+	m_virutalView.SetPerspective(fov, aspect, _near, _far);
 }
 
 void HMDCamera::SetOrthographic(float viewWidth, float viewHeight, float Near, float Far)
 {
 	m_Views[0]->SetOrthographic(viewWidth, viewHeight, Near, Far);
 	m_Views[1]->SetOrthographic(viewWidth, viewHeight, Near, Far);
+	m_virutalView.SetOrthographic(viewWidth, viewHeight, Near, Far);
 }

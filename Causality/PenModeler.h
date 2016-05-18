@@ -85,7 +85,7 @@ namespace Causality
 
 		scoped_connection			m_con_pc;
 
-		TrackedPen*					m_pTracker;
+		TrackedPen*					m_pen;
 		MeshType*					m_target;
 	};
 }

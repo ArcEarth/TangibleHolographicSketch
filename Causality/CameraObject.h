@@ -74,6 +74,7 @@ namespace Causality
 	{
 	public:
 		virtual size_t ViewCount() const = 0;
+		virtual const IViewControl* GetCollisionView() const = 0;
 		virtual IViewControl* GetView(int view = 0) = 0;
 		virtual size_t ViewRendererCount(int view = 0) const = 0;
 		virtual IRenderControl* GetViewRenderer(int view = 0, int renderer = 0) = 0;
@@ -204,6 +205,7 @@ namespace Causality
 
 		virtual size_t ViewCount() const override;
 		virtual IViewControl* GetView(int view = 0) override;
+		virtual const IViewControl* GetCollisionView() const override { return ICamera::GetView(0); }
 
 		// A direct call to monolith camera's focus will change camera's orientation instead of CameraViewControl's local coords
 		virtual void FocusAt(FXMVECTOR focusPoint, FXMVECTOR upDir) override;
@@ -279,6 +281,8 @@ namespace Causality
 
 		void CreateDeviceResources(IRenderDevice* pDevice, RenderTarget& canvas);
 
+		virtual const IViewControl* GetCollisionView() const override;
+
 		virtual void Parse(const ParamArchive* store) override;
 		virtual void BeginFrame() override;
 		virtual void EndFrame() override;
@@ -291,6 +295,7 @@ namespace Causality
 		void SetOrthographic(float viewWidth, float viewHeight, float Near = 0.01f, float Far = 100.0f);
 
 	private:
+		CameraViewControl			m_virutalView; // the virtual view control for collision detection
 		sptr<Devices::OculusRift>	m_pRift;
 		cptr<IRenderContext>		m_pContext;
 		float						m_ipd; // default to 64mm

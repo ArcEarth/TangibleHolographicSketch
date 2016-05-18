@@ -6,6 +6,9 @@
 #include <Leap.h>
 #endif
 #include "TrackedObjectControl.h"
+#include "Scene.h"
+#include "CameraObject.h"
+#include "Pointer.h"
 
 using namespace Causality;
 using namespace Causality::Devices;
@@ -87,6 +90,22 @@ bool TrackedObjectControl::UpdateFromLeapHand(double dt)
 		}
 	}
 #endif
+	return false;
+}
+
+bool TrackedObjectControl::UpdateFromCursor(double time_delta)
+{
+	auto viewport = this->Scene->SceneViewport();
+	auto pView = this->Scene->PrimaryCamera()->GetCollisionView();
+	auto view = pView->GetViewMatrix();
+	auto proj = pView->GetProjectionMatrix();
+
+	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
+	pos = viewport.Unproject(pos,proj,view, m_intrinsic.TransformMatrix());
+
+	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(-g_XMIdentityR2.v, pos + view.r[3]);
+	m_pRigid->SetPosition(pos);
+	m_pRigid->SetOrientation(rotQ);
 	return false;
 }
 

@@ -43,7 +43,7 @@ inline D2D1_POINT_2F XM_CALLCONV GetD2DPoint(const Vector2& v)
 PenModeler::PenModeler(int objectIdx)
 	: m_state(None), m_target(nullptr)
 {
-	m_pTracker = nullptr;
+	m_pen = nullptr;
 	m_patches.reserve(100);
 	m_extrusions.reserve(100);
 	m_extruBuffers.reserve(100);
@@ -70,7 +70,7 @@ void PenModeler::AddChild(SceneObject * child)
 	auto pPen = dynamic_cast<TrackedPen*>(child);
 	if (pPen)
 	{
-		m_pTracker = pPen;
+		m_pen = pPen;
 	}
 }
 
@@ -343,30 +343,31 @@ void PenModeler::OnAirDragEnd()
 void PenModeler::Update(time_seconds const & time_delta)
 {
 	SceneObject::Update(time_delta);
-	if (!m_pTracker)
+	if (!m_pen)
 		return;
 
-	m_pTracker->Update(time_delta);
-	m_isVisable = m_pTracker->IsVisible();
+	m_pen->Update(time_delta);
+	m_isVisable = m_pen->IsVisible();
 	m_isVisable = true;
 	if (m_isVisable)
 	{
-		XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
-		XMVECTOR dir = XMVector3Rotate(-g_XMIdentityR0.v, m_Transform.LclRotation);
+		// These position / directions are in local coordinate
+		XMVECTOR pos = m_pen->GetTipPosition();
+		XMVECTOR dir = m_pen->GetTipDirection();
 
-		if (m_state == None && m_pTracker->IsInking())
+		if (m_state == None && m_pen->IsInking())
 		{
 			SurfaceSketchBegin();
 		}
-		else if (m_state == Inking && !m_pTracker->IsInking())
+		else if (m_state == Inking && !m_pen->IsInking())
 		{
 			SurfaceSketchEnd();
 		}
-		else if (m_state == None && m_pTracker->IsDraging())
+		else if (m_state == None && m_pen->IsDraging())
 		{
 			OnAirDragBegin();
 		}
-		else if (m_state == Dragging && !m_pTracker->IsDraging())
+		else if (m_state == Dragging && !m_pen->IsDraging())
 		{
 			OnAirDragEnd();
 		}
@@ -448,7 +449,7 @@ void DrawCurve(const Curve& curve, FXMVECTOR color)
 
 void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 {
-	if (!m_isVisable || !m_pTracker) return;
+	if (!m_isVisable || !m_pen) return;
 
 	Color transparent = Colors::Transparent.v;
 	Color stroke = Colors::LimeGreen;
@@ -524,9 +525,9 @@ void Causality::PenModeler::RenderPen()
 	XMVECTOR pos = GetPosition();
 	XMVECTOR color = Colors::Yellow.v;
 
-	if (m_pTracker->IsInking())
+	if (m_pen->IsInking())
 		color = Colors::LimeGreen.v;
-	else if (m_pTracker->IsDraging())
+	else if (m_pen->IsDraging())
 		color = Colors::Red.v;
 
 	float length = 0.05f;

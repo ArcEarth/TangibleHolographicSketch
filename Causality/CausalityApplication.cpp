@@ -162,16 +162,16 @@ bool App::OnStartup(const std::vector<std::string>& args)
 	//loadingScene->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
 
 	Scenes.emplace_back(new Scene);
-	auto& selector = Scenes.back();
-	selector->SetRenderDeviceAndContext(pDevice.Get(), pContext.Get());
-	selector->SetHudRenderDevice(pDeviceResources->GetD2DFactory(), pDeviceResources->GetD2DDeviceContext(), pDeviceResources->GetDWriteFactory());
-	selector->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
+	auto& scene = Scenes.back();
+	scene->SetRenderDeviceAndContext(pDevice.Get(), pContext.Get());
+	scene->SetHudRenderDevice(pDeviceResources->GetD2DFactory(), pDeviceResources->GetD2DDeviceContext(), pDeviceResources->GetDWriteFactory());
+	scene->SetCanvas(pDeviceResources->GetBackBufferRenderTarget());
 
-	concurrency::task<void> loadScene([sceneFile,&selector]() {
+	concurrency::task<void> loadScene([sceneFile,&scene]() {
 		cout << "Current Directory :" << sys::current_path() << endl;
 		cout << "Loading [Scene](" << sceneFile << ") ..." << endl;
 		CoInitializeEx(NULL, COINIT::COINIT_APARTMENTTHREADED);
-		selector->LoadFromFile(sceneFile.string());
+		scene->LoadFromFile(sceneFile.string());
 		CoUninitialize();
 		cout << "[Scene] Loading Finished!";
 	});

@@ -6,6 +6,7 @@
 #include <mutex>
 #include <vector>
 #include "SmartPointers.h"
+#include <SimpleMathExtend.h>
 
 namespace DirectX
 {
@@ -134,9 +135,13 @@ namespace Causality
 		void SetRenderDeviceAndContext(IRenderDevice* device, IRenderContext* context);
 		void SetHudRenderDevice(I2DFactory* pD2dFactory,I2DContext* pD2dContext, ITextFactory* pTextFactory);
 
-		RenderTarget&		Canvas() { return m_canvas; }
-		const RenderTarget&	Canvas() const { return m_canvas; }
-		void							SetCanvas(RenderTarget& canvas);
+		// Get the Scene Viewport Relative to the window's backbuffer
+		DirectX::SimpleMath::Viewport	SceneViewport() const { return m_sceneViewport; }
+
+		// The Scene's local render target
+		RenderTarget&			Canvas() { return m_canvas; }
+		const RenderTarget&		Canvas() const { return m_canvas; }
+		void					SetCanvas(RenderTarget& canvas);
 
 		vector<ICamera*>&				GetCameras() { return m_cameras; }
 		vector<ILight*>&				GetLights() { return m_lights; }
@@ -173,6 +178,9 @@ namespace Causality
 
 		ParamArchive*				m_settings;
 		uptr<ParamDocument>			m_sourceDoc;
+
+		DirectX::SimpleMath::Viewport 
+									m_sceneViewport;
 
 		RenderTarget				m_canvas;
 		//RenderableTexture2D			back_buffer;
