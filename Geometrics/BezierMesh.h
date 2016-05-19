@@ -85,7 +85,9 @@ namespace Geometrics
 		size_t offset = mesh.vertices.size();
 		size_t stride = tessellation + 1;
 
-		MeshType::VertexType d_vertex;
+		using VertexType = std::remove_cv_t<std::remove_const_t<decltype(mesh.vertices[0])>>;
+
+		VertexType d_vertex;
 		using DirectX::XMVECTOR;
 
 		float delta = 1.0f / (float)tessellation;
@@ -118,7 +120,7 @@ namespace Geometrics
 		}
 
 		// Fix normals
-		if (has_normal<MeshType::VertexType>::value)
+		if (has_normal<VertexType>::value)
 		{
 			for (size_t j = 0; j <= tessellation; j++)
 			{

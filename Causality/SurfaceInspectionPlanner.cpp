@@ -446,7 +446,7 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	else if (m_pen->IsDraging())
 		color = Colors::Red.v;
 
-	color = XMVectorSetW(color,0.5f);
+	float alpha = 0.5f;
 
 	XMMATRIX world = this->GetGlobalTransform().TransformMatrix();
 	XMMATRIX invworld = XMMatrixInverse(nullptr,world);
@@ -460,16 +460,20 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	m_mesh.intersect(pos, dir, &intersecs);
 	if (!intersecs.empty())
 	{
-		color = XMVectorSetW(color, 1.0f);
+		alpha = 1.0f;
 		pos = intersecs[0].position;
 	}
 
 	float length = 0.01f / scl;
 	float radius = 0.0035f / scl;
 
+	m_cursorMaterial->DiffuseColor = color;
+	m_cursorMaterial->Alpha = alpha;
+	m_cursorMaterial->SetupEffect(pEffect);
+
 	drawer.SetWorld(world);
-	drawer.DrawSphere(pos, radius, color);
-	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color);
+	drawer.DrawSphere(pos, radius, color, pEffect);
+	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color, pEffect);
 }
 
 inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)

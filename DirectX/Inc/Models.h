@@ -226,6 +226,7 @@ namespace DirectX
 		namespace GeometricPrimtives
 		{
 			typedef TypedMeshBuffer<VertexPositionNormalTexture, uint16_t> MeshBufferType;
+
 			std::shared_ptr<MeshBufferType>	CreateCube(ID3D11Device * pDevice, float size, bool rhcoords = true);
 			std::shared_ptr<MeshBufferType>	CreateSphere(ID3D11Device * pDevice, float radius, size_t tessellation = 16, bool rhcoords = true, bool inside_facing = false);
 			std::shared_ptr<MeshBufferType>	CreateCylinder(ID3D11Device * pDevice, float radius, float height, size_t tessellation = 32, bool rhcoords = true);

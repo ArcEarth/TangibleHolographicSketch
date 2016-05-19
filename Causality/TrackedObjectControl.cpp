@@ -104,10 +104,10 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 
 	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
 	pos = XMVectorSetW(pos, 1.0f);
-	pos = XMVectorSetZ(pos,0.8f);
+	pos = XMVectorSetZ(pos,0.4f);
 	auto world = XMMatrixIdentity();
 	pos = viewport.Unproject(pos, proj, view, world);
-	XMVECTOR origin = viewport.Unproject(XMVectorSetZ(pos, 0.1f), proj, view, world);
+	XMVECTOR origin = viewport.Unproject(XMVectorSetZ(pos, 0.0f), proj, view, world);
 
 	XMVECTOR dir = pos - origin;
 	/*XMVECTOR dir = pos + view.r[3];*/
