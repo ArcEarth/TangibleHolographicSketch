@@ -26,6 +26,7 @@ namespace Causality
 
 		XMVECTOR XM_CALLCONV GetTipPosition() const;
 		XMVECTOR XM_CALLCONV GetTipDirection() const;
+		XMDUALVECTOR XM_CALLCONV GetTipRay() const;
 		// = 0.0145 m
 		static const float TipLength;
 	protected:

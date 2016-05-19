@@ -120,13 +120,26 @@ bool TrackedPen::IsVisible() const
 
 XMVECTOR XM_CALLCONV TrackedPen::GetTipPosition() const
 {
-	XMVECTOR pos = XMLoadA(m_Transform.LclTranslation);
+	XMVECTOR pos = GetPosition();
 	return pos;
 }
 
 XMVECTOR XM_CALLCONV TrackedPen::GetTipDirection() const
 {
-	XMVECTOR dir = XMVector3Rotate(m_tipDirbase, m_Transform.LclRotation);
+	XMVECTOR rot = GetOrientation();
+	XMVECTOR dir = XMVector3Rotate(m_tipDirbase, rot);
+
+	std::cout << "dir = " << Vector3(dir) << std::endl;
+	std::cout << "orientation = " << Quaternion(rot) << std::endl;
+
 	return dir;
+}
+
+XMDUALVECTOR XM_CALLCONV TrackedPen::GetTipRay() const
+{
+	XMDUALVECTOR ray;
+	ray.r[0] = GetPosition();
+	ray.r[1] = GetTipDirection();
+	return ray;
 }
 

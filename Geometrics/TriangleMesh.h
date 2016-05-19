@@ -319,7 +319,7 @@ namespace Geometrics
 			}
 		}
 
-		std::vector<VertexType> vertices;
+		std::vector<VertexType, DirectX::AlignedAllocator<VertexType>> vertices;
 		std::vector<IndexType>	indices;
 	};
 
@@ -377,7 +377,9 @@ namespace Geometrics
 	public:
 		// edge's reverse edge
 		// stores the adjacent edges of a edge in a triangle
-		std::vector<IndexType> revedges;
+		std::vector<IndexType>	revedges;
+		DirectX::BoundingBox	aabb;
+		DirectX::BoundingOrientedBox obb;
 
 		// vertex's first adjacant edge
 		// std::vector<IndexType> vedges;

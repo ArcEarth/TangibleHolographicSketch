@@ -105,10 +105,19 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
 	pos = XMVectorSetZ(pos,0.4f);
 	pos = viewport.Unproject(pos,proj,view, XMMatrixIdentity());
+	XMVECTOR dir = pos + view.r[3];
+	std::cout << "tracker_dir = " << Vector3(dir) << std::endl;
 
-	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(-g_XMIdentityR2.v, pos + view.r[3]);
+	//dir = _DXMEXT XMVector3Normalize(dir);
+
+	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(g_XMIdentityR2.v, dir);
 	m_pRigid->SetPosition(pos);
 	m_pRigid->SetOrientation(rotQ);
+	std::cout << "tracker_orientation = " << rotQ << std::endl;
+
+	//pos = XMVector3Rotate(g_XMIdentityR2.v, rotQ);
+	//std::cout << Vector3(dir) << Vector3(pos) << std::endl;
+	//assert(XMVector3NearEqual(pos, dir, g_XMEpsilon.v * 128));
 	return true;
 }
 
@@ -123,17 +132,21 @@ TrackedObjectControl::TrackedObjectControl()
 	//	m_pRigid = this->Parent();
 	//});
 
-#if defined(__HAS_LEAP__)
-	m_pLeap = LeapSensor::GetForCurrentView();
-#endif
+	XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
+
 	m_pVicon = IViconClient::GetFroCurrentView();
 
 	if (m_pVicon && !m_pVicon->IsStreaming())
 		m_pVicon.reset();
 
-	XMMATRIX world = XMMatrixTranslation(0, 0.50f, 0.0f);
 #if defined(__HAS_LEAP__)
-	m_pLeap->SetDeviceWorldCoord(world);
+	m_pLeap = LeapSensor::GetForCurrentView();
+	if (m_pLeap && m_pLeap->IsStreaming())
+	{
+		m_pLeap->SetDeviceWorldCoord(world);
+	}
+	else
+		m_pLeap.reset();
 #endif
 
 	m_posFilter.SetUpdateFrequency(&m_freq);

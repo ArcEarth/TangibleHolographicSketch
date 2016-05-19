@@ -67,6 +67,9 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 
 	Color color = DirectX::Colors::White;
 
+	m_cursorMaterial = std::make_shared<PhongMaterial>();
+	m_cursorMaterial->Alpha = 0.5f;
+	
 	m_isReady = false;
 	m_declDirtyFalg = 0;
 	int tessellation = 9;
@@ -102,6 +105,8 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	// the BoundingOrientedBox is computed from an 3x3 svd, (pca of the vertices)
 	CreateBoundingBoxesFromPoints(bb, obb,
 		m_mesh.vertices.size(), &m_mesh.vertices[0].position, sizeof(TVertex));
+
+	m_mesh.build();
 
 	auto pDevice = this->Scene->GetRenderDevice();
 	auto pD2dContext = this->Scene->Get2DContext();
@@ -428,11 +433,12 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 {
 	auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
 
-	drawer.SetWorld(DirectX::XMMatrixIdentity());
-	XMVECTOR rot = m_pen->GetOrientation();
-	XMVECTOR pos = m_pen->GetPosition();
+	XMVECTOR pos = m_pen->GetTipPosition();
+	XMVECTOR dir = m_pen->GetTipDirection();
 
-	XMVECTOR yDir = XMVector3Rotate(-g_XMIdentityR2.v, rot);
+	std::cout << "dir = " << Vector3(dir) << std::endl;
+	std::cout << "orientation = " << m_pen->GetOrientation() << std::endl;
+
 	XMVECTOR color = Colors::Yellow.v;
 
 	if (m_pen->IsInking())
@@ -440,10 +446,30 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	else if (m_pen->IsDraging())
 		color = Colors::Red.v;
 
-	float length = 0.05f;
-	float radius = 0.01f;
-	drawer.DrawSphere(pos - (yDir * TrackedPen::TipLength), 0.0075f, color);
-	drawer.DrawCone(pos - (yDir * length * 0.5f), yDir, length, radius, color);
+	color = XMVectorSetW(color,0.5f);
+
+	XMMATRIX world = this->GetGlobalTransform().TransformMatrix();
+	XMMATRIX invworld = XMMatrixInverse(nullptr,world);
+	float scl = this->GetGlobalTransform().Scale.x;
+
+	pos = XMVector3Transform(pos, invworld);
+	dir = XMVector3TransformNormal(dir, invworld);
+
+	
+	std::vector<Geometrics::MeshRayIntersectionInfo> intersecs;
+	m_mesh.intersect(pos, dir, &intersecs);
+	if (!intersecs.empty())
+	{
+		color = XMVectorSetW(color, 1.0f);
+		pos = intersecs[0].position;
+	}
+
+	float length = 0.01f / scl;
+	float radius = 0.0035f / scl;
+
+	drawer.SetWorld(world);
+	drawer.DrawSphere(pos, radius, color);
+	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color);
 }
 
 inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)

@@ -56,16 +56,16 @@ namespace DirectX
 
 		void XM_CALLCONV DrawQuad(FXMVECTOR P0, FXMVECTOR P1, FXMVECTOR P2, GXMVECTOR P3, CXMVECTOR Color);
 
-		void XM_CALLCONV DrawGeometry(GeometricPrimitive* geometry, FXMMATRIX World, CXMVECTOR Color);
-		void XM_CALLCONV DrawSphere(FXMVECTOR Center,float Radius,FXMVECTOR Color);
-		void XM_CALLCONV DrawSphere(FXMVECTOR Sphere,FXMVECTOR Color);
+		void XM_CALLCONV DrawGeometry(GeometricPrimitive* geometry, FXMMATRIX World, CXMVECTOR Color, IEffect* pEffect = nullptr);
+		void XM_CALLCONV DrawSphere(FXMVECTOR Center,float Radius,FXMVECTOR Color, IEffect* pEffect = nullptr);
+		void XM_CALLCONV DrawSphere(FXMVECTOR Sphere,FXMVECTOR Color, IEffect* pEffect = nullptr);
 
-		void XM_CALLCONV DrawCylinder(FXMVECTOR P1, FXMVECTOR P2, float radius, FXMVECTOR Color);
-		void XM_CALLCONV DrawCylinder(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color);
+		void XM_CALLCONV DrawCylinder(FXMVECTOR P1, FXMVECTOR P2, float radius, FXMVECTOR Color, IEffect* pEffect = nullptr);
+		void XM_CALLCONV DrawCylinder(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color, IEffect* pEffect = nullptr);
 		//void XM_CALLCONV DrawSphere(FXMVECTOR Position, float radius, FXMVECTOR Color);
-		void XM_CALLCONV DrawCube(FXMVECTOR Position, FXMVECTOR HalfExtend, FXMVECTOR Orientation, GXMVECTOR Color);
-		void XM_CALLCONV DrawCube(FXMVECTOR HalfExtend, FXMMATRIX WorldTransform , GXMVECTOR Color);
-		void XM_CALLCONV DrawCone(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color);
+		void XM_CALLCONV DrawCube(FXMVECTOR Position, FXMVECTOR HalfExtend, FXMVECTOR Orientation, GXMVECTOR Color, IEffect* pEffect = nullptr);
+		void XM_CALLCONV DrawCube(FXMVECTOR HalfExtend, FXMMATRIX WorldTransform , GXMVECTOR Color, IEffect* pEffect = nullptr);
+		void XM_CALLCONV DrawCone(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color, IEffect* pEffect = nullptr);
 
 		GeometricPrimitive* GetCube()
 		{

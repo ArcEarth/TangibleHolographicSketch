@@ -652,32 +652,64 @@ namespace DirectX
 #endif
 	}
 
-	// Caculate the rotation quaternion base on v1 and v2 (shortest rotation geo-distance in sphere surface)
+
+	inline XMVECTOR XM_CALLCONV XMVectorNegateFast(FXMVECTOR V)
+	{
+		return XMVectorXorInt(V, XMVectorReplicate(-0.f));
+	}
+
+	// Construct an Rotation quaternion that flips V to -V, the exact path is undefined
+	// The result is Q = (z, z, -(x+y), 0) for this implementation
+	inline XMVECTOR XM_CALLCONV XMQuaternionRotationFlipVector(FXMVECTOR V)
+	{
+#if defined(_XM_SSE_INTRINSICS_) && defined(__SSE3__)
+		XMVECTOR XY = _mm_hadd_ps(V, V); // XY ZW XY ZW
+#else
+		XMVECTOR XY = _DXMEXT XMVectorSplatY(V);
+		XY = XMVectorAdd(V, XY);
+#endif
+		XY = XMVectorNegateFast(XY); // XY = -XY
+		XMVECTOR Q = _DXMEXT XMVectorPermute<2, 2, 4, 4>(V, XY);
+		Q = XMVectorAddInt(Q, g_XMMask3.v); // Q=(z,z,-(x+y),0), note sin(pi/2) =1, cos(pi/2) = 0
+											//XY = _DXMEXT XMVector3Dot(Q, V);
+		Q = _DXMEXT XMVector3Normalize(Q);
+		return Q;
+	}
+
+	// Caculate the rotation quaternion that rotate v1 => v2 
+	// When v1 and v2 are not paradell, it gives the shortest rotation (interm of rotation angle)
+	// When v1 and v2's direction are identical, it returns Identity()
+	// When v1 == (-)v2, it returns a quaternion that flips the vector, but the axis are undefined
 	inline XMVECTOR XM_CALLCONV XMQuaternionRotationVectorToVector(FXMVECTOR v1, FXMVECTOR v2, FXMVECTOR epsilon = g_XMEpsilon) {
+		using namespace DirectX;
 		assert(!XMVector3Equal(v1, XMVectorZero()));
 		assert(!XMVector3Equal(v2, XMVectorZero()));
-		XMVECTOR n1 = XMVector3Normalize(v1);
-		XMVECTOR n2 = XMVector3Normalize(v2);
 
-		if (XMVector4NearEqual(n1, n2, epsilon))
+		XMVECTOR n1 = _DXMEXT XMVector3Normalize(v1);
+		XMVECTOR n2 = _DXMEXT XMVector3Normalize(v2);
+
+		XMVECTOR axis = XMVector3Cross(n1, n2); // axis = Axis * sin(a)
+		XMVECTOR cos = _DXMEXT XMVector3Dot(n1, n2);
+
+		XMVECTOR one = g_XMOne.v - epsilon;
+
+		if (XMVector4Greater(cos, one)) // paradell to each other
 		{
 			return XMQuaternionIdentity();
 		}
-
-		XMVECTOR axias = XMVector3Cross(n1, n2);
-		if (XMVector4NearEqual(axias, XMVectorZero(), epsilon))
+		else if (XMVector4Greater(XMVectorNegateFast(cos), one))
 		{
-			n2 = g_XMIdentityR0.v;
-			axias = XMVector3Cross(n1, n2);
-			if (XMVector4NearEqual(axias, XMVectorZero(), epsilon))
-			{
-				n2 = g_XMIdentityR1.v;
-				axias = XMVector3Cross(n1, n2);
-			}
+			return XMQuaternionRotationFlipVector(v1);
 		}
-		float angle = XMScalarACos(XMVectorGetX(XMVector3Dot(n1, n2)));
-		auto rot = XMQuaternionRotationAxis(axias, angle);
-		return rot;
+
+		// Use cos(a) to caculate cos(a/2) and sin(a/2)/sin(a)
+		one = XMVectorReplicate(2.0f);
+		cos = _DXMEXT XMVectorMultiplyAdd(cos, one, one); // = 2*cos^2(a/2)
+		cos = XMVectorSqrt(cos);
+		axis = XMVectorDivide(axis, cos); // q_xyz = Axis * sin(a/2) = Axis * sin(a) / (2*cos(a/2))
+		cos = XMVectorMultiply(cos, XMVectorReplicate(0.5f)); // now cos(a/2)
+		axis = _DXMEXT XMVectorPermute<0, 1, 2, 7>(axis, cos);
+		return axis;
 	}
 
 	// Caculate Left handed eular angles with 

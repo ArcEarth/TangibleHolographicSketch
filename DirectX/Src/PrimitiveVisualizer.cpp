@@ -115,7 +115,7 @@ namespace DirectX{
 		std::vector<uint16_t> CylinderIndices;
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawCylinder(FXMVECTOR P1, FXMVECTOR P2, float radius, FXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawCylinder(FXMVECTOR P1, FXMVECTOR P2, float radius, FXMVECTOR Color, IEffect* pEffect)
 	{
 		auto center = 0.5f * XMVectorAdd(P1, P2);
 		auto dir = XMVectorSubtract(P1, P2);
@@ -128,56 +128,69 @@ namespace DirectX{
 		XMVECTOR rot = XMQuaternionRotationVectorToVector(g_XMIdentityR1, dir, XMVectorReplicate(1e-3f));
 		XMMATRIX world = XMMatrixAffineTransformation(scale, g_XMZero, rot, center);
 
-		DrawGeometry(m_pCylinder.get(), world, Color);
+		DrawGeometry(m_pCylinder.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawCylinder(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawCylinder(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color, IEffect* pEffect)
 	{
 		XMVECTOR rot = XMQuaternionRotationVectorToVector(g_XMIdentityR1, YDirection);
 		XMMATRIX world = XMMatrixAffineTransformation(XMVectorSet(radius,height,radius,1), g_XMZero, rot, Position);
 
-		DrawGeometry(m_pCylinder.get(), world, Color);
+		DrawGeometry(m_pCylinder.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawGeometry(GeometricPrimitive * geometry, FXMMATRIX World, CXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawGeometry(GeometricPrimitive * geometry, FXMMATRIX World, CXMVECTOR Color, IEffect* pEffect)
 	{
 		float alpha = XMVectorGetW(Color);
-		m_pEffect->SetVertexColorEnabled(false);
-		m_pEffect->SetWorld(XMMatrixMultiply(World,WorldMatrix));
-		m_pEffect->SetDiffuseColor(XMVectorSetW(Color,1.0f));
-		m_pEffect->SetAlpha(alpha);
-		//geometry->Draw(World, ViewMatrix, ProjectionMatrix);
-		geometry->Draw(m_pEffect.get(), m_pGeometryInputLayout.Get(), alpha < 0.99f);
-		m_pEffect->SetWorld(WorldMatrix);
-		m_pEffect->SetAlpha(1.0f);
-		m_pEffect->SetDiffuseColor(Colors::White.v);
-	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawSphere(FXMVECTOR Position, float radius, FXMVECTOR Color)
+		if (!pEffect)
+		{
+
+			m_pEffect->SetVertexColorEnabled(false);
+			m_pEffect->SetWorld(XMMatrixMultiply(World, WorldMatrix));
+			m_pEffect->SetDiffuseColor(XMVectorSetW(Color, 1.0f));
+			m_pEffect->SetAlpha(alpha);
+			//geometry->Draw(World, ViewMatrix, ProjectionMatrix);
+			geometry->Draw(m_pEffect.get(), m_pGeometryInputLayout.Get(), alpha < 0.99f);
+			m_pEffect->SetWorld(WorldMatrix);
+			m_pEffect->SetAlpha(1.0f);
+			m_pEffect->SetDiffuseColor(Colors::White.v);
+		}
+		else
+		{
+			auto pMe = dynamic_cast<IEffectMatrices*> (pEffect);
+			if (pMe)
+				pMe->SetWorld(XMMatrixMultiply(World, WorldMatrix));
+
+			geometry->Draw(pEffect, m_pGeometryInputLayout.Get(), alpha < 0.99f);
+		}
+	}
+	
+	void XM_CALLCONV PrimitveDrawer::DrawSphere(FXMVECTOR Position, float radius, FXMVECTOR Color, IEffect* pEffect)
 	{
 		XMMATRIX world = XMMatrixAffineTransformation(XMVectorReplicate(radius), g_XMZero, XMQuaternionIdentity(), Position);
-		DrawGeometry(m_pSphere.get(), world, Color);
+		DrawGeometry(m_pSphere.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawSphere(FXMVECTOR Sphere, FXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawSphere(FXMVECTOR Sphere, FXMVECTOR Color, IEffect* pEffect)
 	{
 		XMMATRIX world = XMMatrixAffineTransformation(XMVectorSplatW(Sphere), g_XMZero, XMQuaternionIdentity(), Sphere);
-		DrawGeometry(m_pSphere.get(), world, Color);
+		DrawGeometry(m_pSphere.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawCube(FXMVECTOR Position, FXMVECTOR HalfExtend, FXMVECTOR Orientation, GXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawCube(FXMVECTOR Position, FXMVECTOR HalfExtend, FXMVECTOR Orientation, GXMVECTOR Color, IEffect* pEffect)
 	{
 		XMMATRIX world = XMMatrixAffineTransformation(HalfExtend, g_XMZero, Orientation, Position);
-		DrawGeometry(m_pCube.get(), world, Color);
+		DrawGeometry(m_pCube.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawCube(FXMVECTOR HalfExtend, FXMMATRIX WorldTransform, GXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawCube(FXMVECTOR HalfExtend, FXMMATRIX WorldTransform, GXMVECTOR Color, IEffect* pEffect)
 	{
 		XMMATRIX world = XMMatrixScalingFromVector(HalfExtend) * WorldTransform;
-		DrawGeometry(m_pCube.get(), world, Color);
+		DrawGeometry(m_pCube.get(), world, Color, pEffect);
 	}
 
-	void XM_CALLCONV PrimitveDrawer::DrawCone(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color)
+	void XM_CALLCONV PrimitveDrawer::DrawCone(FXMVECTOR Position, FXMVECTOR YDirection, float height, float radius, FXMVECTOR Color, IEffect* pEffect)
 	{
 		XMVECTOR rot;
 		if (XMVector4NearEqual(YDirection, g_XMZero.v, g_XMEpsilon.v))
@@ -186,7 +199,7 @@ namespace DirectX{
 			rot = XMQuaternionRotationVectorToVector(g_XMIdentityR1, YDirection);
 
 		XMMATRIX world = XMMatrixAffineTransformation(XMVectorSet(radius, height, radius, 1), g_XMZero, rot, Position);
-		DrawGeometry(m_pCone.get(), world, Color);
+		DrawGeometry(m_pCone.get(), world, Color, pEffect);
 	}
 
 	PrimitveDrawer::PrimitveDrawer()

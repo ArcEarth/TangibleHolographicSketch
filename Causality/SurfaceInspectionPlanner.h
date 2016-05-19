@@ -81,6 +81,7 @@ namespace Causality
 			Color							m_decalFill;
 
 			const IPointer*					m_cursor;
+			sptr<PhongMaterial>				m_cursorMaterial;
 
 			std::vector<TriangleMeshType>		m_fracorizedMeshes;
 			uptr<DirectX::Scene::IModelNode>	m_decalModel;
