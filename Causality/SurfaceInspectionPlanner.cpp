@@ -436,8 +436,8 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	XMVECTOR pos = m_pen->GetTipPosition();
 	XMVECTOR dir = m_pen->GetTipDirection();
 
-	std::cout << "dir = " << Vector3(dir) << std::endl;
-	std::cout << "orientation = " << m_pen->GetOrientation() << std::endl;
+	//std::cout << "dir = " << Vector3(dir) << std::endl;
+	//std::cout << "orientation = " << m_pen->GetOrientation() << std::endl;
 
 	XMVECTOR color = Colors::Yellow.v;
 

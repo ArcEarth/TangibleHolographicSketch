@@ -176,14 +176,14 @@ void NativeWindow::Initialize(const std::string& title, unsigned int screenWidth
 
 	// Create the window with the screen settings and get the handle to it.
 	m_hWnd = CreateWindowEx(WS_EX_APPWINDOW, wc.lpszClassName, wc.lpszClassName,
-		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | (fullScreen ? (WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME) : 0),
+		(fullScreen ? (WS_OVERLAPPED | WS_POPUP) : (WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME)),
 		posX, posY, screenWidth, screenHeight, NULL, NULL, m_hInstance, NULL);
 
 	Application::WindowsLookup[m_hWnd] = this->shared_from_this();
 
 	// Bring the window up on the screen and set it as main focus.
 	ShowWindow(m_hWnd, SW_SHOW);
-	ShowCursor(FALSE);
+	//ShowCursor(FALSE);
 	SetForegroundWindow(m_hWnd);
 	SetFocus(m_hWnd);
 

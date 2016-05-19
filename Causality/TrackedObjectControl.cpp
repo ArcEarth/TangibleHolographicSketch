@@ -103,17 +103,22 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 	if (!m_cursor) return false;
 
 	XMVECTOR pos = m_cursor->Position(); // X-Y-Z is mapped to X-Y-Wheel
-	pos = XMVectorSetZ(pos,0.4f);
-	pos = viewport.Unproject(pos,proj,view, XMMatrixIdentity());
-	XMVECTOR dir = pos + view.r[3];
-	std::cout << "tracker_dir = " << Vector3(dir) << std::endl;
+	pos = XMVectorSetW(pos, 1.0f);
+	pos = XMVectorSetZ(pos,0.8f);
+	auto world = XMMatrixIdentity();
+	pos = viewport.Unproject(pos, proj, view, world);
+	XMVECTOR origin = viewport.Unproject(XMVectorSetZ(pos, 0.1f), proj, view, world);
+
+	XMVECTOR dir = pos - origin;
+	/*XMVECTOR dir = pos + view.r[3];*/
+	//std::cout << "tracker_dir = " << Vector3(dir) << std::endl;
 
 	//dir = _DXMEXT XMVector3Normalize(dir);
 
 	XMVECTOR rotQ = XMQuaternionRotationVectorToVector(g_XMIdentityR2.v, dir);
 	m_pRigid->SetPosition(pos);
 	m_pRigid->SetOrientation(rotQ);
-	std::cout << "tracker_orientation = " << rotQ << std::endl;
+	//std::cout << "tracker_orientation = " << rotQ << std::endl;
 
 	//pos = XMVector3Rotate(g_XMIdentityR2.v, rotQ);
 	//std::cout << Vector3(dir) << Vector3(pos) << std::endl;

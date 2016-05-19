@@ -129,8 +129,8 @@ XMVECTOR XM_CALLCONV TrackedPen::GetTipDirection() const
 	XMVECTOR rot = GetOrientation();
 	XMVECTOR dir = XMVector3Rotate(m_tipDirbase, rot);
 
-	std::cout << "dir = " << Vector3(dir) << std::endl;
-	std::cout << "orientation = " << Quaternion(rot) << std::endl;
+	//std::cout << "dir = " << Vector3(dir) << std::endl;
+	//std::cout << "orientation = " << Quaternion(rot) << std::endl;
 
 	return dir;
 }
