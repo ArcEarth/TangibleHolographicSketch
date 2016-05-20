@@ -406,6 +406,9 @@
     <Image Include="icon1.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="..\Assets\Meshes\ceil.obj">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Causality.rc">
@@ -422,5 +425,10 @@
     <Xml Include="..\Assets\ArSketch.xml">
       <Filter>Resource Files</Filter>
     </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assets\Meshes\ceil.mtl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

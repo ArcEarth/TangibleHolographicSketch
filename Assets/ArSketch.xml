@@ -6,7 +6,7 @@
     </enviroment>
   </scene.settings>
   <scene.assets>
-    <mesh name="ceil_mesh" src="Mug.obj" flip_normal="false"></mesh>
+    <mesh name="ceil_mesh" src="ceil.obj" flip_normal="false"></mesh>
     <mesh name="cube_mesh" src="cube.obj" flip_normal="true"></mesh>
     <!--<mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>-->
