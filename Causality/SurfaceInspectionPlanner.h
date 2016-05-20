@@ -42,23 +42,31 @@ namespace Causality
 
 		typedef std::vector<InspectionPatch> InspectionPath;
 
-		class SurfaceInspectionPlanner : public VisualObject
+		class SurfaceInspectionPlanner : public SceneObject, public IVisual
 		{
 		public:
 			void Parse(const ParamArchive* archive) override;
 
+			void BuildDecalMesh(const IModelNode* pNode);
+
 			SurfaceInspectionPlanner();
 			~SurfaceInspectionPlanner();
+			virtual bool IsVisible(const BoundingGeometry& viewFrustum) const;
 			virtual void AddChild(SceneObject* child) override;
 			virtual void Update(time_seconds const& time_delta) override;
 			virtual void Render(IRenderContext * pContext, IEffect* pEffect = nullptr) override;
+
+			virtual RenderFlags GetRenderFlags() const;
+			virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);;
+
+			void DrawBezeirPatchControlPoints();
 			void RenderPen(IRenderContext *pContext, IEffect*pEffect);
 
 		private:
 			void DrawDecal(I2DContext* pContext);
 			
 			void UpdateDecalGeometry(I2DFactory* pFactory);
-			void ExtractMeshFromModel(TriangleMeshType& mesh, const IModelNode* pNode);
+			void CopyMesh(TriangleMeshType& mesh, const IModelNode* pNode);
 			void BuildTriangleMesh(int tessellation, DirectX::SimpleMath::Color &color);
 
 			void AddPatch();
@@ -72,6 +80,13 @@ namespace Causality
 			// Decal texture for rendering highlights in target model
 			int								m_declDirtyFalg;
 			int								m_requestCancelLoading;
+
+			BoundingFrustum					m_cameraFrustum;
+			Matrix4x4						m_cameraProjection;
+			float							m_cameraFocus;
+			float							m_cameraDepthTolerance;
+			Vector2							m_maxPatchSize;
+
 			RenderableTexture2D				m_decal;
 			cptr<ID2D1PathGeometry>			m_patchGeos;
 			cptr<ID2D1SolidColorBrush>		m_brush;

@@ -52,7 +52,7 @@ inline std::shared_ptr<MeshBuffer> CreateMeshBuffer(IRenderDevice* pDevice,
 void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 {
 	using namespace DirectX::VertexTraits;
-	VisualObject::Parse(archive);
+	SceneObject::Parse(archive);
 
 	const char* cpstr = nullptr;
 	std::vector<float> cps;
@@ -89,47 +89,6 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	//	return;
 
 	//std::copy_n(cps.data(), 3 * 16, (float*)m_patch.data());
-
-	if (m_pRenderModel)
-	{
-		ExtractMeshFromModel(m_mesh, m_pRenderModel);
-	}
-	else
-		BuildTriangleMesh(tessellation, color);
-
-	BoundingBox bb;
-	BoundingOrientedBox obb;
-
-	using TVertex = decltype(m_mesh.vertices[0]);
-	using TIndex = decltype(m_mesh.indices[0]);
-	// the BoundingOrientedBox is computed from an 3x3 svd, (pca of the vertices)
-	CreateBoundingBoxesFromPoints(bb, obb,
-		m_mesh.vertices.size(), &m_mesh.vertices[0].position, sizeof(TVertex));
-
-	m_mesh.build();
-
-	auto pDevice = this->Scene->GetRenderDevice();
-	auto pD2dContext = this->Scene->Get2DContext();
-
-	{
-		auto pModel = new MonolithModel();
-		pModel->pMesh = CreateMeshBuffer(pDevice, m_mesh);
-		pModel->SetName("whole_patch");
-		pModel->BoundBox = bb;
-		pModel->BoundOrientedBox = obb;
-		m_decalModel.reset(pModel);
-		//VisualObject::m_pRenderModel = pModel;
-
-		m_decal = RenderableTexture2D(pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true);
-		m_decal.CreateD2DBitmapView(pD2dContext);
-
-		auto declMat = make_shared<PhongMaterial>();
-		declMat->DiffuseMap = m_decal;
-		declMat->UseAlphaDiscard = true;
-		pModel->pMaterial = std::move(declMat);
-
-		UpdateDecalGeometry(Scene->Get2DFactory());
-	}
 
 	m_requestCancelLoading = 0;
 	//m_loadingTask = concurrency::create_task([=]() {
@@ -269,7 +228,52 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	//});
 }
 
-void SurfaceInspectionPlanner::ExtractMeshFromModel(TriangleMeshType& mesh, const IModelNode* pNode)
+void SurfaceInspection::SurfaceInspectionPlanner::BuildDecalMesh(const IModelNode* pModel)
+{
+	if (pModel)
+	{
+		CopyMesh(m_mesh, pModel);
+	}
+	else
+		BuildTriangleMesh(10, Color(Colors::AliceBlue.f));
+
+	BoundingBox bb;
+	BoundingOrientedBox obb;
+
+	using TVertex = decltype(m_mesh.vertices[0]);
+	using TIndex = decltype(m_mesh.indices[0]);
+	// the BoundingOrientedBox is computed from an 3x3 svd, (pca of the vertices)
+	CreateBoundingBoxesFromPoints(bb, obb,
+		m_mesh.vertices.size(), &m_mesh.vertices[0].position, sizeof(TVertex));
+
+	m_mesh.build();
+
+	auto pDevice = this->Scene->GetRenderDevice();
+	auto pD2dContext = this->Scene->Get2DContext();
+
+	{
+		auto pModel = new MonolithModel();
+		pModel->pMesh = CreateMeshBuffer(pDevice, m_mesh);
+		pModel->SetName("whole_patch");
+		pModel->BoundBox = bb;
+		pModel->BoundOrientedBox = obb;
+		//VisualObject::m_pRenderModel = pModel;
+
+		m_decal = RenderableTexture2D(pDevice, g_DecalResolution, g_DecalResolution, DXGI_FORMAT_B8G8R8A8_UNORM, 1, 0, true);
+		m_decal.CreateD2DBitmapView(pD2dContext);
+
+		auto declMat = make_shared<PhongMaterial>();
+		declMat->DiffuseMap = m_decal;
+		declMat->UseAlphaDiscard = true;
+
+		pModel->pMaterial = std::move(declMat);
+		UpdateDecalGeometry(Scene->Get2DFactory());
+
+		m_decalModel.reset(pModel);
+	}
+}
+
+void SurfaceInspectionPlanner::CopyMesh(TriangleMeshType& mesh, const IModelNode* pNode)
 {
 	using DirectX::Scene::DefaultStaticModel;
 	using DirectX::Scene::DefaultSkinningModel;
@@ -342,11 +346,27 @@ SurfaceInspectionPlanner::~SurfaceInspectionPlanner()
 	//if (pModel) delete pModel;
 }
 
+bool SurfaceInspectionPlanner::IsVisible(const BoundingGeometry & viewFrustum) const
+{
+	return true;
+}
+
 void SurfaceInspectionPlanner::AddChild(SceneObject * child)
 {
-	VisualObject::AddChild(child);
+	SceneObject::AddChild(child);
 	if (!m_pen)
 		m_pen = child->As<TrackedPen>();
+	if (child->Name == "workload")
+	{
+		auto pVO = child->As<VisualObject>();
+		auto pModel = pVO ? pVO->RenderModel() : nullptr;
+		if (pModel)
+		{
+			m_loadingTask = concurrency::create_task([=]() {
+				this->BuildDecalMesh(pModel);
+			});
+		}
+	}
 }
 
 void SurfaceInspectionPlanner::Update(time_seconds const & time_delta)
@@ -358,9 +378,8 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 	if (m_declDirtyFalg)
 		DrawDecal(Scene->Get2DContext());
 
-	VisualObject::Render(pContext, pEffect);
-
-	m_decalModel->Render(pContext, GlobalTransformMatrix(), pEffect);
+	if (m_decalModel)
+		m_decalModel->Render(pContext, GlobalTransformMatrix(), pEffect);
 
 	if (m_pen)
 	{
@@ -369,63 +388,72 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 
 	if (g_DebugView && pEffect)
 	{
-		auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
-		auto world = this->GlobalTransformMatrix();
-		//geo.Transform(geo, GlobalTransformMatrix());
-		Color color = DirectX::Colors::LimeGreen.v;
+		DrawBezeirPatchControlPoints();
+	}
+}
 
-		drawer.SetWorld(world);
+RenderFlags SurfaceInspectionPlanner::GetRenderFlags() const { return RenderFlags::OpaqueObjects; }
 
-		if (m_decalModel && g_VisualizeNormal)
+void XM_CALLCONV SurfaceInspectionPlanner::UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection) {}
+
+void SurfaceInspectionPlanner::DrawBezeirPatchControlPoints()
+{
+	auto& drawer = DirectX::Visualizers::g_PrimitiveDrawer;
+	auto world = this->GlobalTransformMatrix();
+	//geo.Transform(geo, GlobalTransformMatrix());
+	Color color = DirectX::Colors::LimeGreen.v;
+
+	drawer.SetWorld(world);
+
+	if (m_decalModel && g_VisualizeNormal)
+	{
+		drawer.Begin();
+		using namespace DirectX::VertexTraits;
+		for (auto& v : m_mesh.vertices)
 		{
-			drawer.Begin();
-			using namespace DirectX::VertexTraits;
-			for (auto& v : m_mesh.vertices)
-			{
-				XMVECTOR pv = get_position(v);
-				XMVECTOR pnv = get_normal(v);
-				pnv = pv + 0.01 * pnv;
-				drawer.DrawLine(pv, pnv, DirectX::Colors::Red.v);
+			XMVECTOR pv = get_position(v);
+			XMVECTOR pnv = get_normal(v);
+			pnv = pv + 0.01 * pnv;
+			drawer.DrawLine(pv, pnv, DirectX::Colors::Red.v);
 
-				pnv = get_tangent(v);
-				pnv = pv + 0.01 * pnv;
-				drawer.DrawLine(pv, pnv, color);
-			}
-
-			drawer.End();
+			pnv = get_tangent(v);
+			pnv = pv + 0.01 * pnv;
+			drawer.DrawLine(pv, pnv, color);
 		}
 
-		for (int i = 0; i < 4; i++)
-		{
-			drawer.DrawSphere(m_patch.control_point(i, 0), g_ControlPointsRaius, color);
-			drawer.DrawSphere(m_patch.control_point(i, 3), g_ControlPointsRaius, color);
-		}
+		drawer.End();
+	}
 
-		for (int i = 1; i < 3; i++)
-		{
-			drawer.DrawSphere(m_patch.control_point(0, i), g_ControlPointsRaius, color);
-			drawer.DrawSphere(m_patch.control_point(3, i), g_ControlPointsRaius, color);
-		}
+	for (int i = 0; i < 4; i++)
+	{
+		drawer.DrawSphere(m_patch.control_point(i, 0), g_ControlPointsRaius, color);
+		drawer.DrawSphere(m_patch.control_point(i, 3), g_ControlPointsRaius, color);
+	}
 
-		for (int i = 0; i < 3; i++)
-		{
-			drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point((i + 1) % 4, 0), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(i, 3), m_patch.control_point((i + 1) % 4, 3), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(0, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(3, i), m_patch.control_point(3, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
-		}
+	for (int i = 1; i < 3; i++)
+	{
+		drawer.DrawSphere(m_patch.control_point(0, i), g_ControlPointsRaius, color);
+		drawer.DrawSphere(m_patch.control_point(3, i), g_ControlPointsRaius, color);
+	}
 
-		color *= 1.2;
-		color.A(1.0f);
-		for (int i = 1; i < 3; i++)
-		{
-			drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point(i, 1), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(i, 1), m_patch.control_point(i, 2), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(i, 2), m_patch.control_point(i, 3), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(1, i), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(1, i), m_patch.control_point(2, i), g_ControlPointsConnectionRadius, color);
-			drawer.DrawCylinder(m_patch.control_point(2, i), m_patch.control_point(3, i), g_ControlPointsConnectionRadius, color);
-		}
+	for (int i = 0; i < 3; i++)
+	{
+		drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point((i + 1) % 4, 0), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(i, 3), m_patch.control_point((i + 1) % 4, 3), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(0, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(3, i), m_patch.control_point(3, (i + 1) % 4), g_ControlPointsConnectionRadius, color);
+	}
+
+	color *= 1.2;
+	color.A(1.0f);
+	for (int i = 1; i < 3; i++)
+	{
+		drawer.DrawCylinder(m_patch.control_point(i, 0), m_patch.control_point(i, 1), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(i, 1), m_patch.control_point(i, 2), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(i, 2), m_patch.control_point(i, 3), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(0, i), m_patch.control_point(1, i), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(1, i), m_patch.control_point(2, i), g_ControlPointsConnectionRadius, color);
+		drawer.DrawCylinder(m_patch.control_point(2, i), m_patch.control_point(3, i), g_ControlPointsConnectionRadius, color);
 	}
 }
 
@@ -468,12 +496,15 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	float radius = 0.0035f / scl;
 
 	m_cursorMaterial->DiffuseColor = color;
+	m_cursorMaterial->AmbientColor = color;
 	m_cursorMaterial->Alpha = alpha;
-	m_cursorMaterial->SetupEffect(pEffect);
+	//m_cursorMaterial->SetupEffect(pEffect);
+
+	color = XMVectorSetW(color, alpha);
 
 	drawer.SetWorld(world);
-	drawer.DrawSphere(pos, radius, color, pEffect);
-	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color, pEffect);
+	drawer.DrawSphere(pos, radius, color);
+	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color);
 }
 
 inline D2D1_COLOR_F XM_CALLCONV GetD2DColor(const Color& color)

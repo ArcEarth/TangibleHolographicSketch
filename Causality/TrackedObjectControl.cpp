@@ -107,10 +107,15 @@ bool TrackedObjectControl::UpdateFromCursor(double time_delta)
 	pos = XMVectorSetZ(pos,0.4f);
 	auto world = XMMatrixIdentity();
 	pos = viewport.Unproject(pos, proj, view, world);
-	XMVECTOR origin = viewport.Unproject(XMVectorSetZ(pos, 0.0f), proj, view, world);
+
+	//XMVECTOR origin = viewport.Unproject(XMVectorSetZ(pos, 0.0f), proj, view, world);
+	XMVECTOR origin = XMMatrixInverse(nullptr, view).r[3];
 
 	XMVECTOR dir = pos - origin;
-	/*XMVECTOR dir = pos + view.r[3];*/
+
+	//XMVECTOR another = XMVector3TransformCoord(origin, view*proj);
+	//XMVECTOR anotherpso = XMVector3TransformCoord(pos, view*proj);
+
 	//std::cout << "tracker_dir = " << Vector3(dir) << std::endl;
 
 	//dir = _DXMEXT XMVector3Normalize(dir);

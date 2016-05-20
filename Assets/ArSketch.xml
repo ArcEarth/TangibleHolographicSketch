@@ -26,7 +26,7 @@
       turn_button='1' is right-button
       turn_button='2' is middle-button
       -->
-      <shadow_camera name="primary_camera" primary="true" background="#FFFFFFFF" position="0,1.7,5.0" focus="0,1.78,0" up="0,1,0" far="100">
+      <shadow_camera name="primary_camera" primary="true" background="#FFFFFFFF" position="0,1.7,2.5" focus="0,0,0" up="0,1,0" far="30">
         <first_person_keyboard_mouse_control turn_button="1" speed="2.0" turing_speed="1.0" flip_x="true" flip_y="true" movement_keys="WASD" />
       </shadow_camera>
 
@@ -35,19 +35,20 @@
         <tracked_object name="camera_tracker" index="0"  translation="( 0.007, 0.036,-0.060)" rotation="{-0.705, 0.091, 0.092,-0.697}"/>
       </hmd_camera>-->
 
-      <skydome name="sky" background="Sunny_01B.dds"/>
+      <!--<skydome name="sky" background="Sunny_01B.dds"/>-->
 
       <coordinate_axis max="3" zx="true"/>
 
-      <object name="ground" position="0,-0.01,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
       <!--<object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>-->
 
       <!--<object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
         <coordinate_axis max="2"/>
       </object>>-->
       
-      <surface_inspector position="0,-1.31,1.0" orientation="<-90,0,0>" tessellation="10" scale="0.05" patch_size="0.15" mesh="{ceil_mesh}">
-          <tracked_pen name="pointer" device="pointer" index="-1" tip_dir="0.0,0,1.0"></tracked_pen>
+      <surface_inspector  tessellation="10" patch_size="0.15">
+        <object name="workspace" position="0,-0.01,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
+        <object name="workload" mesh="{ceil_mesh}" position="0,-1.31,1.0" orientation="<-90,0,0>" scale="0.05"/>
+        <tracked_pen name="pointer" device="pointer" index="-1" tip_dir="0.0,0,1.0"></tracked_pen>
       </surface_inspector>
       
       <!--
