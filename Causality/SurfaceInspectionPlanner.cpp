@@ -7,7 +7,7 @@
 #include <Eigen\Core>
 #include "Cca.h"
 #include <Geometrics\csg.h>
-#include <GeometricPrimitive.h>
+#include <Geometrics\Primitives.h>
 #include "Pointer.h"
 #include "TrackerdPen.h"
 

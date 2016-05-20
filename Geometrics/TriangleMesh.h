@@ -75,6 +75,15 @@ namespace Geometrics
 		size_t size() const { return VertexCount; }
 	};
 
+	struct submesh_data
+	{
+		uint32_t vertex_offset; // start vertices index of this geometry
+		uint32_t vertex_count;
+		uint32_t index_offset; // start index position of this geometry
+		uint32_t index_count;
+	};
+
+
 	// generate per vertex normal for given triangle mesh
 	template <typename VertexType, typename IndexType>
 	bool generate_normal(gsl::span<VertexType> vertices, gsl::span<const Triangle<IndexType>> facets)
@@ -198,6 +207,50 @@ namespace Geometrics
 		return true;
 	}
 
+	namespace Detail
+	{
+		XM_HAS_MEMBER(vertices, has_vertices);
+		XM_HAS_MEMBER(indices, has_indices);
+	}
+
+	template <typename MeshType>
+	struct concept_mesh_type : public std::integral_constant<bool, Detail::has_vertices<MeshType>::value && Detail::has_indices<MeshType>::value> {};
+
+	template <typename _MeshType>
+	class SubMesh : public submesh_data
+	{
+	public:
+		typedef _MeshType MeshType; // Parent MeshTypw
+		typedef typename MeshType::VertexType	VertexType;
+		typedef typename MeshType::IndexType	IndexType;
+		typedef typename MeshType::FaceType		FaceType;
+
+		static constexpr size_t PolygonVertex = FaceType::VertexCount;
+
+
+		SubMesh(MeshType& mesh, const submesh_data& metric)
+			: parent(mesh), submesh_data(metric)
+		{
+			vertices = gsl::span<VertexType>(&mesh.vertices[metric.vertex_offset], metric.vertex_count);
+			indices = gsl::span<IndexType>(&mesh.indices[metric.index_offset], metric.index_count);
+		}
+
+		MeshType&						parent;
+		gsl::span<VertexType>			vertices;
+		gsl::span<IndexType>			indices;
+
+		gsl::span<Triangle<IndexType>>	facets()
+		{
+			return gsl::span<const FaceType>(
+				reinterpret_cast<const FaceType*>(indices.data()),
+				indices.size() / FaceType::VertexCount);
+		}
+
+		bool empty() const {
+			return vertices.empty() || indices.empty();
+		}
+
+	};
 
 	template <typename _VertexType, typename _IndexType = uint16_t, typename _FaceType = Triangle<_IndexType>>
 	class PolygonSoup

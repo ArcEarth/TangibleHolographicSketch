@@ -141,6 +141,7 @@
     <ClInclude Include="MetaBallModel.h" />
     <ClInclude Include="KdBVH.h" />
     <ClInclude Include="Polygonizer.h" />
+    <ClInclude Include="Primitives.h" />
     <ClInclude Include="SpaceCurve.h" />
     <ClInclude Include="TriangleMesh.h" />
   </ItemGroup>
@@ -155,6 +156,9 @@
     <ProjectReference Include="..\DirectX\DirectXHelpers.vcxproj">
       <Project>{c6d38a30-8097-4ca4-a1cb-1273ce21eaaf}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Primitives.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

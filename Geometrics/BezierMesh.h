@@ -85,7 +85,7 @@ namespace Geometrics
 		size_t offset = mesh.vertices.size();
 		size_t stride = tessellation + 1;
 
-		using VertexType = std::remove_cv_t<std::remove_const_t<decltype(mesh.vertices[0])>>;
+		using VertexType = typename decltype(mesh.vertices)::value_type;
 
 		VertexType d_vertex;
 		using DirectX::XMVECTOR;
