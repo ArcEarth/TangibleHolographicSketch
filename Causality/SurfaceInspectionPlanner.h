@@ -62,6 +62,8 @@ namespace Causality
 			void DrawBezeirPatchControlPoints();
 			void RenderPen(IRenderContext *pContext, IEffect*pEffect);
 
+			InspectionPatch* TrySelectInspectionPatch(FXMVECTOR uv, int fid = -1);
+
 		private:
 			void DrawDecal(I2DContext* pContext);
 			
@@ -69,13 +71,20 @@ namespace Causality
 			void CopyMesh(TriangleMeshType& mesh, const IModelNode* pNode);
 			void BuildTriangleMesh(int tessellation, DirectX::SimpleMath::Color &color);
 
-			void AddPatch();
-			void RemovePatch();
+			InspectionPatch* AddInspectionPatch(FXMVECTOR uv, int fid);
+			void RemovePatch(InspectionPatch* patch);
 
 			TrackedPen*						m_pen;
 
+			bool							m_isHit;
+			Geometrics::MeshRayIntersectionInfo	
+											m_isInfo;
+
+			std::vector<InspectionPatch>	m_isPatches;
+
 			CubicBezierPatch				m_patch;
 			TriangleMeshType				m_mesh;
+			VisualObject*					m_workloadObj;
 
 			// Decal texture for rendering highlights in target model
 			int								m_declDirtyFalg;

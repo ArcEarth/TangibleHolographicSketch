@@ -228,7 +228,7 @@ void SurfaceInspectionPlanner::Parse(const ParamArchive * archive)
 	//});
 }
 
-void SurfaceInspection::SurfaceInspectionPlanner::BuildDecalMesh(const IModelNode* pModel)
+void SurfaceInspectionPlanner::BuildDecalMesh(const IModelNode* pModel)
 {
 	if (pModel)
 	{
@@ -330,6 +330,7 @@ void SurfaceInspectionPlanner::BuildTriangleMesh(int tessellation, DirectX::Simp
 SurfaceInspectionPlanner::SurfaceInspectionPlanner()
 {
 	m_pen = nullptr;
+	m_workloadObj = nullptr;
 }
 
 SurfaceInspectionPlanner::~SurfaceInspectionPlanner()
@@ -360,10 +361,34 @@ void SurfaceInspectionPlanner::AddChild(SceneObject * child)
 	{
 		auto pVO = child->As<VisualObject>();
 		auto pModel = pVO ? pVO->RenderModel() : nullptr;
+		auto bb = pModel->GetOrientedBoundingBox();
+		Vector3 tsl = bb.Center;
+		float scl = bb.Extents.x;
+		(Vector3&)(bb.Extents) /= scl;
+
+
+		XMMATRIX rotm = XMMatrixIdentity();
+		//rotm.r[0] = g_XMIdentityR0.v;
+		rotm.r[1] = g_XMIdentityR2.v;
+		rotm.r[2] = -g_XMIdentityR1.v;
+		XMVECTOR quat = XMQuaternionRotationMatrix(rotm);
+		tsl = -XMVector3Rotate(tsl / scl + XMVectorSet(0, 0, bb.Extents.z, 0), quat); /**/;
+		quat = XMQuaternionMultiply(XMQuaternionConjugate(XMLoad(bb.Orientation)), quat);
+
+
+		pVO->SetPosition(tsl);
+		pVO->SetOrientation(quat);
+		pVO->SetScale(Vector3(1.0f / scl));
+
+		DirectX::BoundingBox bbx;
+		pVO->GetBoundingBox(bbx);
+
+		m_workloadObj = pVO;
 		if (pModel)
 		{
 			m_loadingTask = concurrency::create_task([=]() {
 				this->BuildDecalMesh(pModel);
+				m_isReady = true;
 			});
 		}
 	}
@@ -371,6 +396,34 @@ void SurfaceInspectionPlanner::AddChild(SceneObject * child)
 
 void SurfaceInspectionPlanner::Update(time_seconds const & time_delta)
 {
+	using namespace DirectX::VertexTraits;
+	m_isHit = false;
+	if (m_isReady)
+	{
+		XMMATRIX world = m_workloadObj->GlobalTransformMatrix();
+		XMMATRIX invworld = XMMatrixInverse(nullptr, world);
+		float scl = m_workloadObj->GetGlobalTransform().Scale.x;
+
+		XMVECTOR pos = m_pen->GetTipPosition();
+		XMVECTOR dir = m_pen->GetTipDirection();
+
+		pos = XMVector3Transform(pos, invworld);
+		dir = XMVector3TransformNormal(dir, invworld);
+
+		std::vector<Geometrics::MeshRayIntersectionInfo> intersecs;
+		m_mesh.intersect(pos, dir, &intersecs);
+		if (!intersecs.empty())
+		{
+			m_isHit = true;
+			m_isInfo = intersecs[0];
+			auto pv = m_mesh.persuodo_vertex(m_isInfo.facet, m_isInfo.barycentric);
+			if (m_cursor->ButtonState(1) == PointerButton_Pressing)
+			{
+				this->AddInspectionPatch(get_uv(pv), m_isInfo.facet);
+			}
+		}
+	}
+
 }
 
 void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffect)
@@ -379,7 +432,7 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 		DrawDecal(Scene->Get2DContext());
 
 	if (m_decalModel)
-		m_decalModel->Render(pContext, GlobalTransformMatrix(), pEffect);
+		m_decalModel->Render(pContext, m_workloadObj->GlobalTransformMatrix(), pEffect);
 
 	if (m_pen)
 	{
@@ -474,23 +527,8 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	else if (m_pen->IsDraging())
 		color = Colors::Red.v;
 
-	float alpha = 0.5f;
-
-	XMMATRIX world = this->GetGlobalTransform().TransformMatrix();
-	XMMATRIX invworld = XMMatrixInverse(nullptr,world);
-	float scl = this->GetGlobalTransform().Scale.x;
-
-	pos = XMVector3Transform(pos, invworld);
-	dir = XMVector3TransformNormal(dir, invworld);
-
-	
-	std::vector<Geometrics::MeshRayIntersectionInfo> intersecs;
-	m_mesh.intersect(pos, dir, &intersecs);
-	if (!intersecs.empty())
-	{
-		alpha = 1.0f;
-		pos = intersecs[0].position;
-	}
+	float alpha = 1.0f, scl = 1.0f;
+	XMMATRIX world = XMMatrixIdentity();
 
 	float length = 0.01f / scl;
 	float radius = 0.0035f / scl;
@@ -499,11 +537,18 @@ void SurfaceInspectionPlanner::RenderPen(IRenderContext * pContext, IEffect * pE
 	m_cursorMaterial->AmbientColor = color;
 	m_cursorMaterial->Alpha = alpha;
 	//m_cursorMaterial->SetupEffect(pEffect);
+	if (m_isHit)
+	{
+		alpha = 1.0f;
+		color = Colors::Red;
+		scl /= 15.0f;
+		pos = m_isInfo.position;
+	}
 
 	color = XMVectorSetW(color, alpha);
 
 	drawer.SetWorld(world);
-	drawer.DrawSphere(pos, radius, color);
+	//drawer.DrawSphere(pos, radius, color);
 	drawer.DrawCylinder(pos, pos + dir * length, radius * 0.5, color);
 }
 

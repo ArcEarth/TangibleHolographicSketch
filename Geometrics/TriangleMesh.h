@@ -529,29 +529,42 @@ namespace Geometrics
 			}
 		}
 
+		// generate a persoude vertex from the interpolation of the trianlge
+		VertexType persuodo_vertex(int fid, DirectX::FXMVECTOR baycentric)
+		{
+			const auto& tri = this->facet(fid);
+			const VertexType& v0 = this->vertex(tri[0]);
+			const VertexType& v1 = this->vertex(tri[1]);
+			const VertexType& v2 = this->vertex(tri[2]);
+
+			using namespace DirectX::VertexTraits;
+			return interpolate_vertex(baycentric, v0, v1, v2);
+		}
+
 		int XM_CALLCONV intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
 		{
 			//assert(revedges.size() == indices.size());
 			using namespace DirectX;
 			using namespace DirectX::VertexTraits;
 			size_t count = 0;
+			XMVECTOR vOri = Origin;
 			XMVECTOR vDir = XMVector3Normalize(Direction);
 			auto fid = 0;
-			for (const auto& tri : this->facets())
+			for (auto tri : this->facets())
 			{
 				float distance;
 
-				XMVECTOR v0 = get_position(&this->vertices[tri[0]]);
-				XMVECTOR v1 = get_position(&this->vertices[tri[1]]);
-				XMVECTOR v2 = get_position(&this->vertices[tri[2]]);
+				XMVECTOR v0 = get_position(this->vertices[tri[0]]);
+				XMVECTOR v1 = get_position(this->vertices[tri[1]]);
+				XMVECTOR v2 = get_position(this->vertices[tri[2]]);
 
-				bool hr = DirectX::TriangleTests::Intersects(Origin, vDir, v0, v1, v2, distance);
+				bool hr = DirectX::TriangleTests::Intersects(vOri, vDir, v0, v1, v2, distance);
 				if (hr) {
 					++count;
 					if (output) {
 						output->emplace_back();
 						auto& info = output->back();
-						XMVECTOR pos = distance * vDir + Origin;
+						XMVECTOR pos = distance * vDir + vOri;
 						XMVECTOR bc = DirectX::TriangleTests::BarycentricCoordinate(pos, v0, v1, v2);
 						info.facet = fid;
 						info.position = pos;

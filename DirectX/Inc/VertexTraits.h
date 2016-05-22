@@ -336,5 +336,19 @@ namespace DirectX
 			set_color(dst, get_color(src));
 			set_weights(dst, get_weights(src), get_indices(src));
 		}
+
+		template <class TVertex>
+		inline TVertex XM_CALLCONV interpolate_vertex(FXMVECTOR baycentric, const TVertex& v0, const TVertex& v1, const TVertex& v2)
+		{
+			TVertex dst;
+			set_position(dst, XMVectorBaryCentricV(get_position(v0), get_position(v1), get_position(v2), baycentric));
+			set_normal(dst, XMVectorBaryCentricV(get_normal(v0), get_normal(v1), get_normal(v2), baycentric));
+			set_uv(dst, XMVectorBaryCentricV(get_uv(v0), get_uv(v1), get_uv(v2), baycentric));
+			set_tangent(dst, XMVectorBaryCentricV(get_tangent(v0), get_tangent(v1), get_tangent(v2), baycentric));
+			set_color(dst, XMVectorBaryCentricV(get_color(v0), get_color(v1), get_color(v2), baycentric));
+			set_weights(dst, get_weights(v0), get_indices(v0));
+			return dst;
+		}
+
 	}
 }
