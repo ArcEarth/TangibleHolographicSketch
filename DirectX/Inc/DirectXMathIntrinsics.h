@@ -242,4 +242,23 @@ template<> inline XMVECTOR XM_CALLCONV XMVectorSwizzle<1,1,3,3>(FXMVECTOR V) { r
 }
 #else
 #define _DXMEXT
+namespace DirectX
+{
+	template <bool WhichX, bool WhichY, bool WhichZ, bool WhichW>
+	inline XMVECTOR XM_CALLCONV XMVectorSelect(FXMVECTOR V1, FXMVECTOR V2)
+	{
+		static const XMVECTORU32 selectMask =
+		{
+			WhichX ? 0xFFFFFFFF : 0,
+			WhichY ? 0xFFFFFFFF : 0,
+			WhichZ ? 0xFFFFFFFF : 0,
+			WhichW ? 0xFFFFFFFF : 0,
+		};
+		return _DXMEXT XMVectorSelect(V1, V2, selectMask.v);
+	}
+
+	template<> inline XMVECTOR XM_CALLCONV XMVectorSelect<0, 0, 0, 0>(FXMVECTOR V1, FXMVECTOR V2) { (V2); return V1; }
+	template<> inline XMVECTOR XM_CALLCONV XMVectorSelect<1, 1, 1, 1>(FXMVECTOR V1, FXMVECTOR V2) { (V1); return V2; }
+
+}
 #endif

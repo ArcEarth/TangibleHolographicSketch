@@ -231,7 +231,7 @@ void PenModeler::SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir)
 		if (uvCurve.size() > 2)
 		{
 			auto uvs = patch.uvBoundry().sample(std::min((int)uvCurve.size(), 100));
-			UpdateRenderGeometry(uvs, Vector2(g_DecalResolution));
+			UpdateRenderGeometry(uvs, Vector2((float)g_DecalResolution));
 		}
 	}
 	else {
@@ -263,7 +263,7 @@ void PenModeler::SurfaceSketchEnd()
 	//curve.smooth(0.8f, 4);
 }
 
-void PenModeler::OnAirDragBegin()
+void PenModeler::SurfacePatchDragBegin()
 {
 	if (m_patches.empty())
 		return;
@@ -309,7 +309,7 @@ void PenModeler::OnAirDragUpdate(FXMVECTOR pos)
 	}
 }
 
-void PenModeler::UpdateMeshBuffer(Geometrics::Extrusion & extruder)
+void PenModeler::UpdateMeshBuffer(Geometrics::GeneralizedExtrusion<MeshType> & extruder)
 {
 	auto context = this->Scene->GetRenderContext();
 	auto& vertices = extruder.mesh().vertices;
@@ -365,7 +365,7 @@ void PenModeler::Update(time_seconds const & time_delta)
 		}
 		else if (m_state == None && m_pen->IsDraging())
 		{
-			OnAirDragBegin();
+			SurfacePatchDragBegin();
 		}
 		else if (m_state == Dragging && !m_pen->IsDraging())
 		{
@@ -497,7 +497,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 	}
 
 
-	RenderPen();	//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
+	RenderCursor();	//g_PrimitiveDrawer.DrawCylinder(pos - (yDir * TrackedPen::TipLength), -yDir, length * 3, radius * 0.5, color);
 
 	if (m_patches.empty())
 		return;
@@ -517,7 +517,7 @@ void PenModeler::Render(IRenderContext * context, IEffect * pEffect)
 
 }
 
-void Causality::PenModeler::RenderPen()
+void Causality::PenModeler::RenderCursor()
 {
 	g_PrimitiveDrawer.SetWorld(XMMatrixIdentity());
 	XMVECTOR rot = GetOrientation();

@@ -20,7 +20,7 @@ namespace Geometrics
 
 			class HalfEdge;
 
-			class Face;
+			struct Face;
 
 			struct Vertex
 			{

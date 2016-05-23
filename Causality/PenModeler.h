@@ -12,8 +12,7 @@ namespace Causality
 {
 	using Geometrics::Curve;
 	using Geometrics::SurfacePatch;
-	using Geometrics::Extrusion;
-	using Geometrics::MeshType;
+	using Geometrics::GeneralizedExtrusion;
 	
 	class KeyboardMouseFirstPersonControl;
 
@@ -27,6 +26,8 @@ namespace Causality
 			Dragging = 2,
 			Erasing = 3,
 		};
+
+		using MeshType = Geometrics::TriangleMesh<Geometrics::DefaultVertex, uint32_t>;
 
 	public:
 		PenModeler(int objectIdx = 1);
@@ -42,11 +43,11 @@ namespace Causality
 		void SrufaceSketchUpdate(XMVECTOR pos, XMVECTOR dir);
 		void SurfaceSketchEnd();
 
-		void OnAirDragBegin();
+		void SurfacePatchDragBegin();
 		void OnAirDragUpdate(FXMVECTOR pos);
 		void OnAirDragEnd();
 
-		void UpdateMeshBuffer(Geometrics::Extrusion & extruder);
+		void UpdateMeshBuffer(GeneralizedExtrusion<MeshType> & extruder);
 		void Update(time_seconds const& time_delta) override;
 
 		void UpdateRenderGeometry(array_view<Vector3> points, const Vector2& canvasSize);
@@ -54,16 +55,16 @@ namespace Causality
 		virtual RenderFlags GetRenderFlags() const;
 		virtual bool IsVisible(const BoundingGeometry& viewFrustum) const;
 		virtual void Render(IRenderContext *context, IEffect* pEffect = nullptr);
-		void RenderPen();
+		void RenderCursor();
 		virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);
 
 	private:
 		// the curves we sketched on the surface
 		PenModelerStateEnum			m_state;
 
-		vector<SurfacePatch>		m_patches;
+		vector<SurfacePatch<MeshType>>		m_patches;
 
-		vector<Extrusion>			m_extrusions;
+		vector<GeneralizedExtrusion<MeshType>>			m_extrusions;
 
 		IRenderDevice*				m_pDevice;
 		I2DContext*					m_p2DContex;

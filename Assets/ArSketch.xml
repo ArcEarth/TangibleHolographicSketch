@@ -6,7 +6,7 @@
     </enviroment>
   </scene.settings>
   <scene.assets>
-    <mesh name="ceil_mesh" src="Mug.obj" flip_normal="true"></mesh>
+    <mesh name="ceil_mesh" src="ceil.obj" flip_normal="false"></mesh>
     <mesh name="cube_mesh" src="cube.obj" flip_normal="true"></mesh>
     <!--<mesh name="mug_mesh" src="Mug.obj"></mesh>
     <mesh name="table_mesh" src="table.obj"></mesh>-->
@@ -41,15 +41,16 @@
 
       <!--<object name="table" position="0,0.0,0" scale="1.0,1.0,1.0" mesh="{table_mesh}"/>-->
 
-      <!--<object name="bottle" position="0,0,0" scale="0.001" mesh="{bottle_mesh}">
+      <object name="workspace" position="0,-0.01,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
+
+      <object name="workload" mesh="{ceil_mesh}">
+        <surface_inspector  tessellation="10" patch_size="0.15">
+          <tracked_pen name="pointer" device="pointer" index="-1" tip_dir="0.0,0,1.0">
+            <coordinate_axis max="0.03"/>
+          </tracked_pen>
+        </surface_inspector>
         <coordinate_axis max="2"/>
-      </object>>-->
-      
-      <surface_inspector  tessellation="10" patch_size="0.15">
-        <object name="workspace" position="0,-0.01,0" scale="2.0,0.005,2.0" mesh="{cube_mesh}"/>
-        <object name="workload" mesh="{ceil_mesh}" position="0,-1.31,1.0" orientation="<-90,0,0>" scale="0.05"/>
-        <tracked_pen name="pointer" device="pointer" index="-1" tip_dir="0.0,0,1.0"></tracked_pen>
-      </surface_inspector>
+      </object>
       
       <!--
       !IMPORTANT! 

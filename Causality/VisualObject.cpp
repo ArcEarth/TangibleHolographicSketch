@@ -214,7 +214,7 @@ void CoordinateAxis::Render(IRenderContext * context, IEffect* pEffect)
 	//g_PrimitiveDrawer.DrawSphere({ .0f,.0f,.0f,0.02f }, Colors::Cyan);
 	g_PrimitiveDrawer.SetWorld(GlobalTransformMatrix());
 
-	float Ar = 0.03f, Al = ub, Almr = Al - Ar, Alpr = Al + Ar;
+	float Ar = 0.015f * m_max, Al = ub, Almr = Al - Ar, Alpr = Al + Ar;
 	g_PrimitiveDrawer.Begin();
 
 	if (m_ZX)

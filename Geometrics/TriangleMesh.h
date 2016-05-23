@@ -530,17 +530,19 @@ namespace Geometrics
 		}
 
 		// generate a persoude vertex from the interpolation of the trianlge
-		VertexType persuodo_vertex(int fid, DirectX::FXMVECTOR baycentric)
+		VertexType persudo_vertex(int fid, DirectX::FXMVECTOR baycentric) const
 		{
 			const auto& tri = this->facet(fid);
-			const VertexType& v0 = this->vertex(tri[0]);
-			const VertexType& v1 = this->vertex(tri[1]);
-			const VertexType& v2 = this->vertex(tri[2]);
+
+			const VertexType& v0 = this->vertices[tri[0]];
+			const VertexType& v1 = this->vertices[tri[1]];
+			const VertexType& v2 = this->vertices[tri[2]];
 
 			using namespace DirectX::VertexTraits;
 			return interpolate_vertex(baycentric, v0, v1, v2);
 		}
 
+		// Ray intersection test with advanced infomation
 		int XM_CALLCONV intersect(DirectX::FXMVECTOR Origin, DirectX::FXMVECTOR Direction, std::vector<MeshRayIntersectionInfo>* output) const
 		{
 			//assert(revedges.size() == indices.size());

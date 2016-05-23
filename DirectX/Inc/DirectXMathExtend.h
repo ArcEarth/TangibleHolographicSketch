@@ -1434,26 +1434,28 @@ namespace DirectX
 			XMVECTOR E = V2 - V1;
 			XMVECTOR R0 = P - V1;
 			R0 = XMVector3Cross(R0, E);
-			R0 = XMVector3Length(R0);
+			R0 = _DXMEXT XMVector3Length(R0);
 
 			E = V0 - V2;
 			XMVECTOR R1 = P - V2;
 			R1 = XMVector3Cross(R1, E);
-			R1 = XMVector3Length(R1);
+			R1 = _DXMEXT XMVector3Length(R1);
 
 			E = V1 - V0;
 			XMVECTOR R2 = P - V0;
 			R2 = XMVector3Cross(R2, E);
-			R2 = XMVector3Length(R2);
+			R2 = _DXMEXT XMVector3Length(R2);
 
 			E = R0 + R1 + R2;
-			R0 = XMVectorSelect(R1, R0, g_XMSelect1000.v); // r0 r1 r1 r1
-			R0 = XMVectorSelect(R2, R0, g_XMSelect1100.v); // r1 r1 r2 r2
+			R0 = _DXMEXT XMVectorSelect<1, 0, 0, 0>(R1, R0); // r0 r1 r1 r1
+			R0 = _DXMEXT XMVectorSelect<1, 1, 0, 0>(R2, R0); // r1 r1 r2 r2
 			R0 /= E;
 
+#ifdef _DEBUG
 			XMVECTOR PR = XMVectorBaryCentricV(V0, V1, V2, R0);
 			PR -= P;
 			assert(XMVectorGetX(XMVector3Length(PR)) < 0.001f);
+#endif // DEBUG
 			return R0;
 		}
 	}

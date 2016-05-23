@@ -5,6 +5,49 @@
 #include "DirectXMathExtend.h"
 #include <span.h>
 
+namespace DirectX {
+	namespace LineSegmentTest
+	{
+		enum LineSegmentIntersectionType
+		{
+			Disjoint = 0,
+			Paredlle = 1,
+			Intersect = 2,
+			Overlap = 3,
+		};
+
+		// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
+		// Returns QNaN if intersection is not valiad
+		// Otherwise returns the intersection position
+		inline XMVECTOR XM_CALLCONV RayIntersects2D(FXMVECTOR Origin, FXMVECTOR Dir, FXMVECTOR A0, GXMVECTOR A1)
+		{
+			XMVECTOR v1 = A1 - A0;
+			XMVECTOR v2 = Origin - A0;
+			XMVECTOR v3 = Dir;
+
+			XMVECTOR D = XMVectorReciprocalEst(XMVector2Cross(v2, v3));
+			XMVECTOR t1 = XMVector2Cross(v2, v1);
+			XMVECTOR t2 = XMVector2Cross(v1, v3);
+			XMVECTOR mask = XMVectorGreater(t2, XMVectorZero());
+			// t1 = cross(v1,v3) > 0 ? t1 : -t1;
+			t1 = XMVectorXorInt(t1, XMVectorAndInt(mask, XMVectorReplicate(-0.f)));
+			t1 = XMVectorMultiply(t1, D);
+			t2 = XMVectorMultiply(t2, D);
+
+			// test for t1 > 0 && t2 > 0 && t2 <= 1
+			mask = XMVectorGreater(t1, XMVectorZero());
+			mask = XMVectorAndInt(mask, XMVectorGreaterOrEqual(t2, XMVectorZero()));
+			mask = XMVectorAndInt(mask, XMVectorLessOrEqual(t2, XMVectorSplatOne()));
+			
+			t1 = XMVectorMultiplyAdd(t1,v3,Origin);
+			t1 = XMVectorSelect(g_XMQNaN, t1, mask);
+			return t1;
+		}
+
+
+	}
+}
+
 namespace Geometrics
 {
 	using DirectX::Vector3;
@@ -63,6 +106,32 @@ namespace Geometrics
 		bool isClose() const { return m_isClose; }
 		void setClose(bool close);
 		void closeLoop() { setClose(true); }
+
+	public:
+		int XM_CALLCONV	intersect2D(FXMVECTOR pos, FXMVECTOR dir, std::vector<DirectX::Vector2>* pContainer = nullptr) const
+		{
+			int count = 0;
+			XMVECTOR b1;
+			XMVECTOR e1 = XMLoadA(m_anchors[0]);
+			for (int i = 0; i < m_anchors.size(); i++)
+			{
+				b1 = e1;
+				e1 = XMLoadA(m_anchors[i]);
+				XMVECTOR ip = DirectX::LineSegmentTest::RayIntersects2D(pos, dir, b1, e1);
+				if (!DirectX::XMVector4IsNaN(ip))
+				{
+					++count;
+					if (pContainer)
+						pContainer->push_back(ip);
+				}
+			}
+			return count;
+		}
+
+		bool XM_CALLCONV contains2D(FXMVECTOR p, FXMVECTOR test_dir = DirectX::g_XMIdentityR0) const
+		{
+			return m_isClose && intersect2D(p, test_dir) & 0x2;
+		}
 
 		size_t size() const;
 		bool empty() const { return m_anchors.empty(); }
