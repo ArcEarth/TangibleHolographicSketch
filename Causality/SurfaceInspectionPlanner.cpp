@@ -943,7 +943,7 @@ bool InspectionPatch::CaculateCameraFrustum()
 		return false;
 	}
 
-	CaculatePatchCurvetures();
+	CaculatePatchCurvetures(positions);
 
 	DirectX::CreateBoundingOrientedBoxFromPoints(BoundingBox, positions.size(), (XMFLOAT3*)positions.data(), sizeof(XMVECTOR));
 
@@ -1008,7 +1008,7 @@ void InspectionPatch::CaculateVerticsInPatch(XMVECTOR_ARRAY&positions)
 
 }
 
-void InspectionPatch::CaculatePatchCurvetures()
+void InspectionPatch::CaculatePatchCurvetures(XMVECTOR_ARRAY &positions)
 {
 	auto& vertices = m_surface->vertices;
 	m_curvetures.clear();
@@ -1073,8 +1073,24 @@ void InspectionPatch::CaculatePatchCurvetures()
 
 				if (v0_in ^ v1_in) // crossing edge
 				{
-					// m_uvCurve.intersect2D(uv0, uv1 - uv0);
-					// add a new persudo vertex in
+					uv0 = get_uv(v0);
+					uv1 = get_uv(v1);
+					uv1 = uv1-uv0;
+					XMVECTOR b1;
+					XMVECTOR e1 = XMLoadA(m_uvCurve[0]);
+					for (int i = 0; i < m_uvCurve.size(); i++)
+					{
+						b1 = e1;
+						e1 = XMLoadA(m_uvCurve[i]);
+						XMVECTOR t = DirectX::LineSegmentTest::RayIntersects2D(uv0, uv1, b1, e1);
+						if (!DirectX::XMVector4IsNaN(t) && XMVector4Less(t,g_XMOne.v))
+						{
+							//add a new persudo vertex in
+							t /= XMVector2Length(uv1);
+							t = XMVectorLerpV(get_position(v0), get_position(v1),t);
+							positions.push_back(t);
+						}
+					}
 				}
 
 			}

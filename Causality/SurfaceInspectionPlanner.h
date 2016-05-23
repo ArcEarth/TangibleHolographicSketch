@@ -64,7 +64,7 @@ namespace Causality
 			void CaculateVerticsInPatch(XMVECTOR_ARRAY &positions);
 
 			// Helper, caculates the patch's edges curves into array m_curvetures
-			void CaculatePatchCurvetures();
+			void CaculatePatchCurvetures(XMVECTOR_ARRAY &positions);
 
 			// Helper, Find the minmimal curveture direction from m_curvestures data
 			// The 3D orientation of this patch, where the rotated Z-axis must be the optics axis direction
