@@ -27,12 +27,17 @@ namespace Causality
 
 			Vector2					DecalSize;
 
+			float					m_opticity;
 			Vector2					m_uvCenter;
 			Vector2					m_uvExtent;
 
 			Vector2					m_uvTranslation;
 			Vector2					m_uvScaling;
 			float					m_uvRotation;
+			float					m_principleUvRotation;
+			Vector3					m_averageNormal;
+			Vector3					m_averageTangent;
+			Vector3					m_averageBinormal;
 
 			float					Area;
 			float					ZTolerance;
@@ -47,8 +52,23 @@ namespace Causality
 
 			std::vector<int>		m_areVertices;
 			std::vector<int>		m_crossFacets;
+			std::vector<Vector4>	m_curvetures;
+			std::vector<int_fast16_t> m_isVertexIn;
 
+			using XMVECTOR_ARRAY = std::vector<DirectX::XMVECTOR, DirectX::XMAllocator>;
+
+			// Principle methods should be called once the patch is update
 			bool CaculateCameraFrustum();
+
+			// Helper, caculates the vertices with in the patch
+			void CaculateVerticsInPatch(XMVECTOR_ARRAY &positions);
+
+			// Helper, caculates the patch's edges curves into array m_curvetures
+			void CaculatePatchCurvetures();
+
+			// Helper, Find the minmimal curveture direction from m_curvestures data
+			// The 3D orientation of this patch, where the rotated Z-axis must be the optics axis direction
+			void XM_CALLCONV CaculatePrinciplePatchOrientation();
 
 			void XM_CALLCONV SetUVRect(FXMVECTOR uvc, FXMVECTOR uvext);
 			void UpdateGeometry(I2DFactory* pFactory, bool smooth = false);
@@ -82,6 +102,8 @@ namespace Causality
 			void SetWorkloadFillView(DirectX::Scene::IModelNode * pModel, Causality::VisualObject * pVO);
 			virtual void Update(time_seconds const& time_delta) override;
 			virtual void Render(IRenderContext * pContext, IEffect* pEffect = nullptr) override;
+
+			void DrawPatchCamera(InspectionPatch& patch);
 
 			virtual RenderFlags GetRenderFlags() const;
 			virtual void XM_CALLCONV UpdateViewMatrix(FXMMATRIX view, CXMMATRIX projection);;

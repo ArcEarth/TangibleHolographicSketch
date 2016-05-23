@@ -18,7 +18,7 @@ namespace DirectX {
 
 		// https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
 		// Returns QNaN if intersection is not valiad
-		// Otherwise returns the intersection position
+		// Otherwise returns the (persudo) distance t, always satisfy Origin + t*Dir = intersection point  
 		inline XMVECTOR XM_CALLCONV RayIntersects2D(FXMVECTOR Origin, FXMVECTOR Dir, FXMVECTOR A0, GXMVECTOR A1)
 		{
 			XMVECTOR v1 = A1 - A0;
@@ -39,11 +39,20 @@ namespace DirectX {
 			mask = XMVectorAndInt(mask, XMVectorGreaterOrEqual(t2, XMVectorZero()));
 			mask = XMVectorAndInt(mask, XMVectorLessOrEqual(t2, XMVectorSplatOne()));
 			
-			t1 = XMVectorMultiplyAdd(t1,v3,Origin);
+			//t1 = XMVectorMultiplyAdd(t1,v3,Origin);
 			t1 = XMVectorSelect(g_XMQNaN, t1, mask);
 			return t1;
 		}
 
+		inline XMVECTOR XM_CALLCONV LineSegmentIntersects2D(FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR B0, GXMVECTOR B1)
+		{
+			XMVECTOR dir = A1 - A0;
+			XMVECTOR t = RayIntersects2D(A0, dir, B0, B1);
+			XMVECTOR mask = XMVectorLess(t, XMVectorZero());
+			t = _DXMEXT XMVectorMultiplyAdd(t, dir, A0);
+			t = XMVectorSelect(g_XMQNaN, t, mask);
+			return t;
+		}
 
 	}
 }
@@ -127,6 +136,27 @@ namespace Geometrics
 			}
 			return count;
 		}
+
+		int XM_CALLCONV	intersectSegment2D(FXMVECTOR A0, FXMVECTOR A1, std::vector<DirectX::Vector2>* pContainer = nullptr) const
+		{
+			int count = 0;
+			XMVECTOR b1;
+			XMVECTOR e1 = XMLoadA(m_anchors[0]);
+			for (int i = 0; i < m_anchors.size(); i++)
+			{
+				b1 = e1;
+				e1 = XMLoadA(m_anchors[i]);
+				XMVECTOR ip = DirectX::LineSegmentTest::LineSegmentIntersects2D(A0, A1, b1, e1,nullptr);
+				if (!DirectX::XMVector4IsNaN(ip))
+				{
+					++count;
+					if (pContainer)
+						pContainer->push_back(ip);
+				}
+			}
+			return count;
+		}
+
 
 		bool XM_CALLCONV contains2D(FXMVECTOR p, FXMVECTOR test_dir = DirectX::g_XMIdentityR0) const
 		{

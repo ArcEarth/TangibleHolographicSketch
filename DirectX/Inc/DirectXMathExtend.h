@@ -1462,7 +1462,7 @@ namespace DirectX
 
 	namespace LineSegmentTest
 	{
-		inline bool Intersects2D(FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR B0, GXMVECTOR B1, XMVECTOR* pIntersection = nullptr);
+		inline XMVECTOR XM_CALLCONV LineSegmentIntersects2D(FXMVECTOR A0, FXMVECTOR A1, FXMVECTOR B0, GXMVECTOR B1, XMVECTOR* pIntersection = nullptr);
 
 		inline float XM_CALLCONV Distance(FXMVECTOR p, FXMVECTOR s0, FXMVECTOR s1);
 		inline float XM_CALLCONV Distance(FXMVECTOR p, const XMFLOAT3 *path, size_t nPoint, size_t strideInByte = sizeof(XMFLOAT3));
