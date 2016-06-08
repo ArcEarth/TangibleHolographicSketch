@@ -645,7 +645,6 @@ void SurfaceInspectionPlanner::DrawPatchCamera(InspectionPatch& patch)
 	DrawGeometryOutline(geo, color);
 	geo = patch.m_cameraFrustum;
 	DrawGeometryOutline(geo, color);
-
 }
 
 RenderFlags SurfaceInspectionPlanner::GetRenderFlags() const { return RenderFlags::SpecialEffects; }
@@ -1026,76 +1025,89 @@ void InspectionPatch::CaculatePatchCurvetures(XMVECTOR_ARRAY &positions)
 				auto v0 = vertices[iv0];
 				auto v1 = vertices[iv1];
 
-				XMVECTOR p0 = get_position(v0);
-				XMVECTOR n0 = get_normal(v0);
-				XMVECTOR p1 = get_position(v1);
-				XMVECTOR n1 = get_normal(v1);
-
-				// project p0,p1,n0,n1 into intrinsic coordinate, ignores the bi-normal direction
-				XMMATRIX rot;
-				XMVECTOR axisX = _DXMEXT XMVector3Normalize(p1 - p0);
-				XMVECTOR axisZ = XMVector3Cross(n0, n1); axisZ = _DXMEXT XMVector3Normalize(axisZ);
-				XMVECTOR axisY = XMVector3Cross(axisZ, axisX);
-				axisZ = XMVector3Cross(axisX, axisY); // idely, the normal should be perpendicular to the edge, but it may not be true in the real world case
-				rot.r[0] = axisX; rot.r[1] = axisY; rot.r[2] = axisZ; rot.r[3] = g_XMIdentityR3;
-				p0 = XMVector3TransformNormal(p0, rot);
-				p1 = XMVector3TransformNormal(p1, rot);
-				n0 = XMVector3TransformNormal(n0, rot);
-				n1 = XMVector3TransformNormal(n1, rot);
-
-				// No do the intersection in 2D
-				XMVECTOR ip = XMVector2IntersectLine(p0, p0 + n0, p1, p1 + n1);
-				if (XMVector4IsNaN(ip))
-					ip = XMVectorZero();
-				else
-				{
-					XMVECTOR c0 = ip + ip - p0 - p1;
-					XMVECTOR c = XMVector3Length(c0);
-					if (XMVector4Less(XMVector3Dot(c0, n0), XMVectorZero()))
-						c = -c;
-
-					ip = XMVectorReciprocal(ip);
-				}
-
-				XMVECTOR uv0, uv1;
-				//uv0 = get_uv(v0);
-				//uv1 = get_uv(v1);
-				//uv1 = uv1 - uv0;
-
-				uv1 = p1 - p0;
-				//uv1 = XMVector3Rotate(uv1, XMQuaternionConjugate(patchOrientation));
-
-				//uv0 = XMVectorSplatY(uv1);
-				//uv1 = XMVectorSplatX(uv1);
-				//XMVECTOR phi = XMVectorATanEst(uv0 / uv1);
-				ip = _DXMEXT XMVectorSelect<0, 0, 0, 1>(uv1, ip);
-				m_curvetures.emplace_back(ip); // X = phi, Y = curveture
+				XMVECTOR ip = GetEdgeCurveture(v0, v1);
+				m_curvetures.emplace_back(ip);
 
 				if (v0_in ^ v1_in) // crossing edge
 				{
-					uv0 = get_uv(v0);
-					uv1 = get_uv(v1);
-					uv1 = uv1-uv0;
-					XMVECTOR b1;
-					XMVECTOR e1 = XMLoadA(m_uvCurve[0]);
-					for (int i = 0; i < m_uvCurve.size(); i++)
-					{
-						b1 = e1;
-						e1 = XMLoadA(m_uvCurve[i]);
-						XMVECTOR t = DirectX::LineSegmentTest::RayIntersects2D(uv0, uv1, b1, e1);
-						if (!DirectX::XMVector4IsNaN(t) && XMVector4Less(t,g_XMOne.v))
-						{
-							//add a new persudo vertex in
-							t /= XMVector2Length(uv1);
-							t = XMVectorLerpV(get_position(v0), get_position(v1),t);
-							positions.push_back(t);
-						}
-					}
+					AddCrossEdgeIntersections(v0, v1, positions);
 				}
 
 			}
 		}
 	}
+}
+
+void InspectionPatch::AddCrossEdgeIntersections(const DirectX::VertexPositionNormalTangentColorTexture &v0, const DirectX::VertexPositionNormalTangentColorTexture &v1, std::vector<DirectX::XMVECTOR, DirectX::XMAllocator> & positions)
+{
+	XMVECTOR uv0 = get_uv(v0);
+	XMVECTOR uv1 = get_uv(v1);
+	uv1 = uv1 - uv0;
+	XMVECTOR b1;
+	XMVECTOR e1 = m_uvCurve[0];
+	for (int i = 0; i < m_uvCurve.size(); i++)
+	{
+		b1 = e1;
+		e1 = m_uvCurve[i];
+		XMVECTOR t = DirectX::LineSegmentTest::RayIntersects2D(uv0, uv1, b1, e1);
+		if (!DirectX::XMVector4IsNaN(t) && XMVector4Less(t, g_XMOne.v))
+		{
+			//add a new persudo vertex in
+			t /= XMVector2Length(uv1);
+			t = XMVectorLerpV(get_position(v0), get_position(v1), t);
+			positions.push_back(t);
+		}
+	}
+
+}
+
+XMVECTOR XM_CALLCONV InspectionPatch::GetEdgeCurveture(const DirectX::VertexPositionNormalTangentColorTexture &v0, const DirectX::VertexPositionNormalTangentColorTexture &v1)
+{
+	XMVECTOR p0 = get_position(v0);
+	XMVECTOR n0 = get_normal(v0);
+	XMVECTOR p1 = get_position(v1);
+	XMVECTOR n1 = get_normal(v1);
+
+	// project p0,p1,n0,n1 into intrinsic coordinate, ignores the bi-normal direction
+	XMMATRIX rot;
+	XMVECTOR axisX = _DXMEXT XMVector3Normalize(p1 - p0);
+	XMVECTOR axisZ = XMVector3Cross(n0, n1); axisZ = _DXMEXT XMVector3Normalize(axisZ);
+	XMVECTOR axisY = XMVector3Cross(axisZ, axisX);
+	axisZ = XMVector3Cross(axisX, axisY); // idely, the normal should be perpendicular to the edge, but it may not be true in the real world case
+	rot.r[0] = axisX; rot.r[1] = axisY; rot.r[2] = axisZ; rot.r[3] = g_XMIdentityR3;
+	p0 = XMVector3TransformNormal(p0, rot);
+	p1 = XMVector3TransformNormal(p1, rot);
+	n0 = XMVector3TransformNormal(n0, rot);
+	n1 = XMVector3TransformNormal(n1, rot);
+
+	// No do the intersection in 2D
+	XMVECTOR ip = XMVector2IntersectLine(p0, p0 + n0, p1, p1 + n1);
+	if (XMVector4IsNaN(ip))
+		ip = XMVectorZero();
+	else
+	{
+		XMVECTOR c0 = ip + ip - p0 - p1;
+		XMVECTOR c = XMVector3Length(c0);
+		if (XMVector4Less(XMVector3Dot(c0, n0), XMVectorZero()))
+			c = -c;
+
+		ip = XMVectorReciprocal(ip);
+	}
+
+	XMVECTOR uv0, uv1;
+	//uv0 = get_uv(v0);
+	//uv1 = get_uv(v1);
+	//uv1 = uv1 - uv0;
+
+	uv1 = p1 - p0;
+	//uv1 = XMVector3Rotate(uv1, XMQuaternionConjugate(patchOrientation));
+
+	//uv0 = XMVectorSplatY(uv1);
+	//uv1 = XMVectorSplatX(uv1);
+	//XMVECTOR phi = XMVectorATanEst(uv0 / uv1);
+	ip = _DXMEXT XMVectorSelect<0, 0, 0, 1>(uv1, ip);
+	// X = phi, Y = curveture
+	return ip;
 }
 
 void XM_CALLCONV InspectionPatch::CaculatePrinciplePatchOrientation()
@@ -1121,14 +1133,15 @@ void XM_CALLCONV InspectionPatch::CaculatePrinciplePatchOrientation()
 		return c0.x < c1.x;
 	});
 
+	auto cuv_phi_backup = cuv_phi;
 	Geometrics::laplacianSmooth<Vector2>(cuv_phi, 0.8f, 4, true);
 	auto minidx = std::min_element(cuv_phi.begin(), cuv_phi.end(), [](const Vector2& c0, const Vector2& c1) -> bool {
 		return fabs(c0.y) < fabs(c1.y);
 	}) - cuv_phi.begin();
 
-	m_principleUvRotation = proj(m_curvetures[minidx]);
+	m_principleUvRotation = proj(cuv_phi_backup[minidx]);
 
-	// (Quaternion&)BoundingBox.Orientation = XMQuaternionMultiply(XMQuaternionRotationRoll(m_principleUvRotation), orientation);
+	(Quaternion&)BoundingBox.Orientation = XMQuaternionMultiply(XMQuaternionRotationRoll(m_principleUvRotation), orientation);
 }
 
 void XM_CALLCONV InspectionPatch::SetUVRect(FXMVECTOR uvc, FXMVECTOR uvext)

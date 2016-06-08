@@ -66,6 +66,10 @@ namespace Causality
 			// Helper, caculates the patch's edges curves into array m_curvetures
 			void CaculatePatchCurvetures(XMVECTOR_ARRAY &positions);
 
+			void AddCrossEdgeIntersections(const DirectX::VertexPositionNormalTangentColorTexture &v0, const  DirectX::VertexPositionNormalTangentColorTexture &v1, std::vector<DirectX::XMVECTOR, DirectX::XMAllocator> & positions);
+
+			DirectX::XMVECTOR XM_CALLCONV GetEdgeCurveture(const DirectX::VertexPositionNormalTangentColorTexture &v0, const DirectX::VertexPositionNormalTangentColorTexture &v1);
+
 			// Helper, Find the minmimal curveture direction from m_curvestures data
 			// The 3D orientation of this patch, where the rotated Z-axis must be the optics axis direction
 			void XM_CALLCONV CaculatePrinciplePatchOrientation();
