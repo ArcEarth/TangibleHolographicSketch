@@ -331,8 +331,8 @@ namespace Geometrics
 			using BaseType::data;
 			using BaseType::size;
 
-			inline _CONST_FUN _Ty control_point(int iu, int iv) const { return BaseType::at(iu * ClippingSize + iv); };
-			inline _CONST_FUN _Ty control_point(int idx) const { return BaseType::at(idx) };
+			inline constexpr const_reference control_point(int iu, int iv) const { return BaseType::at(iu * ClippingSize + iv); };
+			inline constexpr const_reference control_point(int idx) const { return BaseType::at(idx) };
 			inline _Ty& control_point(int iu, int iv) { return BaseType::at(iu * ClippingSize + iv); };
 			inline _Ty& control_point(int idx) { return BaseType::at(idx) };
 

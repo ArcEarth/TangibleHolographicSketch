@@ -42,6 +42,10 @@ namespace Causality
 			float					Area;
 			float					ZTolerance;
 			BoundingOrientedBox		BoundingBox;
+
+			static constexpr int	CurvtureAngluarResolution = 64U;
+			vector<float>			CurvtureDistribution;
+
 			bool					Valiad;
 			BoundingFrustum			m_cameraFrustum;
 			BoundingFrustum			m_defaultCameraFrustum;
@@ -49,6 +53,7 @@ namespace Causality
 			D2D1::Matrix3x2F		m_decalTransform;
 			bool					m_requireRedraw;
 			cptr<ID2D1PathGeometry> m_deaclGeometry;
+			cptr<ID2D1PathGeometry> m_curvHistoGeometry;
 
 			std::vector<int>		m_areVertices;
 			std::vector<int>		m_crossFacets;
@@ -69,6 +74,8 @@ namespace Causality
 			void AddCrossEdgeIntersections(const DirectX::VertexPositionNormalTangentColorTexture &v0, const  DirectX::VertexPositionNormalTangentColorTexture &v1, std::vector<DirectX::XMVECTOR, DirectX::XMAllocator> & positions);
 
 			DirectX::XMVECTOR XM_CALLCONV GetEdgeCurveture(const DirectX::VertexPositionNormalTangentColorTexture &v0, const DirectX::VertexPositionNormalTangentColorTexture &v1);
+
+			static void ProjectEdgeInTangentNormalPlane(DirectX::XMVECTOR &p1, DirectX::XMVECTOR &p0, DirectX::XMVECTOR &n0, DirectX::XMVECTOR &n1);
 
 			// Helper, Find the minmimal curveture direction from m_curvestures data
 			// The 3D orientation of this patch, where the rotated Z-axis must be the optics axis direction

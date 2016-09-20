@@ -75,7 +75,7 @@ namespace DirectX
 			{
 				using lhs_traits = vector_traits<lhs_t>;
 				using rhs_traits = vector_traits<rhs_t>;
-				static _CONST_DATA bool value = std::is_same<typename lhs_traits::scalar, typename rhs_traits::scalar>::value
+				static const bool value = std::is_same<typename lhs_traits::scalar, typename rhs_traits::scalar>::value
 					&& lhs_traits::rows == rhs_traits::rows && lhs_traits::cols == lhs_traits::cols;
 			};
 

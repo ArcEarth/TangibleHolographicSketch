@@ -402,7 +402,7 @@ InspectionPatch * SurfaceInspectionPlanner::AddInspectionPatch(FXMVECTOR uv, int
 	m_isPatches.emplace_back();
 	auto& patch = m_isPatches.back();
 	patch.setSurface(&m_mesh);
-
+	patch.CurvtureDistribution = m_previwPatch.CurvtureDistribution;
 	patch.SetUVRect(uv, patch.m_uvExtent);
 	auto pFactory = this->Scene->Get2DFactory();
 	patch.UpdateGeometry(pFactory);
@@ -803,7 +803,12 @@ void SurfaceInspectionPlanner::DrawDecal(I2DContext *pContext)
 	pContext->BeginDraw();
 	pContext->Clear(GetD2DColor(m_decalBackground));
 
-	m_previwPatch.DrawDecal(pContext, m_brush.Get());
+	if (m_isHit)
+	{
+		auto pFactory = this->Scene->Get2DFactory();
+		m_previwPatch.UpdateGeometry(pFactory); // reset the histogram
+		m_previwPatch.DrawDecal(pContext, m_brush.Get());
+	}
 	for (auto& patch : m_isPatches)
 		patch.DrawDecal(pContext, m_brush.Get());
 
@@ -1068,46 +1073,71 @@ XMVECTOR XM_CALLCONV InspectionPatch::GetEdgeCurveture(const DirectX::VertexPosi
 	XMVECTOR p1 = get_position(v1);
 	XMVECTOR n1 = get_normal(v1);
 
-	// project p0,p1,n0,n1 into intrinsic coordinate, ignores the bi-normal direction
-	XMMATRIX rot;
-	XMVECTOR axisX = _DXMEXT XMVector3Normalize(p1 - p0);
-	XMVECTOR axisZ = XMVector3Cross(n0, n1); axisZ = _DXMEXT XMVector3Normalize(axisZ);
-	XMVECTOR axisY = XMVector3Cross(axisZ, axisX);
-	axisZ = XMVector3Cross(axisX, axisY); // idely, the normal should be perpendicular to the edge, but it may not be true in the real world case
-	rot.r[0] = axisX; rot.r[1] = axisY; rot.r[2] = axisZ; rot.r[3] = g_XMIdentityR3;
-	p0 = XMVector3TransformNormal(p0, rot);
-	p1 = XMVector3TransformNormal(p1, rot);
-	n0 = XMVector3TransformNormal(n0, rot);
-	n1 = XMVector3TransformNormal(n1, rot);
+	XMVECTOR edir = p1 - p0;
+
+	ProjectEdgeInTangentNormalPlane(p1, p0, n0, n1);
 
 	// No do the intersection in 2D
 	XMVECTOR ip = XMVector2IntersectLine(p0, p0 + n0, p1, p1 + n1);
-	if (XMVector4IsNaN(ip))
+	// Now caculate the curvture base on intersection distantce
+	if (XMVector4IsNaN(ip)) // paradelle to each other, 0 curvture
 		ip = XMVectorZero();
 	else
 	{
+		// Caculate the average cruvture circle radius
 		XMVECTOR c0 = ip + ip - p0 - p1;
-		XMVECTOR c = XMVector3Length(c0);
+		XMVECTOR c = XMVector3Length(c0) * 0.5f; // In fact *.5 is useless as we donot need the curvature up to a scale
 		if (XMVector4Less(XMVector3Dot(c0, n0), XMVectorZero()))
 			c = -c;
-
-		ip = XMVectorReciprocal(ip);
+		ip = XMVectorReciprocal(c);
 	}
 
-	XMVECTOR uv0, uv1;
+	//XMVECTOR uv0, uv1;
 	//uv0 = get_uv(v0);
 	//uv1 = get_uv(v1);
 	//uv1 = uv1 - uv0;
 
-	uv1 = p1 - p0;
 	//uv1 = XMVector3Rotate(uv1, XMQuaternionConjugate(patchOrientation));
 
 	//uv0 = XMVectorSplatY(uv1);
 	//uv1 = XMVectorSplatX(uv1);
 	//XMVECTOR phi = XMVectorATanEst(uv0 / uv1);
-	ip = _DXMEXT XMVectorSelect<0, 0, 0, 1>(uv1, ip);
 	// X = phi, Y = curveture
+
+	// stores the edge direction and the curvture among it
+	ip = _DXMEXT XMVectorSelect<0, 0, 0, 1>(edir, ip);
+
 	return ip;
+}
+
+void InspectionPatch::ProjectEdgeInTangentNormalPlane(DirectX::XMVECTOR &p1, DirectX::XMVECTOR &p0, DirectX::XMVECTOR &n0, DirectX::XMVECTOR &n1)
+{
+	// project p0,p1,n0,n1 into intrinsic coordinate, ignores the bi-normal direction
+	XMMATRIX rot;
+	XMVECTOR axisX = _DXMEXT XMVector3Normalize(p1 - p0);
+	XMVECTOR axisY = XMVectorAdd(n0, n1);
+	// idely, the normal should be perpendicular to the edge
+	// but it may not be true in the real world case
+	// use two Cross-Product to build a orthgnal base
+	XMVECTOR axisZ = XMVector3Cross(axisX, axisY);
+	axisY = XMVector3Cross(axisZ, axisX);
+	axisZ = XMVector3Cross(axisX, axisY);
+	// Build the Rotation-Projection Matrix, conceptually:
+	// rot.r[0] = axisX; rot.r[1] = axisY; rot.r[2] = axisZ; rot.r[3] = g_XMZero;
+	// Notice rot is row-major, which means rot' == rotation from intrinsic to original
+	// And that rot == rot'' == inv(rotation from intrinsic to original)
+	// thus rot == rotation original from to intrinsic
+	// And we wish to ingnore the Z/W coordinate, so that we set rot = rot * dialog(1,1,0,0)
+	// Which means set Z components of axisX/Y/Z to zero
+	XMVECTOR mask = g_XMSelect1100.v;
+	axisX = XMVectorAndInt(axisX, mask); axisY = XMVectorAndInt(axisY, mask); axisZ = XMVectorAndInt(axisZ, mask);
+	rot.r[0] = axisX; rot.r[1] = axisY; rot.r[2] = axisZ; rot.r[3] = g_XMZero;
+
+	// No Translate, ingnore W part
+	p0 = XMVector3TransformNormal(p0, rot);
+	p1 = XMVector3TransformNormal(p1, rot);
+	n0 = XMVector3TransformNormal(n0, rot);
+	n1 = XMVector3TransformNormal(n1, rot);
 }
 
 void XM_CALLCONV InspectionPatch::CaculatePrinciplePatchOrientation()
@@ -1115,31 +1145,54 @@ void XM_CALLCONV InspectionPatch::CaculatePrinciplePatchOrientation()
 	XMVECTOR orientation = XMLoad(BoundingBox.Orientation);
 	XMVECTOR projQuat = XMQuaternionConjugate(orientation);
 
+	// convert the edge into principle coords
+	// and ignores its Z componet
+	// and get the 'angle' in this 2D coords
 	auto proj = [projQuat](FXMVECTOR v) -> float
 	{
 		XMVECTOR V = XMVector3Rotate(v, projQuat);
-		return atanf(XMVectorGetX(V) / XMVectorGetY(V));
+		float a = atan2f(XMVectorGetY(V), XMVectorGetX(V));
+		a = fmodf(a + XM_PI, XM_PI); // we need the result in [0,pi)
+		return a;
 	};
 
-	std::vector<Vector2> cuv_phi(m_curvetures.size());
-	for (int i = 0; i < m_curvetures.size(); i++)
+	std::vector<Vector2> cuv_phi; cuv_phi.reserve((m_curvetures.size()));
+	for (auto& c : m_curvetures)
+		cuv_phi.emplace_back(proj(c), XMVectorGetX(XMVector3Length(c))*c.w);
+
+	// angle resolution of our minimumlizer
+	// since this function is __NOT__ CONVEX at all, use search to do this
+	CurvtureDistribution.resize(CurvtureAngluarResolution);
+	auto f = [&cuv_phi](float theta)
 	{
-		cuv_phi[i].x = proj(m_curvetures[i]);
-		cuv_phi[i].y = m_curvetures[i].w;
+		float val = 0;
+		for (auto& c : cuv_phi)
+		{
+			float dis = fabsf(theta - c.x);
+			dis = fminf(dis, XM_PI - dis);
+			float fallout = XMScalarCosEst(dis);
+			fallout *= fallout; // cos may not be localized enough
+			//fallout *= fallout; // use cos^4 instead ! (any bell curv may be fine)
+			val += fallout * fabsf(c.y); // we donnot need a high precision cos
+		}
+		return val;
+	};
+	auto delta = XM_PI / CurvtureAngluarResolution;
+	int minid = 9; float minval = f(0);
+	CurvtureDistribution[0] = minval;
+	for (int i = 1; i < CurvtureAngluarResolution; i++)
+	{
+		auto val = f(i*delta);
+		CurvtureDistribution[i] = val;
+		if (val < minval) { minval = val; minid = i; }
 	}
 
-	// sort the directional curvetures by its UV rotation angle PHI
-	std::sort(cuv_phi.begin(), cuv_phi.end(), [](const Vector2& c0, const Vector2& c1) -> bool {
-		return c0.x < c1.x;
-	});
+	// normalize it
+	float maxval = *std::max_element(CurvtureDistribution.begin(), CurvtureDistribution.end());
+	for (auto& c : CurvtureDistribution)
+		c /= maxval;
 
-	auto cuv_phi_backup = cuv_phi;
-	Geometrics::laplacianSmooth<Vector2>(cuv_phi, 0.8f, 4, true);
-	auto minidx = std::min_element(cuv_phi.begin(), cuv_phi.end(), [](const Vector2& c0, const Vector2& c1) -> bool {
-		return fabs(c0.y) < fabs(c1.y);
-	}) - cuv_phi.begin();
-
-	m_principleUvRotation = proj(cuv_phi_backup[minidx]);
+	m_principleUvRotation = minid * delta;
 
 	(Quaternion&)BoundingBox.Orientation = XMQuaternionMultiply(XMQuaternionRotationRoll(m_principleUvRotation), orientation);
 }
@@ -1178,6 +1231,7 @@ void InspectionPatch::UpdateGeometry(I2DFactory* pFactory, bool smooth)
 
 	int n = smooth ? smoothed.size() : points.size();
 	vector<D2D1_POINT_2F> dpoints(n);
+
 	if (smooth)
 	{
 		for (int i = 0; i < n; i++)
@@ -1199,9 +1253,31 @@ void InspectionPatch::UpdateGeometry(I2DFactory* pFactory, bool smooth)
 		dpoints[0],
 		D2D1_FIGURE_BEGIN_FILLED
 	);
-
 	pSink->AddLines(&dpoints[1], n - 1);
 	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+	pSink->Close();
+	pSink.Reset();
+
+	if (CurvtureDistribution.empty()) return;
+
+	pFactory->CreatePathGeometry(&m_curvHistoGeometry);
+	ThrowIfFailed(m_curvHistoGeometry->Open(&pSink));
+	pSink->SetFillMode(D2D1_FILL_MODE_WINDING);
+	vector<D2D1_POINT_2F> chisto(CurvtureAngluarResolution * 2);
+
+	for (int i = 0; i < CurvtureAngluarResolution * 2; i++)
+	{
+		float a = i* XM_PI / CurvtureAngluarResolution;
+		float m = 0.8f * CurvtureDistribution[i % CurvtureAngluarResolution];
+		chisto[i] = D2D_POINT_2F{ XMScalarCosEst(a)*m, XMScalarSinEst(a)*m };
+	}
+	pSink->BeginFigure(
+		chisto[0],
+		D2D1_FIGURE_BEGIN_FILLED
+	);
+	pSink->AddLines(&chisto[1], chisto.size() - 1);
+	pSink->EndFigure(D2D1_FIGURE_END_CLOSED);
+
 	pSink->Close();
 	pSink.Reset();
 
@@ -1225,9 +1301,12 @@ void InspectionPatch::DrawDecal(I2DContext * pContext, ID2D1SolidColorBrush * pB
 	pBrush->SetColor(GetD2DColor(color));
 	pContext->FillGeometry(m_deaclGeometry.Get(), pBrush);
 
-	color = Colors::Black.v;
+	//color = Colors::Black.v;
+	//pBrush->SetColor(GetD2DColor(color));
+	//pContext->DrawGeometry(m_curvHistoGeometry.Get(), pBrush, 2.0f / DecalSize.Length());
+	color = Colors::White.v;
 	pBrush->SetColor(GetD2DColor(color));
-	pContext->DrawGeometry(m_deaclGeometry.Get(), pBrush, 2.0f / DecalSize.Length());
+	pContext->FillGeometry(m_curvHistoGeometry.Get(), pBrush);
 }
 
 void InspectionPatch::UpdateDecalTransformMatrix()
