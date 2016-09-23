@@ -6,8 +6,6 @@
 #include <iterator>
 
 // We need AlignedBox 
-#include <Eigen\Core>
-#include <Eigen\src\Geometry\AlignedBox.h>
 #include <iterator_range.h>
 
 namespace Geometrics {
@@ -36,7 +34,7 @@ namespace Geometrics {
 		template<typename Scalar, int Dim>
 		struct box_int_pair
 		{
-			typedef Eigen::Matrix<Scalar, Dim, 1> VectorType;
+			typedef Scalar VectorType[Dim];
 
 			typedef Eigen::AlignedBox<Scalar, Dim> BoxType;
 
@@ -302,7 +300,7 @@ namespace Geometrics {
 	// Acess all object with vector interface, e.g. begin(), end(), size()
 	// ===== Spatial Query =====
 	// Do spatial intersection queries by findObjects(pred)
-	template <typename _TScaler, size_t _Dim, typename _TObject, class _TAabb = Eigen::AlignedBox<_TScaler, _Dim>>
+	template <typename _TScaler, size_t _Dim, typename _TObject, class _TAabb>
 	class KdAabbTree
 	{
 	public:
@@ -315,8 +313,8 @@ namespace Geometrics {
 		typedef AabbType	Volume;
 		typedef ObjectType	Object;
 
-		typedef std::vector<AabbType, Eigen::aligned_allocator<AabbType>> VolumeList;
-		typedef std::vector<ObjectType, Eigen::aligned_allocator<ObjectType>> ObjectList;
+		typedef std::vector<AabbType, DirectX::AlignedAllocator<AabbType>> VolumeList;
+		typedef std::vector<ObjectType, DirectX::AlignedAllocator<ObjectType>> ObjectList;
 
 		typedef const Index*	VolumeIterator; //an iterator type over node children--returns Index
 		typedef const Object*	ObjectIterator; //an iterator over object (leaf) children--returns const Object &
@@ -471,7 +469,7 @@ namespace Geometrics {
 
 	protected:
 		typedef internal::box_int_pair<Scalar, Dim> IndexedBox;
-		typedef std::vector<IndexedBox, Eigen::aligned_allocator<IndexedBox>> IndexedBoxList;
+		typedef std::vector<IndexedBox, DirectX::AlignedAllocator<IndexedBox>> IndexedBoxList;
 		struct VectorComparator //compares vectors, or, more specificall, VIPairs along a particular dimension
 		{
 			VectorComparator(int inDim) : dim(inDim) {}
@@ -528,7 +526,7 @@ namespace Geometrics {
 
 		Index build(IndexedBoxList &idxBoxes, Index from, Index to, int dim)
 		{
-			eigen_assert(to - from > 1);
+			assert(to - from > 1);
 			if (to - from == 2) {
 
 				m_boxes[from] = idxBoxes[from].getBox();

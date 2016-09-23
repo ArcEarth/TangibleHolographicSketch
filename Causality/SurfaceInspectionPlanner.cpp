@@ -407,7 +407,45 @@ InspectionPatch * SurfaceInspectionPlanner::AddInspectionPatch(FXMVECTOR uv, int
 	auto pFactory = this->Scene->Get2DFactory();
 	patch.UpdateGeometry(pFactory);
 	patch.CaculateCameraFrustum();
+	CaculateCameraPath();
 	return &patch;
+}
+
+void SurfaceInspectionPlanner::CaculateCameraPath()
+{
+	m_isCameraPath.push_back(m_isCameraPath.size());
+	auto dis = [this](int i, int j) {return Vector3::Distance(m_isPatches[i].m_cameraFrustum.Origin, m_isPatches[j].m_cameraFrustum.Origin);};
+
+	vector<int> path(m_isCameraPath);
+	auto& spath = m_isCameraPath;
+	int n = m_isCameraPath.size();
+	float minDis = std::numeric_limits<float>::max();
+	vector<BOOL> visited(n,false);
+	visited[m_isCameraPath[0]] = true;
+
+	function<void(int,int)> search_recur = [&](int k, float sum) -> void
+	{
+		if (k == n && sum < minDis)
+		{
+			spath = path; minDis = sum;
+			return;
+		}
+		auto citr = path.begin() + k;
+		for (int i = 0; i < n; i++)
+		{
+			if (!visited[i])
+			{
+				path[k] = i;
+				visited[i] = true;
+				float newS = sum + dis(path[k - 1], path[k]);
+				if (newS < minDis)
+					search_recur(k + 1, newS);
+				visited[i] = false;
+			}
+		}
+	};
+
+	search_recur(1, .0f);
 }
 
 SurfaceInspectionPlanner::SurfaceInspectionPlanner()
@@ -622,6 +660,14 @@ void SurfaceInspectionPlanner::Render(IRenderContext * pContext, IEffect * pEffe
 			{
 				DrawPatchCamera(patch);
 			}
+			for (int i = 1; i < m_isCameraPath.size(); i++)
+			{
+				int pcpid = m_isCameraPath[i - 1];
+				int cpid = m_isCameraPath[i];
+				auto prev = XMLoad(m_isPatches[pcpid].m_cameraFrustum.Origin);
+				auto curr = XMLoad(m_isPatches[cpid].m_cameraFrustum.Origin);
+				darwer.DrawLine(prev, curr, DirectX::Colors::Blue);
+			}
 
 			darwer.End();
 		}
@@ -642,7 +688,7 @@ void SurfaceInspectionPlanner::DrawPatchCamera(InspectionPatch& patch)
 {
 	BoundingGeometry geo(patch.BoundingBox);
 	XMVECTOR color = patch.Valiad ? Colors::Lime.v : Colors::Red.v;
-	DrawGeometryOutline(geo, color);
+	//DrawGeometryOutline(geo, color);
 	geo = patch.m_cameraFrustum;
 	DrawGeometryOutline(geo, color);
 }
@@ -916,8 +962,8 @@ InspectionPatch::InspectionPatch()
 	m_defaultCameraFrustum.Far = 8.0f;
 	m_defaultCameraFrustum.Near = 1.0f;
 	// it is actually half fov
-	float hfov = tanf(XMConvertToRadians(10));
-	float vfov = tanf(XMConvertToRadians(7.5));
+	float hfov = tanf(XMConvertToRadians(16)); //10
+	float vfov = tanf(XMConvertToRadians(12)); //7.5
 	m_defaultCameraFrustum.RightSlope = hfov;
 	m_defaultCameraFrustum.LeftSlope = -hfov;
 	m_defaultCameraFrustum.TopSlope = vfov;
@@ -927,9 +973,9 @@ InspectionPatch::InspectionPatch()
 
 	DecalSize = Vector2(g_DecalResolution);
 	// 1/(physical dimension) * sqrt(2), so that the uv rect scales up and misalign with 45 degree  will still contains in
-	float phydim = 20.0f;
+	float phydim = 35.0f;
 	float minfov = std::fminf(hfov, vfov);
-	ZTolerance = 0.14f;
+	ZTolerance = 0.16f; //0.14f
 	m_uvExtent = 1 / (phydim * sqrtf(2)) * m_defaultCameraFrustum.Far * Vector2(minfov, minfov);
 }
 
@@ -1268,8 +1314,8 @@ void InspectionPatch::UpdateGeometry(I2DFactory* pFactory, bool smooth)
 	for (int i = 0; i < CurvtureAngluarResolution * 2; i++)
 	{
 		float a = i* XM_PI / CurvtureAngluarResolution;
-		float m = 0.8f * CurvtureDistribution[i % CurvtureAngluarResolution];
-		chisto[i] = D2D_POINT_2F{ XMScalarCosEst(a)*m, XMScalarSinEst(a)*m };
+		float m = 0.25f * CurvtureDistribution[i % CurvtureAngluarResolution];
+		chisto[i] = D2D_POINT_2F{0.75f + XMScalarCosEst(a)*m, 0.75f + XMScalarSinEst(a)*m };
 	}
 	pSink->BeginFigure(
 		chisto[0],

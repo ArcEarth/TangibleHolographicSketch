@@ -8,6 +8,7 @@
 #include <gsl.h>
 #include <VertexTraits.h>
 #include <minmax>
+//#include "KdBVH.h"
 
 namespace Geometrics
 {
@@ -426,6 +427,7 @@ namespace Geometrics
 	{
 	public:
 		static const size_t VertexCount = FaceType::VertexCount;
+		using triangle_handle = IndexType;
 
 	public:
 		// edge's reverse edge
@@ -433,6 +435,34 @@ namespace Geometrics
 		std::vector<IndexType>	revedges;
 		DirectX::BoundingBox	aabb;
 		DirectX::BoundingOrientedBox obb;
+
+		struct XM_ALIGNATTR aabb_t {
+			DirectX::XMVECTOR min;
+			DirectX::XMVECTOR max;
+			aabb_t merged(const aabb_t& rhs) const
+			{
+				using namespace DirectX;
+				return aabb_t{ XMVectorMin(min,rhs.min),XMVectorMax(max,rhs.max); }
+			}
+		};
+
+		/*
+		typedef KdAabbTree<float, 3, triangle_handle> kdtree_t;
+		kdtree_t				kdtree;
+
+		TriangleMesh() :kdtree([this](const triangle_handle t) {
+			using DirectX::VertexTraits;
+			using namespace DirectX;
+			auto f = this->facet(t);
+			XMVECTOR v0 = get_position(this->vertex(f[0]));
+			XMVECTOR v1 = get_position(this->vertex(f[1]));
+			XMVECTOR v2 = get_position(this->vertex(f[2]));
+			XMVECTOR vmax = XMVectorMax(v0, v1);
+			vmax = XMVectorMax(vmax, v2);
+			XMVECTOR vmin = XMVectorMin(v0, v1);
+			vmin = XMVectorMin(vmax, v2);
+			return Eigen::AlignedBox<float, 3>(vmin,vmax);
+		});*/
 
 		// vertex's first adjacant edge
 		// std::vector<IndexType> vedges;
@@ -527,6 +557,8 @@ namespace Geometrics
 
 				++fid;
 			}
+
+			//kdtree.init();
 		}
 
 		// generate a persoude vertex from the interpolation of the trianlge

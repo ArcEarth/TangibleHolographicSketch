@@ -62,5 +62,13 @@
     <ClInclude Include="Extrusion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Primitives.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Primitives.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

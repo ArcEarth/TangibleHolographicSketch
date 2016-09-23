@@ -148,7 +148,10 @@
   <ItemGroup>
     <ClCompile Include="csg.cpp" />
     <ClCompile Include="Extrusion.cpp" />
-    <ClCompile Include="MetaBallModel.cpp" />
+    <ClCompile Include="MetaBallModel.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Polygonizer.cpp" />
     <ClCompile Include="SpaceCurve.cpp" />
   </ItemGroup>

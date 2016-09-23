@@ -138,6 +138,7 @@ namespace Causality
 
 
 			InspectionPatch* AddInspectionPatch(FXMVECTOR uv, int fid);
+			void CaculateCameraPath();
 			void RemovePatch(InspectionPatch* patch);
 
 			void SurfaceSketchBegin();
@@ -155,6 +156,7 @@ namespace Causality
 			Geometrics::MeshRayIntersectionInfo	
 											m_isInfo;
 
+			std::vector<int>				m_isCameraPath;
 			std::vector<InspectionPatch>	m_isPatches;
 			InspectionPatch*				m_activePatch;
 
