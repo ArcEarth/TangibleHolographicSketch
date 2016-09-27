@@ -1215,7 +1215,7 @@ void XM_CALLCONV InspectionPatch::CaculatePrinciplePatchOrientation()
 		for (auto& c : cuv_phi)
 		{
 			float dis = fabsf(theta - c.x);
-			dis = fminf(dis, XM_PI - dis);
+			dis = fminf(dis, fabsf(XM_PI - dis));
 			float fallout = XMScalarCosEst(dis);
 			fallout *= fallout; // cos may not be localized enough
 			//fallout *= fallout; // use cos^4 instead ! (any bell curv may be fine)
